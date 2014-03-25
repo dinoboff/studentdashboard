@@ -1,0 +1,316 @@
+'use strict';
+
+var spawn = require('child_process').spawn,
+  readline = require('readline');
+
+module.exports = function(grunt) {
+  require('load-grunt-tasks')(grunt);
+
+  grunt.initConfig({
+
+    autoshot: {
+      dev: {
+        options: {
+          path: 'screenshots/',
+          viewport: ['1024x655'],
+          local: false,
+          remote: {
+            files: [{
+              src: 'http://0.0.0.0:8888/app#/',
+              dest: 'home.jpg',
+            }]
+          }
+        }
+      }
+    },
+
+    clean: {
+      dist: {
+        files: [{
+          dot: true,
+          src: [
+            'dist',
+          ]
+        }]
+      },
+      build: {
+        files: [{
+          dot: true,
+          src: [
+            'build',
+          ]
+        }]
+      }
+    },
+
+    concat: {},
+
+    connect: {
+      options: {
+        hostname: '0.0.0.0',
+        base: './'
+      },
+      devserver: {
+        options: {
+          port: 8888,
+          middleware: function(connect, options) {
+            var middlewares = [];
+            var directory = options.directory || options.base[options.base.length - 1];
+            if (!Array.isArray(options.base)) {
+              options.base = [options.base];
+            }
+            // Setup the proxy
+            middlewares.push(require('grunt-connect-proxy/lib/utils').proxyRequest);
+
+            options.base.forEach(function(base) {
+              // Serve static files.
+              middlewares.push(connect.static(base));
+            });
+
+            // Make directory browse-able.
+            middlewares.push(connect.directory(directory));
+
+            return middlewares;
+          }
+        },
+        proxies: [{
+          context: '/api/v1',
+          host: '0.0.0.0',
+          port: 8080
+        }]
+      },
+      screenshots: {
+        options: {
+          port: 5556,
+          base: './screenshots/',
+          keepalive: true
+        }
+      }
+    },
+
+    copy: {
+      build: {
+        files: [{
+          expand: true,
+          dot: true,
+          cwd: 'app',
+          dest: 'build',
+          src: [
+            '**/*',
+            '!lib/',
+            '!lib/**/*',
+            '!js/',
+            '!js/**/*',
+            '!css/',
+            '!css/**/*',
+          ]
+        }, {
+          expand: true,
+          cwd: 'app/lib/bootstrap/dist',
+          dest: 'build',
+          src: [
+            'fonts/*'
+          ]
+        }]
+      },
+      dist: {
+        files: [{
+          expand: true,
+          dot: true,
+          cwd: 'build',
+          dest: 'dist',
+          src: [
+            '**/*',
+            '!js/**/*',
+            '!css/**/*',
+            '!*.html',
+            '!views/**/*.html'
+          ]
+        }]
+      }
+    },
+
+    cssmin: {
+      dist: {
+        expand: true,
+        cwd: 'build/css/',
+        src: ['*.css', '!*.min.css'],
+        dest: 'dist/css/'
+      }
+    },
+
+    htmlmin: {
+      dist: {
+        files: [{
+          expand: true,
+          cwd: 'build',
+          src: ['*.html', 'views/**/*.html'],
+          dest: 'dist'
+        }]
+      }
+    },
+
+    jshint: {
+      options: {
+        jshintrc: '.jshintrc',
+      },
+      all: [
+        'Gruntfile.js',
+        'app/js/**/*.js',
+        'app/components/**/*.js'
+      ]
+    },
+
+    karma: {
+      unit: {
+        configFile: 'config/karma.conf.js',
+        singleRun: true
+      },
+      autoUnit: {
+        configFile: 'config/karma.conf.js',
+        autoWatch: true,
+        singleRun: false
+      }
+    },
+
+    rev: {
+      dist: {
+        files: {
+          src: [
+            'dist/js/**/*.js',
+            'dist/css/**/*.css',
+            'dist/fonts/*'
+          ]
+        }
+      }
+    },
+
+    uglify: {
+      dist: {
+        expand: true,
+        cwd: 'build/js/',
+        src: ['*.js', '!*.min.js'],
+        dest: 'dist/js/'
+      }
+    },
+
+    useminPrepare: {
+      html: 'app/index.html',
+      options: {
+        dest: 'build',
+        flow: {
+          html: {
+            steps: {
+              'js': ['concat'],
+              'css': ['concat']
+            },
+            post: {}
+          }
+        }
+      }
+    },
+
+    usemin: {
+      html: ['build/**/*.html', 'dist/**/*.html'],
+      css: ['build/css/**/*.css', 'dist/css/**/*.css'],
+    },
+
+    watch: {
+      app: {
+        files: [
+          'app/**/*',
+          '!app/lib/**/*'
+        ],
+        tasks: ['build']
+      },
+    },
+
+  });
+
+  grunt.registerTask('gae:start', 'run "make server".', function() {
+    var kill, exit, done, rl, gae;
+
+    // Start the server.
+    //
+    // TODO: convert the make task to a grunt task.
+    gae = spawn('make', ['serve'], {
+      stdio: [process.stdin, process.stdout, 'pipe']
+    });
+
+    kill = function() {
+      if (gae && gae.connected) {
+        gae.kill();
+      }
+    };
+
+    exit = function() {
+      kill();
+      process.exit();
+    };
+
+    // make this task async. We need to give the server some time to
+    // start up.
+    done = this.async();
+
+    rl = readline.createInterface({input: gae.stderr, output: process.stderr});
+
+    // Finish task when the server exit...
+    gae.on('exit', function(){
+      done();
+      gae = null;
+    });
+
+    // ... or when the server is ready
+    rl.on('line', function(log) {
+      if (log.indexOf('Starting admin server') > -1) {
+        done();
+      }
+    });
+
+    // Stop the server when asked...
+    grunt.event.on('gae.stop', kill);
+
+    // ... Or when the all grunt tasks stop
+    process.on('uncaughtException', exit);
+    process.on('SIGINT', exit);
+  });
+
+  grunt.registerTask('gae:stop', 'stop dev server.', function() {
+    grunt.event.emit('gae.stop');
+  });
+
+  grunt.registerTask('build:assets', [
+    'jshint',
+    'clean:build',
+    'useminPrepare',
+    'concat',
+    'copy:build',
+  ]);
+  grunt.registerTask('build', ['build:assets', 'usemin']);
+
+  grunt.registerTask('dist', [
+    'build:assets',
+    'clean:dist',
+    'copy:dist',
+    'htmlmin',
+    'cssmin',
+    'uglify',
+    'rev',
+    'usemin'
+  ]);
+
+  grunt.registerTask('test', ['jshint', 'karma:unit']);
+  grunt.registerTask('autotest', ['jshint', 'karma:autoUnit']);
+
+  grunt.registerTask(
+    'server:dev', ['gae:start', 'configureProxies:devserver', 'connect:devserver']
+  );
+
+  grunt.registerTask('dev', ['build', 'server:dev', 'watch']);
+
+  grunt.registerTask(
+    'screenshots', ['build', 'server:dev', 'autoshot', 'connect:screenshots']);
+
+  grunt.registerTask('default', ['test', 'build', 'server:dev', 'autoshot']);
+
+};
