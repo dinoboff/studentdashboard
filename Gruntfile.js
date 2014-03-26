@@ -29,7 +29,7 @@ module.exports = function(grunt) {
         files: [{
           dot: true,
           src: [
-            'dist',
+            'app-dist',
           ]
         }]
       },
@@ -37,7 +37,7 @@ module.exports = function(grunt) {
         files: [{
           dot: true,
           src: [
-            'build',
+            'app-build',
           ]
         }]
       }
@@ -94,7 +94,7 @@ module.exports = function(grunt) {
           expand: true,
           dot: true,
           cwd: 'app',
-          dest: 'build',
+          dest: 'app-build',
           src: [
             '**/*',
             '!lib/',
@@ -107,7 +107,7 @@ module.exports = function(grunt) {
         }, {
           expand: true,
           cwd: 'app/lib/bootstrap/dist',
-          dest: 'build',
+          dest: 'app-build',
           src: [
             'fonts/*'
           ]
@@ -117,8 +117,8 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           dot: true,
-          cwd: 'build',
-          dest: 'dist',
+          cwd: 'app-build',
+          dest: 'app-dist',
           src: [
             '**/*',
             '!js/**/*',
@@ -133,9 +133,9 @@ module.exports = function(grunt) {
     cssmin: {
       dist: {
         expand: true,
-        cwd: 'build/css/',
+        cwd: 'app-build/css/',
         src: ['*.css', '!*.min.css'],
-        dest: 'dist/css/'
+        dest: 'app-dist/css/'
       }
     },
 
@@ -143,9 +143,9 @@ module.exports = function(grunt) {
       dist: {
         files: [{
           expand: true,
-          cwd: 'build',
+          cwd: 'app-build',
           src: ['*.html', 'views/**/*.html'],
-          dest: 'dist'
+          dest: 'app-dist'
         }]
       }
     },
@@ -177,9 +177,9 @@ module.exports = function(grunt) {
       dist: {
         files: {
           src: [
-            'dist/js/**/*.js',
-            'dist/css/**/*.css',
-            'dist/fonts/*'
+            'app-dist/js/**/*.js',
+            'app-dist/css/**/*.css',
+            'app-dist/fonts/*'
           ]
         }
       }
@@ -188,16 +188,16 @@ module.exports = function(grunt) {
     uglify: {
       dist: {
         expand: true,
-        cwd: 'build/js/',
+        cwd: 'app-build/js/',
         src: ['*.js', '!*.min.js'],
-        dest: 'dist/js/'
+        dest: 'app-dist/js/'
       }
     },
 
     useminPrepare: {
       html: 'app/index.html',
       options: {
-        dest: 'build',
+        dest: 'app-build',
         flow: {
           html: {
             steps: {
@@ -211,8 +211,8 @@ module.exports = function(grunt) {
     },
 
     usemin: {
-      html: ['build/**/*.html', 'dist/**/*.html'],
-      css: ['build/css/**/*.css', 'dist/css/**/*.css'],
+      html: ['app-build/**/*.html', 'app-dist/**/*.html'],
+      css: ['app-build/css/**/*.css', 'app-dist/css/**/*.css'],
     },
 
     watch: {
@@ -258,6 +258,7 @@ module.exports = function(grunt) {
     gae.on('exit', function(){
       done();
       gae = null;
+      rl.close();
     });
 
     // ... or when the server is ready
