@@ -111,6 +111,13 @@ module.exports = function(grunt) {
           src: [
             'fonts/*'
           ]
+        }, {
+          expand: true,
+          cwd: 'app/lib/angular-file-upload/dist',
+          dest: 'app-build/js',
+          src: [
+            'FileAPI.*'
+          ]
         }]
       },
       dist: {
@@ -125,6 +132,13 @@ module.exports = function(grunt) {
             '!css/**/*',
             '!*.html',
             '!views/**/*.html'
+          ]
+        }, {
+          expand: true,
+          cwd: 'app/lib/angular-file-upload/dist',
+          dest: 'app-dist/js',
+          src: [
+            'FileAPI.*'
           ]
         }]
       }
