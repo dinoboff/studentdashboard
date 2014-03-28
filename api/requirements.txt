@@ -1,0 +1,2 @@
+git+git://github.com/dinoboff/webapp2ext.swagger.git@f3295359dddee5f8505a2e1378c6fe2ccb78edbf
+jsonschema==2.3.0
