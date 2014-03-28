@@ -1,12 +1,6 @@
 (function() {
   'use strict';
 
-  angular.module('scDashboard', ['scDashboard.controllers']);
-
-})();
-(function() {
-  'use strict';
-
   angular.module('scDashboard.controllers', []).
 
   controller('scdNavBarCtrl', ['$scope', function($scope) {

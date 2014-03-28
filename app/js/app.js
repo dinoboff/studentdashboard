@@ -1,5 +1,6 @@
 (function() {
   'use strict';
 
-  angular.module('scDashboard', []);
+  angular.module('scDashboard', ['scDashboard.controllers']);
+
 })();
