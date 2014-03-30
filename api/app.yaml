@@ -5,6 +5,7 @@ api_version: 1
 threadsafe: yes
 
 includes:
+- lib/educationext/educationext.core.yaml
 - educationext/dashboard.yaml
 
 libraries:

@@ -18,12 +18,16 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'app/lib/jquery/dist/jquery.js',
+      'app/lib/lodash/dist/lodash.js',
+      'app/lib/angular-file-upload/dist/angular-file-upload-shim.js',
       'app/lib/angular/angular.js',
-      'app/lib/angular-resource/angular-resource.js',
       'app/lib/angular-cookies/angular-cookies.js',
       'app/lib/angular-sanitize/angular-sanitize.js',
       'app/lib/angular-route/angular-route.js',
-      'app/lib/bootstrap/dist/js/bootstrap.js',
+      'app/lib/restangular/dist/restangular.js',
+      'app/lib/angular-file-upload/dist/angular-file-upload-shim.js',
+      'app/lib/bootstrap/js/collapse.js',
+      'app/lib/educationext.core/app-build/js/app.js',
       'app/js/*.js',
       'app/components/**/*.js'
     ],

@@ -1,7 +1,8 @@
 'use strict';
 
 var spawn = require('child_process').spawn,
-  readline = require('readline');
+  readline = require('readline'),
+  modRewrite = require('connect-modrewrite');
 
 module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
@@ -62,6 +63,11 @@ module.exports = function(grunt) {
             // Setup the proxy
             middlewares.push(require('grunt-connect-proxy/lib/utils').proxyRequest);
 
+            middlewares.push(modRewrite([
+              '^/students/$ /app/lib/educationext.core/app-build/index.html [L]',
+              '^/students/(.+)$ /app/lib/educationext.core/app-build/$1',
+            ]));
+
             options.base.forEach(function(base) {
               // Serve static files.
               middlewares.push(connect.static(base));
@@ -70,6 +76,7 @@ module.exports = function(grunt) {
             // Make directory browse-able.
             middlewares.push(connect.directory(directory));
 
+
             return middlewares;
           }
         },
@@ -77,7 +84,12 @@ module.exports = function(grunt) {
           context: '/api/v1',
           host: '0.0.0.0',
           port: 8080
-        }]
+        }, {
+          context: '/_ah',
+          host: '0.0.0.0',
+          port: 8080
+        }
+        ]
       },
       screenshots: {
         options: {
@@ -85,7 +97,7 @@ module.exports = function(grunt) {
           base: './screenshots/',
           keepalive: true
         }
-      }
+      },
     },
 
     copy: {
@@ -318,7 +330,12 @@ module.exports = function(grunt) {
   grunt.registerTask('autotest', ['jshint', 'karma:autoUnit']);
 
   grunt.registerTask(
-    'server:dev', ['gae:start', 'configureProxies:devserver', 'connect:devserver']
+    'server:dev',
+    [
+      'gae:start',
+      'configureProxies:devserver',
+      'connect:devserver'
+    ]
   );
 
   grunt.registerTask('dev', ['build', 'server:dev', 'watch']);

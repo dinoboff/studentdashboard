@@ -40,18 +40,30 @@
                         </li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
-                        <li>
+                        <li ng-if="!activeUser">
+                            <p class="navbar-text">Loading user details...</p>
+                        </li>
+                        <li ng-if="activeUser && activeUser.name">
                             <p class="navbar-text">Signed in as {{activeUser.name}}</p>
                         </li>
-                        <li>
-                            <a href=""><i class="glyphicon glyphicon-off"></i> Logout</a>
+                        <li ng-if="activeUser">
+                            <a ng-href="{{activeUser.loginUrl}}" ng-if="activeUser.loginUrl">
+                                <i class="glyphicon glyphicon-off"></i> login
+                            </a>
+                            <a ng-href="{{activeUser.logoutUrl}}" ng-if="activeUser.logoutUrl">
+                                <i class="glyphicon glyphicon-off"></i> logout
+                            </a>
                         </li>
                     </ul>
                 </div>
             </div>
         </header>
+        <div class="container-fluid">
+            <div class="row">
+                <div ng-view="" id="main-container" class="col-md-12"></div>
+            </div>
+        </div>
 
-        <div ng-view="" id="main-container"></div>
     </div>
 
     <footer>

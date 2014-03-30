@@ -37,6 +37,7 @@
     "grunt-rev": "^0.1.0",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-connect-proxy": "^0.1.10",
-    "grunt-autoshot": "^0.2.0"
+    "grunt-autoshot": "^0.2.0",
+    "connect-modrewrite": "^0.6.4-pre"
   }
 }
