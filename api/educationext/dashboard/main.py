@@ -16,10 +16,8 @@
 #
 import webapp2
 
-class MainHandler(webapp2.RequestHandler):
-    def get(self):
-        self.response.write('Hello world!')
+from educationext.dashboard import api
 
 app = webapp2.WSGIApplication([
-    ('/api/v1/dashboard/', MainHandler)
+    api.routes()
 ], debug=True)

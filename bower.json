@@ -24,5 +24,8 @@
     "bootstrap": "~3.1.1",
     "angular-file-upload": "https://github.com/danialfarid/angular-file-upload.git#6b70ad774dffde4a3ada8e0acd51192075966dde",
     "educationext.core": "https://github.com/dinoboff/educationext.core.git"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.2.15"
   }
 }

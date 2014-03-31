@@ -112,6 +112,7 @@ module.exports = function(grunt) {
             '!lib/',
             '!lib/**/*',
             '!js/',
+            '!components/**/*',
             '!js/**/*',
             '!css/',
             '!css/**/*',
@@ -141,6 +142,7 @@ module.exports = function(grunt) {
           src: [
             '**/*',
             '!js/**/*',
+            '!components/**/*',
             '!css/**/*',
             '!*.html',
             '!views/**/*.html'

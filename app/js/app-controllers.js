@@ -7,8 +7,9 @@
     function($scope, $location, currentUserApi) {
 
       $scope.activeUser = null;
-      currentUserApi.get('/').then(function(info) {
+      $scope.login = currentUserApi.get('/').then(function(info) {
         $scope.activeUser = info;
+        return info;
       });
 
       $scope.isActive = function(route) {

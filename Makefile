@@ -32,6 +32,8 @@ setup-dev:
 
 	# add GAE to path
 	echo ${GAEPATH} >> ${PYENV}/lib/python2.7/site-packages/gae.pth
+	echo ${ROOT} >> ${PYENV}/lib/python2.7/site-packages/gae.pth
+	echo 'import educationext' >> ${PYENV}/lib/python2.7/site-packages/gae.pth
 	echo ${ROOT}/${LIB} >> ${PYENV}/lib/python2.7/site-packages/gae.pth
 	echo "import dev_appserver; dev_appserver.fix_sys_path()" >> ${PYENV}/lib/python2.7/site-packages/gae.pth
 

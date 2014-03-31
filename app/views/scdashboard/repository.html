@@ -1,0 +1,57 @@
+<h1>Repository</h1>
+
+<div class="row">
+  <div ng-class="'col-md-8'">
+
+    <p class="alert alert-warning" ng-if="error" ng-bind="error"></p>
+
+    <form class="form-inline" role="form" ng-if="displayStudentsSelect">
+
+      <div class="form-group">
+        <label class="sr-only" for="student_id">Student</label>
+        <select id="student_id" class="form-control"
+          ng-model="target.student"
+          ng-options="s.firstName + ' ' + s.lastName for s in students track by s.id"
+        >
+          <option value="">Select a student</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-default"
+        ng-disable="!target.student"
+        ng-click="listFile(target.student.id)"
+      >
+        List files
+      </button>
+    </form>
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Sender</th>
+          <th>Sent date</th>
+          <th>Last download data</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="file in files">
+          <td>{{file.name}}</td>
+          <td>{{file.sender}}</td>
+          <td>{{file.uploadedAt}}</td>
+          <td>{{file.lastDownloadAt}}</td>
+          <td><a ng-href="{{file.name}}">download</a></td>
+        </tr>
+        <tr ng-if="!files">
+          <td colspan="5">Loading file list...</td>
+        </tr>
+        <tr ng-if="files.length == 0">
+          <td colspan="5">No files</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+</div>
