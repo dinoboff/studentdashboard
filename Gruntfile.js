@@ -9,22 +9,6 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
 
-    autoshot: {
-      dev: {
-        options: {
-          path: 'screenshots/',
-          viewport: ['1024x655'],
-          local: false,
-          remote: {
-            files: [{
-              src: 'http://0.0.0.0:8888/app#/',
-              dest: 'home.jpg',
-            }]
-          }
-        }
-      }
-    },
-
     clean: {
       dist: {
         files: [{
@@ -98,6 +82,11 @@ module.exports = function(grunt) {
           keepalive: true
         }
       },
+      e2e: {
+        options: {
+          port: 5557
+        }
+      }
     },
 
     copy: {
@@ -201,6 +190,21 @@ module.exports = function(grunt) {
       }
     },
 
+    protractor: {
+      options: {
+        configFile: 'config/e2e.conf.js',
+        keepAlive: false,
+        noColor: false,
+      },
+      build: {
+        options: {
+          args: {
+            specs: ['app/js/appSpec.e2e.js']
+          }
+        }
+      },
+    },
+
     rev: {
       dist: {
         files: {
@@ -209,6 +213,14 @@ module.exports = function(grunt) {
             'app-dist/css/**/*.css',
             'app-dist/fonts/*'
           ]
+        }
+      }
+    },
+
+    targethtml: {
+      build: {
+        files: {
+          'app-build/index.html': 'app-build/index.html'
         }
       }
     },
@@ -250,7 +262,7 @@ module.exports = function(grunt) {
           '!app/lib/**/*'
         ],
         tasks: ['build']
-      },
+      }
     },
 
   });
@@ -293,6 +305,9 @@ module.exports = function(grunt) {
     rl.on('line', function(log) {
       if (log.indexOf('Starting admin server') > -1) {
         done();
+      } else if (log.indexOf('Unable to bind') > -1) {
+        kill();
+        done();
       }
     });
 
@@ -314,6 +329,7 @@ module.exports = function(grunt) {
     'useminPrepare',
     'concat',
     'copy:build',
+    'targethtml:build'
   ]);
   grunt.registerTask('build', ['build:assets', 'usemin']);
 
@@ -329,22 +345,21 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', ['jshint', 'karma:unit']);
+  grunt.registerTask('test:e2e', [
+    'build',
+    'connect:e2e',
+    'protractor:build'
+  ]);
+
   grunt.registerTask('autotest', ['jshint', 'karma:autoUnit']);
 
   grunt.registerTask(
     'server:dev',
-    [
-      'gae:start',
-      'configureProxies:devserver',
-      'connect:devserver'
-    ]
+    ['gae:start', 'configureProxies:devserver', 'connect:devserver']
   );
 
-  grunt.registerTask('dev', ['build', 'server:dev', 'watch']);
+  grunt.registerTask('dev', ['build', 'server:dev', 'watch', 'gae:stop']);
 
-  grunt.registerTask(
-    'screenshots', ['build', 'server:dev', 'autoshot', 'connect:screenshots']);
-
-  grunt.registerTask('default', ['test', 'build', 'server:dev', 'autoshot']);
+  grunt.registerTask('default', ['test', 'build', 'server:dev', 'autoshot', 'gae:stop']);
 
 };
