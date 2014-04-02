@@ -1,0 +1,31 @@
+{
+  "name": "studentdashboard",
+  "version": "0.0.0",
+  "homepage": "https://github.com/ChrisBoesch/studentdashboard",
+  "authors": [
+    "Chris Boesch"
+  ],
+  "description": "The student dashboard enables instructors to upload PDF’s for individual student.",
+  "main": "src/educationext/app/index.html",
+  "license": "MIT",
+  "ignore": [
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.0",
+    "angular": "~1.2.15",
+    "angular-resource": "~1.2.15",
+    "angular-cookies": "~1.2.15",
+    "angular-sanitize": "~1.2.15",
+    "angular-route": "~1.2.15",
+    "bootstrap": "~3.1.1",
+    "angular-file-upload": "https://github.com/danialfarid/angular-file-upload.git#6b70ad774dffde4a3ada8e0acd51192075966dde",
+    "educationext.core": "https://github.com/dinoboff/educationext.core.git"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.2.15"
+  }
+}

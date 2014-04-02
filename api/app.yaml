@@ -1,0 +1,15 @@
+application: studentdashboard
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+includes:
+- lib/educationext/educationext.core.yaml
+- educationext/dashboard.yaml
+
+libraries:
+- name: webapp2
+  version: "2.5.2"
+- name: setuptools
+  version: "0.6c11"

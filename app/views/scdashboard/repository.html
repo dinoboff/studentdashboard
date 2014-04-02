@@ -1,0 +1,91 @@
+
+<h1>Repository</h1>
+
+<form role="form" class="form-inline" ng-if="showStudentSelector">
+  <div class="form-group">
+    <label for="selected-student">Show repository of </label>
+    <select id="selected-student" class="form-control " ng-model="selected.student"
+      ng-options="s.firstName + ' ' + s.lastName for s in students track by s.id"
+      ng-change="listFile(selected.student.id)"
+    >
+      <option value="">Select a student</option>
+    </select>
+  </div>
+  <hr/>
+</form>
+
+<div class="row">
+  <div class="col-md-8">
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Sender</th>
+          <th>Sent date</th>
+          <th>Last download data</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="file in files" class="file-details">
+          <td>{{file.name}}</td>
+          <td>{{file.sender}}</td>
+          <td>{{file.uploadedAt}}</td>
+          <td>{{file.lastDownloadAt || '-'}}</td>
+          <td><a ng-href="{{file.name}}">download</a></td>
+        </tr>
+        <tr ng-if="!files">
+          <td colspan="5">Loading file list...</td>
+        </tr>
+        <tr ng-if="files.length == 0">
+          <td colspan="5">No files</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col-md-4">
+    <div ng-if="selected.student">
+      <form role="form" ng-controller="scdRepositoryUploadFileCtrl">
+        <fielset>
+          <legend>Upload File</legend>
+
+          <div class="form-group">
+            <label for="file-select">Select a file to upload :</label>
+            <input type="file" id="exampleInputFile" class="form-control"
+              ng-file-select="onFileSelect($files)"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="file-name">File name :</label>
+            <input type="text" class="form-control" id="file-name"
+              placeholder="File name"
+              ng-model="fileMeta.name"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block"
+            ng-click="uploadButtonClicked(selected.file)"
+            ng-disabled="!selected.file"
+            ng-hide="showProgress"
+          >
+            Upload
+          </button>
+
+          <div class="progress progress-striped active" ng-show="showProgress">
+            <div class="progress-bar"  role="progressbar"
+              ng-attr-aria-valuenow="45"
+              aria-valuemin="0" aria-valuemax="100"
+              ng-style="{'width': progress + '%'}"
+            >
+              <span class="sr-only">45% Complete</span>
+            </div>
+          </div>
+
+        </fielset>
+      </form>
+    </div>
+  </div>
+</div>
