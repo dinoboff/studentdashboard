@@ -16,8 +16,10 @@
 #
 import webapp2
 
-from educationext.dashboard import api
+from educationext.dashboard import api, config
+from educationext.dashboard.controllers import UploadHandler
 
 app = webapp2.WSGIApplication([
-    api.routes()
+    (config.UPLOAD_CB_URL, UploadHandler,),
+    api.routes(),
 ], debug=True)

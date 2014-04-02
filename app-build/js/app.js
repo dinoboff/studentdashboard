@@ -8,7 +8,7 @@
       $routeProvider
         .when('/', {
           templateUrl: 'views/scdashboard/repository.html',
-          controller: 'scdRepositoryList'
+          controller: 'scdRepositoryListCtrl'
         })
         .otherwise({
           redirectTo: '/'
@@ -45,7 +45,7 @@
     return resp;
   };
 
-  angular.module('scDashboard.services', ['restangular', 'scDashboard.config']).
+  angular.module('scDashboard.services', ['restangular', 'scDashboard.config', 'scecUser.services']).
 
   service('scdDashboardApi', ['Restangular', 'SCD_API_BASE',
     function(Restangular, SCD_API_BASE) {
@@ -53,6 +53,33 @@
         RestangularConfigurer.setBaseUrl(SCD_API_BASE);
         RestangularConfigurer.addResponseInterceptor(interceptor);
       });
+    }
+  ]).
+
+  service('scdDashboardUserApi', ['scecCurrentUserApi', '$q',
+    function(scecCurrentUserApi, $q) {
+      var user = {
+        currentUser: null,
+        _currentPromise: null,
+        get: function(returnUrl) {
+          if (user.currentUser) {
+            return $q.when(user.currentUser);
+          }
+
+          if (user._currentPromise) {
+            return user._currentPromise;
+          }
+
+          user._currentPromise = scecCurrentUserApi.get(returnUrl).then(function(data) {
+            user.currentUser = data;
+            return data;
+          });
+
+          return user._currentPromise;
+        }
+      };
+
+      return user;
     }
   ])
 
@@ -62,13 +89,13 @@
 (function() {
   'use strict';
 
-  angular.module('scDashboard.controllers', ['scecUser.services']).
+  angular.module('scDashboard.controllers', ['scDashboard.services']).
 
-  controller('scdNavBarCtrl', ['$scope', '$location', 'scecCurrentUserApi',
-    function($scope, $location, currentUserApi) {
+  controller('scdNavBarCtrl', ['$scope', '$location', 'scdDashboardUserApi',
+    function($scope, $location, userApi) {
 
       $scope.activeUser = null;
-      $scope.login = currentUserApi.get('/').then(function(info) {
+      $scope.login = userApi.get().then(function(info) {
         $scope.activeUser = info;
         return info;
       });
@@ -80,9 +107,7 @@
   ]).
 
   controller('scdHomeCtrl', ['$scope',
-    function($scope) {
-      $scope.files = {};
-    }
+
   ])
 
   ;
@@ -98,6 +123,9 @@
       return {
         getRepositoryById: function(studentId) {
           return scdDashboardApi.one('repository', studentId).all('files').getList();
+        },
+        newUploadUrl: function(studentId) {
+          return scdDashboardApi.one('repository', studentId).one('uploadurl').post();
         }
       };
     }
@@ -109,42 +137,59 @@
 (function() {
   'use strict';
 
-  angular.module('scdRepository.controllers', ['scdRepository.services', 'scecStudents.services', 'scecUser.services']).
+  angular.module(
+    'scdRepository.controllers', [
+      'scdRepository.services',
+      'scecStudents.services',
+      'scDashboard.services',
+      'angularFileUpload'
+    ]
+  ).
 
-  controller('scdRepositoryList', ['$scope', 'scdRepositoryApi', 'scecStudentsApi', 'scecCurrentUserApi',
-    function($scope, scdRepositoryApi, scecStudentsApi, scecCurrentUserApi) {
+  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scecStudentsApi', 'scdDashboardUserApi', '$q',
+    function($scope, scdRepositoryApi, scecStudentsApi, scdDashboardUserApi, $q) {
+      $scope.currentUser = null;
+      $scope.files = null;
+      $scope.showStudentSelector = false;
+      $scope.selected = {};
+      $scope.students = null;
 
-      scecCurrentUserApi.get().then(function(user) {
+      scdDashboardUserApi.get().then(function(user) {
         if (user.error) {
           $scope.error = 'You need to be logged to list a repository';
           $scope.files = [];
-          return;
-        }
-        if (!user.isStaff && !user.isAdmin) {
-          return $scope.listFile(user.id);
+          return $q.reject('You need to be logged to list a repository');
         }
 
-        $scope.displayStudentsSelect = true;
-        listStudent();
+        $scope.currentUser = user;
+        if (!user.isStaff && !user.isAdmin) {
+          $scope.listFile(user.id);
+          return user;
+        }
+
+        $scope.showStudentSelector = true;
         $scope.files = [];
-        return $scope.files;
+        listStudent();
+        return user;
       });
 
-
-      $scope.students = null;
-      $scope.displayStudentsSelect = false;
       function listStudent() {
         return scecStudentsApi.all().then(function(studentList) {
           $scope.students = studentList;
         });
       }
 
-      $scope.files = null;
       $scope.listFile = function(studentId) {
+        if (!studentId) {
+          $scope.files = [];
+          return $q.reject('You need to select a student.');
+        }
+
         $scope.files = null;
-        scdRepositoryApi.getRepositoryById(studentId).then(function(list) {
+        return scdRepositoryApi.getRepositoryById(studentId).then(function(list) {
           $scope.files = list;
-        }).catch(function(resp) {
+          return list;
+        }).catch (function(resp) {
           if (resp.status === 401) {
             $scope.error = 'You need to be logged to list a repository';
           } else if (resp.status === 403) {
@@ -154,6 +199,58 @@
           }
         });
       };
+    }
+  ]).
+
+  controller('scdRepositoryUploadFileCtrl', ['$scope', '$upload', 'scdRepositoryApi',
+    function($scope,$upload, scdRepositoryApi) {
+
+      function onProgress(evt) {
+        $scope.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
+      }
+
+      function onSucess(data) {
+        $scope.files.unshift(data);
+        $scope.success = 'New file uploaded.';
+        $scope.reset();
+      }
+
+      function uploadFile(file) {
+        scdRepositoryApi.newUploadUrl($scope.selected.student.id).then(function(uploadInfo) {
+          $scope.upload = $upload.upload({
+            url: uploadInfo.url,
+            method: 'POST',
+            withCredentials: true,
+            data: {
+              name: $scope.fileMeta.name,
+              destId: $scope.selected.student.id
+            },
+            file: file
+          }).progress(
+            onProgress
+          ).success(
+            onSucess
+          );
+        });
+      }
+
+      $scope.reset = function() {
+        $scope.fileMeta = {};
+        $scope.showProgress = false;
+        $scope.progress = 0;
+      };
+
+      $scope.onFileSelect = function(files) {
+        $scope.fileMeta.name = files[0].name;
+        $scope.selected.file = files[0];
+      };
+
+      $scope.uploadButtonClicked = function(file) {
+        uploadFile(file);
+        $scope.showProgress = true;
+      };
+
+      $scope.reset();
     }
   ])
 

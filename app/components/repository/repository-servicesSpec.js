@@ -43,6 +43,21 @@
         expect(list.length).toBe(1);
         expect(list[0].name).toBe('foo.pdf');
       });
+
+      it('should request a new upload file url', function() {
+        var resp;
+
+        api.newUploadUrl('x1').then(function(_resp) {
+          resp = _resp;
+        });
+
+        $httpBackend.expectPOST(
+          '/api/v1/dashboard/repository/x1/uploadurl'
+        ).respond({url: '/foo'});
+        $httpBackend.flush();
+
+        expect(resp.url).toBeTruthy();
+      });
     });
   });
 

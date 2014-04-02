@@ -1,13 +1,13 @@
 (function() {
   'use strict';
 
-  angular.module('scDashboard.controllers', ['scecUser.services']).
+  angular.module('scDashboard.controllers', ['scDashboard.services']).
 
-  controller('scdNavBarCtrl', ['$scope', '$location', 'scecCurrentUserApi',
-    function($scope, $location, currentUserApi) {
+  controller('scdNavBarCtrl', ['$scope', '$location', 'scdDashboardUserApi',
+    function($scope, $location, userApi) {
 
       $scope.activeUser = null;
-      $scope.login = currentUserApi.get('/').then(function(info) {
+      $scope.login = userApi.get().then(function(info) {
         $scope.activeUser = info;
         return info;
       });
@@ -19,9 +19,7 @@
   ]).
 
   controller('scdHomeCtrl', ['$scope',
-    function($scope) {
-      $scope.files = {};
-    }
+
   ])
 
   ;

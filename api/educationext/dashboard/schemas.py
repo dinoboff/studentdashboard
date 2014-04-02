@@ -10,7 +10,7 @@ api.schema(
         "name": String(required=True),
         "url": String(required=True),
         "sender": String(required=True),
-        "senderId": String(required=True),
+        "senderId": String(),
         "dest": String(required=True),
         "destId": String(required=True),
         "uploadedAt": String(required=True),
@@ -33,5 +33,13 @@ api.schema(
     properties={
         'cursor': String(),
         'files': Array(items='File', required=True)
+    }
+)
+
+
+api.schema(
+    'BlobStoreUploadInfo',
+    properties={
+        'url': String(required=True)
     }
 )

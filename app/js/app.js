@@ -8,7 +8,7 @@
       $routeProvider
         .when('/', {
           templateUrl: 'views/scdashboard/repository.html',
-          controller: 'scdRepositoryList'
+          controller: 'scdRepositoryListCtrl'
         })
         .otherwise({
           redirectTo: '/'

@@ -1,4 +1,4 @@
 handlers:
 
-- url: /api/v1/dashboard/.*
+- url: /api/v1/(dashboard/.*|_admin/dashboard/upload)
   script: educationext.dashboard.main.app

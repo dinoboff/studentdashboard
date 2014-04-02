@@ -8,6 +8,9 @@
       return {
         getRepositoryById: function(studentId) {
           return scdDashboardApi.one('repository', studentId).all('files').getList();
+        },
+        newUploadUrl: function(studentId) {
+          return scdDashboardApi.one('repository', studentId).one('uploadurl').post();
         }
       };
     }

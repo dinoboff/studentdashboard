@@ -193,7 +193,7 @@ module.exports = function(grunt) {
     protractor: {
       options: {
         configFile: 'config/e2e.conf.js',
-        keepAlive: false,
+        keepAlive: true,
         noColor: false,
       },
       build: {
@@ -262,6 +262,13 @@ module.exports = function(grunt) {
           '!app/lib/**/*'
         ],
         tasks: ['build']
+      },
+      e2e: {
+        files: [
+          'app/**/*',
+          '!app/lib/**/*'
+        ],
+        tasks: ['protractor:build']
       }
     },
 
@@ -345,13 +352,14 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', ['jshint', 'karma:unit']);
-  grunt.registerTask('test:e2e', [
-    'build',
-    'connect:e2e',
-    'protractor:build'
-  ]);
 
   grunt.registerTask('autotest', ['jshint', 'karma:autoUnit']);
+  grunt.registerTask('autotest:e2e', [
+    'build',
+    'connect:e2e',
+    'protractor:build',
+    'watch:e2e'
+  ]);
 
   grunt.registerTask(
     'server:dev',

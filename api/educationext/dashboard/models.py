@@ -1,3 +1,6 @@
+import time
+from email import utils
+
 from google.appengine.ext import ndb
 from google.appengine.datastore.datastore_query import Cursor
 
@@ -8,32 +11,40 @@ from educationext.core.models import Student
 class File(ndb.Model):
 
     data = ndb.JsonProperty()
-    sender_ref = ndb.KeyProperty(required=True)
+    sender_ref = ndb.KeyProperty()
     dest_ref = ndb.KeyProperty(required=True)
     uploaded_at = ndb.DateTimeProperty(auto_now_add=True)
 
     def summary(self):
         data = self.data.copy()
-        data['senderId'] = self.sender_ref.id()
-        data['destId'] = self.sender_ref.id()
+        data['destId'] = self.dest_ref.id()
         data['url'] = self.url_for(self)
-        data['uploadedAt'] = self.uploaded_at
+
+        uploaded_ts = time.mktime(self.uploaded_at.timetuple())
+        data['uploadedAt'] = utils.formatdate(uploaded_ts)
+
+        if self.sender_ref:
+            data['senderId'] = self.sender_ref.id()
+
         return data
 
     @classmethod
-    def new_file(cls, sender, dest_id, blob_info, name=None):
+    def new_file(cls, dest_id, blob_info, sender=None, name=None):
         dest = Student.get_by_id(dest_id)
+        if dest is None:
+            raise ValueError("Couldn't find the student to send the file to.")
+
         data={
             'name': name if name else blob_info.filename,
-            'sender': sender.full_name,
+            'sender': sender.full_name if sender else 'System',
             'dest': dest.full_name,
-            'lastDownloadAt': None
+            'lastDownloadAt': ''
         }
         file = cls(
             id=str(blob_info.key()),
             data=data,
-            sender_ref=sender.key(),
-            dest_ref=dest.key()
+            sender_ref=sender.key if sender else None,
+            dest_ref=dest.key
         )
         file.put()
         return file
@@ -52,7 +63,7 @@ class File(ndb.Model):
 
     @staticmethod
     def validate(data):
-        api.validate('FileData')
+        api.validate('FileData', data)
 
     def _pre_put_hook(self):
         self.validate(self.data)

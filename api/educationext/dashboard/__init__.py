@@ -8,6 +8,7 @@ class _ConfigDefaults(object):
   HOST = "http://0.0.0.0:8080/"
   PATH = '/api/v1/dashboard'
   VERSION = '1-dev'
+  UPLOAD_CB_URL = '/api/v1/_admin/dashboard/upload'
 
 config = lib_config.register('education_dashboard',  _ConfigDefaults.__dict__)
 
