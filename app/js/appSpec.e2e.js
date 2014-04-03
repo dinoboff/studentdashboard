@@ -39,6 +39,7 @@
               'files': [{
                 'destId': 'x1',
                 'name': 'test (1)',
+                'type': 'SHELF',
                 'url': '/api/v1/dashboard/repository/files/tKcnN9E5z4OFWNawW7WKaQ==',
                 'sender': 'System',
                 'lastDownloadAt': '',
@@ -47,6 +48,7 @@
               }, {
                 'dest': 'Smith, Alice',
                 'name': 'test',
+                'type': 'SHELF',
                 'url': '/api/v1/dashboard/repository/files/VXZzPGy5lw9sq2z_9ANqsA==',
                 'sender': 'System',
                 'lastDownloadAt': '',
