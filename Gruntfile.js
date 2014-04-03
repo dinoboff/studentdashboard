@@ -72,8 +72,7 @@ module.exports = function(grunt) {
           context: '/_ah',
           host: '0.0.0.0',
           port: 8080
-        }
-        ]
+        }]
       },
       screenshots: {
         options: {
@@ -217,6 +216,22 @@ module.exports = function(grunt) {
       }
     },
 
+    shell: {
+      options: {
+        stdout: true,
+        stderr: true
+      },
+      'npm_install': {
+        command: 'npm install'
+      },
+      'npm_post_install': {
+        command: [
+          './node_modules/.bin/bower install',
+          './node_modules/.bin/webdriver-manager update'
+        ].join(';')
+      }
+    },
+
     targethtml: {
       build: {
         files: {
@@ -299,10 +314,13 @@ module.exports = function(grunt) {
     // start up.
     done = this.async();
 
-    rl = readline.createInterface({input: gae.stderr, output: process.stderr});
+    rl = readline.createInterface({
+      input: gae.stderr,
+      output: process.stderr
+    });
 
     // Finish task when the server exit...
-    gae.on('exit', function(){
+    gae.on('exit', function() {
       done();
       gae = null;
       rl.close();
@@ -362,8 +380,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask(
-    'server:dev',
-    ['gae:start', 'configureProxies:devserver', 'connect:devserver']
+    'server:dev', ['gae:start', 'configureProxies:devserver', 'connect:devserver']
   );
 
   grunt.registerTask('dev', ['build', 'server:dev', 'watch:app', 'gae:stop']);
