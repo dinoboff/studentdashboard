@@ -33,7 +33,7 @@
           <td>{{file.sender}}</td>
           <td>{{file.uploadedAt}}</td>
           <td>{{file.lastDownloadAt || '-'}}</td>
-          <td><a ng-href="{{file.name}}">download</a></td>
+          <td><a ng-href="{{file.url}}">download</a></td>
         </tr>
         <tr ng-if="!files">
           <td colspan="5">Loading file list...</td>

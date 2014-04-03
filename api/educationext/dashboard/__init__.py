@@ -9,6 +9,7 @@ class _ConfigDefaults(object):
   PATH = '/api/v1/dashboard'
   VERSION = '1-dev'
   UPLOAD_CB_URL = '/api/v1/_admin/dashboard/upload'
+  DOWNLOAD_URL = '/api/v1/dashboard/repository/files/<keyId>'
 
 config = lib_config.register('education_dashboard',  _ConfigDefaults.__dict__)
 

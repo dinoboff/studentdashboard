@@ -1,4 +1,5 @@
 import json
+import urllib
 
 from educationext.core.models import Student, User
 from educationext.core.utils import ApiRequestHandler
@@ -70,9 +71,17 @@ class RepositoryFiledHandler(ApiRequestHandler):
         ffiles = [k.get_async() for k in file_keys]
 
         self.render_json({
-            'files': [ff.get_result().summary() for ff in ffiles],
+            'files': map(
+                self.file_dict,
+                [ff.get_result() for ff in ffiles]
+            ),
             'cursor': cursor.urlsafe() if cursor else ''
         })
+
+    def file_dict(self, file_):
+        data = file_.summary()
+        data['url'] = self.uri_for('download_file', keyId=file_.key.id())
+        return data
 
 
 class UploadUrlHandler(ApiRequestHandler):
@@ -112,14 +121,18 @@ class UploadUrlHandler(ApiRequestHandler):
         })
 
 
-class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
-    """Handle the call sent by the blobstore after a successful upload.
+class HandlerMixin(object):
 
-    """
     def render_json(self, data, status_code=200):
         self.response.status = status_code
         self.response.headers['Content-Type'] = "application/json"
         self.response.out.write(json.dumps(data))
+
+
+class UploadHandler(blobstore_handlers.BlobstoreUploadHandler, HandlerMixin):
+    """Handle the call sent by the blobstore after a successful upload.
+
+    """
 
     def post(self):
         self.response.headers['Content-Type'] = "application/json"
@@ -131,7 +144,6 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
                 401
             )
             return
-
 
         sender = User.get_by_id(current_user.user_id())
 
@@ -162,3 +174,30 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             return
         else:
             self.render_json(new_file.summary())
+
+
+class DownloadHandler(blobstore_handlers.BlobstoreDownloadHandler, HandlerMixin):
+    """Handle file download"""
+
+    def get(self, keyId):
+        keyId = str(urllib.unquote(keyId))
+
+        current_user = users.get_current_user()
+        if not current_user:
+            self.error(401)
+            return
+
+        doc = models.File.get_by_id(keyId)
+        viewer = User.get_by_id(current_user.user_id())
+        if (viewer is None
+            or viewer.staff_id is None
+            or viewer.student_id  is None
+            or viewer.student_id != doc.dest_ref.id()
+        ):
+            if not users.is_current_user_admin():
+                # self.error(403)
+                # everyone is admin
+                pass
+
+        blob_info = blobstore.BlobInfo.get(keyId)
+        self.send_blob(blob_info)
