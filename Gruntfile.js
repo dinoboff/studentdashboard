@@ -366,7 +366,7 @@ module.exports = function(grunt) {
     ['gae:start', 'configureProxies:devserver', 'connect:devserver']
   );
 
-  grunt.registerTask('dev', ['build', 'server:dev', 'watch', 'gae:stop']);
+  grunt.registerTask('dev', ['build', 'server:dev', 'watch:app', 'gae:stop']);
 
   grunt.registerTask('default', ['test', 'build', 'server:dev', 'autoshot', 'gae:stop']);
 

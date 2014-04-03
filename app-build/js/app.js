@@ -142,7 +142,8 @@
       'scdRepository.services',
       'scecStudents.services',
       'scDashboard.services',
-      'angularFileUpload'
+      'angularFileUpload',
+      'scdRepository.directives'
     ]
   ).
 
@@ -212,6 +213,7 @@
       function onSucess(data) {
         $scope.files.unshift(data);
         $scope.success = 'New file uploaded.';
+        $scope.selected.file = null;
         $scope.reset();
       }
 
@@ -232,17 +234,18 @@
             onSucess
           );
         });
+
       }
 
       $scope.reset = function() {
         $scope.fileMeta = {};
+        $scope.selected.file = null;
         $scope.showProgress = false;
         $scope.progress = 0;
       };
 
-      $scope.onFileSelect = function(files) {
-        $scope.fileMeta.name = files[0].name;
-        $scope.selected.file = files[0];
+      $scope.onFileSelect = function(file) {
+        $scope.fileMeta.name = file.name;
       };
 
       $scope.uploadButtonClicked = function(file) {
@@ -251,6 +254,52 @@
       };
 
       $scope.reset();
+    }
+  ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  angular.module('scdRepository.directives', []).
+
+
+  directive('scdFile', ['$parse',
+    function($parse) {
+      return {
+        link: function($scope, elem, attr) {
+          var onSelect = $parse(attr.scdSelected),
+            fileSetter = $parse(attr.scdFile).assign;
+
+          elem.bind('change', function(evt) {
+            var files = [],
+              fileList, i;
+
+            fileList = evt.target.files;
+            if (fileList !== null) {
+              for (i = 0; i < fileList.length; i++) {
+                files.push(fileList.item(i));
+              }
+            }
+
+            fileSetter($scope, files.length > 0 ? files[0] : null);
+            onSelect($scope);
+            $scope.$digest();
+          });
+
+          elem.bind('click', function() {
+            this.value = null;
+          });
+
+          $scope.$watch(attr.scdFile, function(newVal) {
+            if (!newVal) {
+              elem.get(0).value = null;
+            }
+          });
+        }
+      };
     }
   ])
 
