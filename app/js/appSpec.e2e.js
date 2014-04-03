@@ -65,6 +65,7 @@
             $httpBackend.whenPOST('http://0.0.0.0:8888/_ah/upload/some-key').respond({
               'destId': 'x1',
               'name': 'download',
+              'type': 'SHELF',
               'url': '/api/v1/dashboard/repository/files/cz_nR76O_kT5rFWy1sdrqw==',
               'sender': 'System',
               'lastDownloadAt': '',
