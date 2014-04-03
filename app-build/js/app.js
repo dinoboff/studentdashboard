@@ -205,6 +205,7 @@
 
   controller('scdRepositoryUploadFileCtrl', ['$scope', '$upload', 'scdRepositoryApi',
     function($scope,$upload, scdRepositoryApi) {
+      $scope.docTypes = ['SHELF', 'USMLE', 'Peer Evaluations'];
 
       function onProgress(evt) {
         $scope.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
@@ -224,7 +225,8 @@
             method: 'POST',
             withCredentials: true,
             data: {
-              name: $scope.fileMeta.name,
+              name: $scope.fileMeta.name || file.name,
+              docType: $scope.fileMeta.docType,
               destId: $scope.selected.student.id
             },
             file: file

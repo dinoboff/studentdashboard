@@ -28,13 +28,14 @@ class File(ndb.Model):
         return data
 
     @classmethod
-    def new_file(cls, dest_id, blob_info, sender=None, name=None):
+    def new_file(cls, dest_id, blob_info, doc_type, sender=None, name=None):
         dest = Student.get_by_id(dest_id)
         if dest is None:
             raise ValueError("Couldn't find the student to send the file to.")
 
         data={
             'name': name if name else blob_info.filename,
+            'type': doc_type,
             'sender': sender.full_name if sender else 'System',
             'dest': dest.full_name,
             'lastDownloadAt': ''

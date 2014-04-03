@@ -2,6 +2,8 @@ from educationext.dashboard import api
 from webapp2ext.swagger import String, Array
 
 
+DOCUMENT_TYPES = ["SHELF", "USMLE", "Peer Evaluations"]
+
 
 api.schema(
     'File',
@@ -9,6 +11,7 @@ api.schema(
     properties={
         "name": String(required=True),
         "url": String(required=True),
+        "type": String(required=True, enum=DOCUMENT_TYPES),
         "sender": String(required=True),
         "senderId": String(),
         "dest": String(required=True),
@@ -22,6 +25,7 @@ api.schema(
     'FileData',
     properties={
         "name": String(required=True),
+        "type": String(required=True, enum=DOCUMENT_TYPES),
         "sender": String(required=True),
         "dest": String(required=True),
         "lastDownloadAt": String()

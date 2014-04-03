@@ -21,6 +21,7 @@
       <thead>
         <tr>
           <th>Name</th>
+          <th>Type</th>
           <th>Sender</th>
           <th>Sent date</th>
           <th>Last download data</th>
@@ -30,6 +31,7 @@
       <tbody>
         <tr ng-repeat="file in files" class="file-details">
           <td>{{file.name}}</td>
+          <td>{{file.type}}</td>
           <td>{{file.sender}}</td>
           <td>{{file.uploadedAt}}</td>
           <td>{{file.lastDownloadAt || '-'}}</td>
@@ -67,10 +69,19 @@
             />
           </div>
 
+          <div class="form-group">
+            <label for="selected-doc-type">Document type</label>
+            <select id="selected-doc-type" class="form-control" ng-model="fileMeta.docType"
+              ng-options="n for n in docTypes"
+            >
+              <option value="">Select a document type</option>
+            </select>
+          </div>
+
           <button type="submit" class="btn btn-primary btn-block"
             ng-click="uploadButtonClicked(selected.file)"
             ng-hide="showProgress"
-            ng-disabled="!selected.file"
+            ng-disabled="!selected.file || !fileMeta.docType"
             id="upload-file"
           >
             Upload

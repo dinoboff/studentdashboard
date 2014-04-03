@@ -1,6 +1,7 @@
 import json
 import urllib
 
+import webapp2
 from educationext.core.models import Student, User
 from educationext.core.utils import ApiRequestHandler
 from google.appengine.api import users
@@ -160,12 +161,26 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler, HandlerMixin):
         blob_info = upload_files[0]
         dest_id = self.request.POST.get('destId')
         name = self.request.POST.get('name', blob_info.filename)
+        doc_type = self.request.POST.get('docType')
 
         if not dest_id:
-            self.abort(400, 'No recipent was given.')
+            self.render_json(
+                {"error": 'No recipent was given.'},
+                400
+            )
+            return
+
+        if not doc_type:
+            self.render_json(
+                {"error": 'A document should have a typ.'},
+                400
+            )
+            return
 
         try:
-            new_file = models.File.new_file(dest_id, blob_info, sender, name)
+            new_file = models.File.new_file(
+                dest_id, blob_info, doc_type, sender, name
+            )
         except (ValueError, ValidationError,), e:
             self.render_json(
                 {"error": "Failed to safe new file (%s)." % str(e)},
@@ -173,7 +188,11 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler, HandlerMixin):
             )
             return
         else:
-            self.render_json(new_file.summary())
+            data = new_file.summary()
+            data['url'] = webapp2.uri_for(
+                'download_file', keyId=new_file.key.id()
+            )
+            self.render_json(data)
 
 
 class DownloadHandler(blobstore_handlers.BlobstoreDownloadHandler, HandlerMixin):

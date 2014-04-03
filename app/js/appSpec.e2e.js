@@ -93,6 +93,11 @@
         return element(by.css('#file-select'));
       };
 
+      this.fileTypeSelectOptions = function() {
+        return element(by.css('#selected-doc-type')).
+          findElements(by.tagName('option'));
+      };
+
       this.fileName = function() {
         return element(by.css('#file-name'));
       };
@@ -107,6 +112,12 @@
 
       this.selectStudent = function(index) {
         return this.studentOptions().then(function(options) {
+          return options[index].click();
+        });
+      };
+
+      this.selectFileType = function(index) {
+        return this.fileTypeSelectOptions().then(function(options) {
           return options[index].click();
         });
       };
@@ -144,6 +155,7 @@
       expect(element(by.css('#upload-form')).isDisplayed()).toBe(true);
       page.selectFile(readMe);
       expect(page.fileName().getAttribute('value')).toBe('README.md');
+      page.selectFileType(1);
       takeScreenShot('file-selected');
 
       var button = page.uploadButton();
