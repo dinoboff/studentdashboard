@@ -17,9 +17,10 @@
 import webapp2
 
 from educationext.dashboard import api, config
-from educationext.dashboard.controllers import UploadHandler
+from educationext.dashboard.controllers import UploadHandler, DownloadHandler
 
 app = webapp2.WSGIApplication([
-    (config.UPLOAD_CB_URL, UploadHandler,),
+    webapp2.Route(config.UPLOAD_CB_URL, UploadHandler),
+    webapp2.Route(config.DOWNLOAD_URL, DownloadHandler, name='download_file'),
     api.routes(),
 ], debug=True)

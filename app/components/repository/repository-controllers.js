@@ -6,7 +6,8 @@
       'scdRepository.services',
       'scecStudents.services',
       'scDashboard.services',
-      'angularFileUpload'
+      'angularFileUpload',
+      'scdRepository.directives'
     ]
   ).
 
@@ -76,6 +77,7 @@
       function onSucess(data) {
         $scope.files.unshift(data);
         $scope.success = 'New file uploaded.';
+        $scope.selected.file = null;
         $scope.reset();
       }
 
@@ -96,17 +98,18 @@
             onSucess
           );
         });
+
       }
 
       $scope.reset = function() {
         $scope.fileMeta = {};
+        $scope.selected.file = null;
         $scope.showProgress = false;
         $scope.progress = 0;
       };
 
-      $scope.onFileSelect = function(files) {
-        $scope.fileMeta.name = files[0].name;
-        $scope.selected.file = files[0];
+      $scope.onFileSelect = function(file) {
+        $scope.fileMeta.name = file.name;
       };
 
       $scope.uploadButtonClicked = function(file) {

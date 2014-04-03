@@ -4,13 +4,15 @@
 (function() {
   'use strict';
 
+  var path = require('path'),
+    readMe = path.resolve(__dirname, '../../README.md');
+
   describe('dashboard', function() {
 
     var ptor = protractor.getInstance(),
       httpBackendMock = function() {
         angular.module('httpBackendMock', ['ngMockE2E', 'scDashboard'])
-          .run(function($httpBackend, $window) {
-            $window.document.body.style.overflowY = 'hidden';
+          .run(function($httpBackend) {
 
             $httpBackend.whenGET(/\/api\/v1\/user/).respond({
               isAdmin: true,
@@ -58,7 +60,7 @@
               'url': 'http://0.0.0.0:8888/_ah/upload/some-key'
             });
 
-            $httpBackend.whenPOST('/_ah/upload/some-key').respond({
+            $httpBackend.whenPOST('http://0.0.0.0:8888/_ah/upload/some-key').respond({
               'destId': 'x1',
               'name': 'download',
               'url': '/api/v1/dashboard/repository/files/cz_nR76O_kT5rFWy1sdrqw==',
@@ -87,14 +89,30 @@
         return this.studentSelector.findElements(by.tagName('option'));
       };
 
+      this.fileSelect = function() {
+        return element(by.css('#file-select'));
+      };
+
+      this.fileName = function() {
+        return element(by.css('#file-name'));
+      };
+
+      this.uploadButton = function() {
+        return element(by.css('#upload-form button[type=submit]'));
+      };
+
       this.get = function() {
         return browser.get('http://0.0.0.0:5557/app/');
       };
 
       this.selectStudent = function(index) {
-        return this.studentSelector.findElements(by.tagName('option')).then(function(options) {
-          options[index].click();
+        return this.studentOptions().then(function(options) {
+          return options[index].click();
         });
+      };
+
+      this.selectFile = function(path) {
+        return this.fileSelect().sendKeys(path);
       };
 
     };
@@ -108,21 +126,35 @@
 
       takeScreenShot('home').then(function(){
         return page.studentSelector.click();
-      }).then(function() {
-        return page.studentOptions();
-      }).then(function(options) {
+      }).then(page.studentOptions.bind(page)).then(function(options) {
         expect(options.length).toBe(3);
         options[1].click();
-        return takeScreenShot('student-selected');
       }).then(function(){
-        return page.files();
-      }).then(function(files){
+        takeScreenShot('student-selected');
+      }).then(page.files.bind(page)).then(function(files){
         expect(files.length).toBe(2);
       });
 
+    });
+
+    it('should let an admin upload a file', function() {
+      var page = new RepositoryHomepage();
+
+      page.selectStudent(1);
+      expect(element(by.css('#upload-form')).isDisplayed()).toBe(true);
+      page.selectFile(readMe);
+      expect(page.fileName().getAttribute('value')).toBe('README.md');
+      takeScreenShot('file-selected');
+
+      var button = page.uploadButton();
+      expect(page.uploadButton().isDisplayed()).toBe(true);
+      button.click();
 
 
-      // page.selectStudent(1);
+      page.files().then(function(files) {
+        expect(files.length).toBe(3);
+        takeScreenShot('file-uploaded');
+      });
 
     });
 

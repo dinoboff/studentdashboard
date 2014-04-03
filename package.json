@@ -4,7 +4,8 @@
   "description": "The student dashboard enables instructors to upload PDF’s for individual student.",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "grunt test",
+    "postinstall": "grunt shell:npm_post_install"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
     "grunt-karma": "^0.8.2",
     "grunt-protractor-runner": "^0.2.4",
     "grunt-rev": "^0.1.0",
+    "grunt-shell": "^0.6.4",
     "grunt-targethtml": "^0.2.6",
     "grunt-usemin": "^2.1.0",
     "karma": "^0.12.1",

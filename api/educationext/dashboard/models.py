@@ -4,7 +4,7 @@ from email import utils
 from google.appengine.ext import ndb
 from google.appengine.datastore.datastore_query import Cursor
 
-from educationext.dashboard import api, config
+from educationext.dashboard import api
 from educationext.core.models import Student
 
 
@@ -18,7 +18,6 @@ class File(ndb.Model):
     def summary(self):
         data = self.data.copy()
         data['destId'] = self.dest_ref.id()
-        data['url'] = self.url_for(self)
 
         uploaded_ts = time.mktime(self.uploaded_at.timetuple())
         data['uploadedAt'] = utils.formatdate(uploaded_ts)
@@ -55,11 +54,6 @@ class File(ndb.Model):
         q = cls.query().filter(cls.dest_ref == student_key)
         q = q.order(-cls.uploaded_at)
         return q.fetch_page(20, cursor=cursor, **kw)
-
-
-    @staticmethod
-    def url_for(file):
-        return '%s/repository/files/%s' % (config.PATH, file.key.id(),)
 
     @staticmethod
     def validate(data):
