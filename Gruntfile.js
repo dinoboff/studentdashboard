@@ -344,6 +344,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('dev', ['build', 'server:dev', 'watch:app']);
 
-  grunt.registerTask('default', ['test', 'build', 'server:dev', 'autoshot']);
+  grunt.registerTask('default', ['test', 'build', 'server:dev']);
 
 };
