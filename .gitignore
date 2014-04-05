@@ -17,4 +17,3 @@ node_modules/
 app/lib
 app-dist/
 app-e2e/
-pyenv/

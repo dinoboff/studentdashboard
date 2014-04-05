@@ -1,4 +1,0 @@
-handlers:
-
-- url: /api/v1/(students|staff|user|api-docs|json-schemas)(/.*)?
-  script: educationext.core.main.app
