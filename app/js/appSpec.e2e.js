@@ -11,67 +11,30 @@
 
     var ptor = protractor.getInstance(),
       httpBackendMock = function() {
-        angular.module('httpBackendMock', ['ngMockE2E', 'scDashboard'])
-          .run(function($httpBackend) {
+        angular.module('httpBackendMock', ['ngMockE2E', 'scDashboard', 'scDashboardMocked.fixtures'])
+          .run(function($httpBackend, SC_DASHBOARD_FIXTURES) {
+            var fix = SC_DASHBOARD_FIXTURES,
+              students = fix.data.students;
 
-            $httpBackend.whenGET(/\/api\/v1\/user/).respond({
-              isAdmin: true,
-              isStaff: false,
-              logoutUrl: '/logout',
-              isStudent: false,
-              name: 'test@example.com'
-            });
+            $httpBackend.whenGET(fix.urls.login).respond(fix.data.user);
 
-            $httpBackend.whenGET('/api/v1/students').respond({
-              'students': [{
-                'firstName': 'Alice',
-                'lastName': 'Smith',
-                'id': 'x1'
-              }, {
-                'firstName': 'Bob',
-                'lastName': 'Taylor',
-                'id': 'x2'
-              }],
+            $httpBackend.whenGET(fix.urls.students).respond({
+              'students': Object.keys(students).map(function(k) {return students[k];}),
               'cursor': 'E-ABAOsB8gEJZnVsbF9uYW1l-gENGgt0YXlsb3IsIGJvYuwBggInahRkZXZ-c3R1ZGVudGRhc2hib2FyZHIPCxIHU3R1ZGVudCICeDIMFA=='
             });
 
-            $httpBackend.whenGET('/api/v1/dashboard/repository/x1/files').respond({
-              'files': [{
-                'destId': 'x1',
-                'name': 'test (1)',
-                'type': 'SHELF',
-                'url': '/api/v1/dashboard/repository/files/tKcnN9E5z4OFWNawW7WKaQ==',
-                'sender': 'System',
-                'lastDownloadAt': '',
-                'dest': 'Smith, Alice',
-                'uploadedAt': 'Wed, 02 Apr 2014 21:39:03 -0000'
-              }, {
-                'dest': 'Smith, Alice',
-                'name': 'test',
-                'type': 'SHELF',
-                'url': '/api/v1/dashboard/repository/files/VXZzPGy5lw9sq2z_9ANqsA==',
-                'sender': 'System',
-                'lastDownloadAt': '',
-                'uploadedAt': 'Wed, 02 Apr 2014 21:31:42 -0000',
-                'destId': 'x1'
-              }],
+            $httpBackend.whenGET(fix.urls.studentFiles).respond({
+              'files': fix.data.files(students.x1, 2),
               'cursor': 'E-ABAOsB8gELdXBsb2FkZWRfYXT6AQkI98SWrqPCvQLsAYICOmoUZGV2fnN0dWRlbnRkYXNoYm9hcmRyIgsSBEZpbGUiGDRSYlBuS0xBUFgtb1JfR0xQQUZ3N1E9PQwU'
             });
 
-            $httpBackend.whenPOST('/api/v1/dashboard/repository/x1/uploadurl').respond({
-              'url': 'http://0.0.0.0:8888/_ah/upload/some-key'
-            });
+            $httpBackend.whenPOST(
+              fix.urls.uploadUrl).respond(fix.data.uploadUrl
+            );
 
-            $httpBackend.whenPOST('http://0.0.0.0:8888/_ah/upload/some-key').respond({
-              'destId': 'x1',
-              'name': 'download',
-              'type': 'SHELF',
-              'url': '/api/v1/dashboard/repository/files/cz_nR76O_kT5rFWy1sdrqw==',
-              'sender': 'System',
-              'lastDownloadAt': '',
-              'dest': 'Smith, Alice',
-              'uploadedAt': 'Wed, 02 Apr 2014 23:16:53 -0000'
-            });
+            $httpBackend.whenPOST(fix.urls.upload).respond(
+              fix.data.newFile('new file', 'x1', 'Alice Smith')
+            );
 
             $httpBackend.whenGET(/.*/).passThrough();
 
@@ -110,7 +73,7 @@
       };
 
       this.get = function() {
-        return browser.get('http://0.0.0.0:5557/app/');
+        return browser.get('http://0.0.0.0:5557/app-e2e/');
       };
 
       this.selectStudent = function(index) {
@@ -153,6 +116,8 @@
 
     it('should let an admin upload a file', function() {
       var page = new RepositoryHomepage();
+
+      page.get();
 
       page.selectStudent(1);
       expect(element(by.css('#upload-form')).isDisplayed()).toBe(true);

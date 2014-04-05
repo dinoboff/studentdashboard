@@ -1,8 +1,32 @@
 'use strict';
 
-var spawn = require('child_process').spawn,
-  readline = require('readline'),
-  modRewrite = require('connect-modrewrite');
+var modRewrite = require('connect-modrewrite');
+
+function middleware(baseDir) {
+  return function(connect, options) {
+    var middlewares = [];
+    var directory = options.directory || options.base[options.base.length - 1];
+    if (!Array.isArray(options.base)) {
+      options.base = [options.base];
+    }
+
+    middlewares.push(modRewrite([
+      '^/students/$ ' + baseDir + '/lib/educationext.core/app-build/index.html [L]',
+      '^/students/(.+)$ ' + baseDir + '/lib/educationext.core/app-build/$1',
+    ]));
+
+    options.base.forEach(function(base) {
+      // Serve static files.
+      middlewares.push(connect.static(base));
+    });
+
+    // Make directory browse-able.
+    middlewares.push(connect.directory(directory));
+
+
+    return middlewares;
+  };
+}
 
 module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
@@ -10,6 +34,14 @@ module.exports = function(grunt) {
   grunt.initConfig({
 
     clean: {
+      build: {
+        files: [{
+          dot: true,
+          src: [
+            'app-build',
+          ]
+        }]
+      },
       dist: {
         files: [{
           dot: true,
@@ -18,14 +50,14 @@ module.exports = function(grunt) {
           ]
         }]
       },
-      build: {
+      e2e: {
         files: [{
           dot: true,
           src: [
-            'app-build',
+            'app-e2e',
           ]
         }]
-      }
+      },
     },
 
     concat: {},
@@ -38,41 +70,8 @@ module.exports = function(grunt) {
       devserver: {
         options: {
           port: 8888,
-          middleware: function(connect, options) {
-            var middlewares = [];
-            var directory = options.directory || options.base[options.base.length - 1];
-            if (!Array.isArray(options.base)) {
-              options.base = [options.base];
-            }
-            // Setup the proxy
-            middlewares.push(require('grunt-connect-proxy/lib/utils').proxyRequest);
-
-            middlewares.push(modRewrite([
-              '^/students/$ /app/lib/educationext.core/app-build/index.html [L]',
-              '^/students/(.+)$ /app/lib/educationext.core/app-build/$1',
-            ]));
-
-            options.base.forEach(function(base) {
-              // Serve static files.
-              middlewares.push(connect.static(base));
-            });
-
-            // Make directory browse-able.
-            middlewares.push(connect.directory(directory));
-
-
-            return middlewares;
-          }
-        },
-        proxies: [{
-          context: '/api/v1',
-          host: '0.0.0.0',
-          port: 8080
-        }, {
-          context: '/_ah',
-          host: '0.0.0.0',
-          port: 8080
-        }]
+          middleware: middleware('/app')
+        }
       },
       screenshots: {
         options: {
@@ -83,7 +82,8 @@ module.exports = function(grunt) {
       },
       e2e: {
         options: {
-          port: 5557
+          port: 5557,
+          middleware: middleware('/app-e2e')
         }
       }
     },
@@ -143,6 +143,17 @@ module.exports = function(grunt) {
             'FileAPI.*'
           ]
         }]
+      },
+      e2e: {
+        files: [{
+          expand: true,
+          dot: true,
+          cwd: 'app',
+          dest: 'app-e2e',
+          src: [
+            '**/*'
+          ]
+        }]
       }
     },
 
@@ -195,10 +206,10 @@ module.exports = function(grunt) {
         keepAlive: true,
         noColor: false,
       },
-      build: {
+      dev: {
         options: {
           args: {
-            specs: ['app/js/appSpec.e2e.js']
+            specs: ['app-e2e/js/appSpec.e2e.js']
           }
         }
       },
@@ -236,6 +247,11 @@ module.exports = function(grunt) {
       build: {
         files: {
           'app-build/index.html': 'app-build/index.html'
+        }
+      },
+      e2e: {
+        files: {
+          'app-e2e/index.html': 'app-e2e/index.html'
         }
       }
     },
@@ -289,65 +305,6 @@ module.exports = function(grunt) {
 
   });
 
-  grunt.registerTask('gae:start', 'run "make server".', function() {
-    var kill, exit, done, rl, gae;
-
-    // Start the server.
-    //
-    // TODO: convert the make task to a grunt task.
-    gae = spawn('make', ['serve'], {
-      stdio: [process.stdin, process.stdout, 'pipe']
-    });
-
-    kill = function() {
-      if (gae && gae.connected) {
-        gae.kill();
-      }
-    };
-
-    exit = function() {
-      kill();
-      process.exit();
-    };
-
-    // make this task async. We need to give the server some time to
-    // start up.
-    done = this.async();
-
-    rl = readline.createInterface({
-      input: gae.stderr,
-      output: process.stderr
-    });
-
-    // Finish task when the server exit...
-    gae.on('exit', function() {
-      done();
-      gae = null;
-      rl.close();
-    });
-
-    // ... or when the server is ready
-    rl.on('line', function(log) {
-      if (log.indexOf('Starting admin server') > -1) {
-        done();
-      } else if (log.indexOf('Unable to bind') > -1) {
-        kill();
-        done();
-      }
-    });
-
-    // Stop the server when asked...
-    grunt.event.on('gae.stop', kill);
-
-    // ... Or when the all grunt tasks stop
-    process.on('uncaughtException', exit);
-    process.on('SIGINT', exit);
-  });
-
-  grunt.registerTask('gae:stop', 'stop dev server.', function() {
-    grunt.event.emit('gae.stop');
-  });
-
   grunt.registerTask('build:assets', [
     'jshint',
     'clean:build',
@@ -374,17 +331,19 @@ module.exports = function(grunt) {
   grunt.registerTask('autotest', ['jshint', 'karma:autoUnit']);
   grunt.registerTask('autotest:e2e', [
     'build',
+    'copy:e2e',
+    'targethtml:e2e',
     'connect:e2e',
-    'protractor:build',
+    'protractor:dev',
     'watch:e2e'
   ]);
 
   grunt.registerTask(
-    'server:dev', ['gae:start', 'configureProxies:devserver', 'connect:devserver']
+    'server:dev', ['connect:devserver']
   );
 
-  grunt.registerTask('dev', ['build', 'server:dev', 'watch:app', 'gae:stop']);
+  grunt.registerTask('dev', ['build', 'server:dev', 'watch:app']);
 
-  grunt.registerTask('default', ['test', 'build', 'server:dev', 'autoshot', 'gae:stop']);
+  grunt.registerTask('default', ['test', 'build', 'server:dev']);
 
 };

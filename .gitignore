@@ -16,4 +16,4 @@ npm-debug.log
 node_modules/
 app/lib
 app-dist/
-pyenv/
+app-e2e/
