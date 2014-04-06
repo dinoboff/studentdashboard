@@ -40778,32 +40778,29 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
   'use strict';
 
   angular.module(
-    'scEducationCore',
+    'scCoreEducation',
     [
       'ngRoute',
-      'scEducationCore.controllers',
-      'scecStudents.controllers',
-      'scecStaff.controllers',
+      'scCoreEducation.controllers',
+      'scceStudents.controllers',
+      'scceStaff.controllers',
+      'scCoreEducation.templates'
     ]
   ).
 
   config(['$routeProvider',
     function($routeProvider) {
       $routeProvider
-        .when('/', {
-          templateUrl: 'views/sceducationcore/home.html',
-          controller: 'scecHomeCtrl'
-        })
         .when('/students', {
-          templateUrl: 'views/sceducationcore/studentlist.html',
-          controller: 'scecStudentListCtrl'
+          templateUrl: 'views/sccoreeducation/studentlist.html',
+          controller: 'scceStudentListCtrl'
         })
         .when('/staff', {
-          templateUrl: 'views/sceducationcore/stafflist.html',
-          controller: 'scecStaffListCtrl'
+          templateUrl: 'views/sccoreeducation/stafflist.html',
+          controller: 'scceStaffListCtrl'
         })
         .otherwise({
-          redirectTo: '/'
+          redirectTo: '/students'
         });
     }
   ])
@@ -40814,9 +40811,9 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 (function() {
   'use strict';
 
-  angular.module('scEducationCore.config', []).
+  angular.module('scCoreEducation.config', []).
 
-  constant('SCEC_API_BASE', '/api/v1')
+  constant('SCCE_API_BASE', '/api/v1')
 
   ;
 })();
@@ -40835,12 +40832,12 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
     return resp;
   };
 
-  angular.module('scEducationCore.services', ['restangular', 'scEducationCore.config']).
+  angular.module('scCoreEducation.services', ['restangular', 'scCoreEducation.config']).
 
-  service('scecApi', ['Restangular', 'SCEC_API_BASE',
-    function(Restangular, SCEC_API_BASE) {
+  service('scceApi', ['Restangular', 'SCCE_API_BASE',
+    function(Restangular, SCCE_API_BASE) {
       return Restangular.withConfig(function(RestangularConfigurer) {
-        RestangularConfigurer.setBaseUrl(SCEC_API_BASE);
+        RestangularConfigurer.setBaseUrl(SCCE_API_BASE);
         RestangularConfigurer.addResponseInterceptor(interceptor);
       });
     }
@@ -40851,12 +40848,12 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 (function() {
   'use strict';
 
-  angular.module('scEducationCore.controllers', ['scecUser.services']).
+  angular.module('scCoreEducation.controllers', ['scceUser.services']).
 
-  controller('scecNavBarCtrl', ['$scope', '$location', 'scecCurrentUserApi',
-    function($scope, $location, scecCurrentUser) {
+  controller('scceNavBarCtrl', ['$scope', '$location', 'scceCurrentUserApi',
+    function($scope, $location, scceCurrentUser) {
       $scope.activeUser = null;
-      scecCurrentUser.get('/').then(function(info) {
+      scceCurrentUser.get().then(function(info) {
         $scope.activeUser = info;
       });
 
@@ -40866,7 +40863,7 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
     }
   ]).
 
-  controller('scecHomeCtrl', ['$scope',
+  controller('scceHomeCtrl', ['$scope',
     function($scope) {
       $scope.files = {};
     }
@@ -40878,17 +40875,29 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 (function() {
   'use strict';
 
-  angular.module('scecUser.services', ['scEducationCore.services']).
+  angular.module('scceUser.services', ['scCoreEducation.services']).
 
-  factory('scecCurrentUserApi', ['$location', '$q', 'scecApi',
-    function($location, $q, scecApi) {
+  /**
+   * scceCurrentUserApi - api to access user info.
+   *
+   * scceCurrentUserApi.get(returnUrl)  Return the user name, id and the
+   * the logout url if the user logged in. Return the login url if the
+   * user logged off.
+   *
+   * Note that it returns a promise that resole in either case. If the promise
+   * fails, there was either a problem with the optional return url, or
+   * there's an unexpected issue with the backend.
+   *
+   */
+  factory('scceCurrentUserApi', ['$location', '$q', 'scceApi',
+    function($location, $q, scceApi) {
       return {
         get: function(returnUrl) {
           var params = {
             returnUrl: returnUrl || $location.absUrl()
           };
 
-          return scecApi.one('user').get(params).then(function(data) {
+          return scceApi.one('user').get(params).then(function(data) {
             return data;
           }).catch(function(resp) {
             if (resp.status === 401) {
@@ -40906,20 +40915,112 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 (function() {
   'use strict';
 
+  angular.module('scceUser.directives', ['scCoreEducation.templates']).
 
-  angular.module('scecStudents.services', ['scEducationCore.services']).
+  /**
+   * Directive displaying a list of user (student or staff)
+   *
+   * usage:
+   *
+   *  <scce-user-grid scce-users="studentList" scce-user-type="students">
+   *  </scce-user-grid>
+   *
+   * Where students `scce-users` should reference a list of students
+   * and `scce-user-type` is type of user ('students' or 'staff').
+   *
+   * Note that `scce-user-type` doesn't reference a scope attribute and
+   * we be evaulated either.
+   *
+   */
+  directive('scceUserGrid', function() {
+    return {
+      restrict: 'E',
+      templateUrl: 'views/sccoreeducation/user/grid.html',
+      scope: {
+        users: '=scceUsers',
+        userType: '@scceUserType'
+      }
+    };
+  }).
 
-  factory('scecStudentsApi', ['scecApi',
-    function(scecApi) {
+  /**
+   * Form to create a new user.
+   *
+   * usage:
+   *
+   *  <scce-user-form
+   *    scce-user-type="student"
+   *    scce-user-handler="submitNewStudent"
+   *   >
+   *  </scce-user-form>
+   *
+   * Where `scce-user-type` is either 'student' or 'staff' and
+   * scce-user-handler reference a function trigger when the form is submitted
+   * .It take a user as argument and returning a promise that should resolve
+   * a truthy value when the form is safe to reset.
+   *
+   * If the handler return a positive value instead of a promise, the form
+   * will be reset right after submission.
+   *
+   */
+  directive('scceUserForm', ['$q',
+    function($q) {
+      return {
+        restrict: 'E',
+        templateUrl: 'views/sccoreeducation/user/form.html',
+        controller: ['$scope',
+          function($scope) {
+            $scope.submitNewUser = function(newUser) {
+              if (!$scope.onSubmit) {
+                $scope.reset();
+                return;
+              }
+
+              $scope.disableForm = true;
+              $q.when($scope.onSubmit(newUser)).then(function(result) {
+                if (result) {
+                  $scope.reset();
+                }
+              });
+            };
+
+            $scope.reset = function() {
+              $scope.disableForm = false;
+              $scope.newUser = {};
+            };
+
+            $scope.reset();
+          }
+        ],
+        scope: {
+          userType: '@scceUserType',
+          onSubmit: '=scceUserHandler'
+        }
+      };
+    }
+  ])
+
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+
+  angular.module('scceStudents.services', ['scCoreEducation.services']).
+
+  factory('scceStudentsApi', ['scceApi',
+    function(scceApi) {
       return {
         all: function() {
-          return scecApi.all('students').getList();
+          return scceApi.all('students').getList();
         },
         add: function(data) {
-          return scecApi.all('students').post(data);
+          return scceApi.all('students').post(data);
         },
         edit: function(id, data) {
-          scecApi.one('students', id).customPUT(data);
+          scceApi.one('students', id).customPUT(data);
         }
       };
     }
@@ -40931,29 +41032,27 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 (function() {
   'use strict';
 
-  angular.module('scecStudents.controllers', ['scecStudents.services']).
+  angular.module('scceStudents.controllers', [
+    'scceStudents.services', 'scceUser.directives', 'scCoreEducation.templates'
+  ]).
 
-  controller('scecStudentListCtrl', ['$scope', 'scecStudentsApi',
-    function($scope, scecStudentsApi) {
+  controller('scceStudentListCtrl', ['$scope', 'scceStudentsApi',
+    function($scope, scceStudentsApi) {
       $scope.students = null;
-      $scope.addingStudent = false;
 
       $scope.submitNewStudent = function(newStudent) {
-        $scope.addingStudent = true;
-        scecStudentsApi.add(newStudent).then(function(student) {
-          $scope.newStudent = {};
+        scceStudentsApi.add(newStudent).then(function(student) {
           $scope.students.push(student);
-          return student;
-        })['finally'](function() {
-          $scope.addingStudent = false;
+          return 'done';
         });
       };
 
       $scope.listStudent = function() {
-        return scecStudentsApi.all().then(function(list) {
+        return scceStudentsApi.all().then(function(list) {
           $scope.students = list;
           return list;
-        }).catch(function(data) {
+        }).
+        catch (function(data) {
           if (data.status === 401) {
             $scope.error = 'You need to be logged in to view the list.';
           } else if (data.status === 403) {
@@ -40975,19 +41074,19 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
   'use strict';
 
 
-  angular.module('scecStaff.services', ['scEducationCore.services']).
+  angular.module('scceStaff.services', ['scCoreEducation.services']).
 
-  factory('scecStaffApi', ['scecApi',
-    function(scecApi) {
+  factory('scceStaffApi', ['scceApi',
+    function(scceApi) {
       return {
         all: function() {
-          return scecApi.all('staff').getList();
+          return scceApi.all('staff').getList();
         },
         add: function(data) {
-          return scecApi.all('staff').post(data);
+          return scceApi.all('staff').post(data);
         },
         edit: function(id, data) {
-          scecApi.one('staff', id).customPUT(data);
+          scceApi.one('staff', id).customPUT(data);
         }
       };
     }
@@ -40999,29 +41098,27 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 (function() {
   'use strict';
 
-  angular.module('scecStaff.controllers', ['scecStaff.services']).
+  angular.module('scceStaff.controllers', [
+    'scceStaff.services', 'scceUser.directives', 'scCoreEducation.templates'
+  ]).
 
-  controller('scecStaffListCtrl', ['$scope', 'scecStaffApi',
-    function($scope, scecStaffApi) {
+  controller('scceStaffListCtrl', ['$scope', 'scceStaffApi',
+    function($scope, scceStaffApi) {
       $scope.staff = null;
-      $scope.addingStaff = false;
 
       $scope.submitNewStaff = function(newStaff) {
-        $scope.addingStaff = true;
-        scecStaffApi.add(newStaff).then(function(staff) {
-          $scope.newStaff = {};
+        return scceStaffApi.add(newStaff).then(function(staff) {
           $scope.staff.push(staff);
-          return staff;
-        })['finally'](function() {
-          $scope.addingStaff = false;
+          return 'done';
         });
       };
 
       $scope.listStaff = function() {
-        return scecStaffApi.all().then(function(list) {
+        return scceStaffApi.all().then(function(list) {
           $scope.staff = list;
           return list;
-        }).catch(function(data) {
+        }).
+        catch (function(data) {
           if (data.status === 401) {
             $scope.error = 'You need to be logged in to view the list.';
           } else if (data.status === 403) {

@@ -11,8 +11,8 @@ function middleware(baseDir) {
     }
 
     middlewares.push(modRewrite([
-      '^/students/$ ' + baseDir + '/lib/educationext.core/app-build/index.html [L]',
-      '^/students/(.+)$ ' + baseDir + '/lib/educationext.core/app-build/$1',
+      '^/students/$ ' + baseDir + '/lib/core-education/app-build/index.html [L]',
+      '^/students/(.+)$ ' + baseDir + '/lib/core-education/app-build/$1',
     ]));
 
     options.base.forEach(function(base) {

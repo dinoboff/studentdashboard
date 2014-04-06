@@ -4,15 +4,15 @@
   angular.module(
     'scdRepository.controllers', [
       'scdRepository.services',
-      'scecStudents.services',
+      'scceStudents.services',
       'scDashboard.services',
       'angularFileUpload',
       'scdRepository.directives'
     ]
   ).
 
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scecStudentsApi', 'scdDashboardUserApi', '$q',
-    function($scope, scdRepositoryApi, scecStudentsApi, scdDashboardUserApi, $q) {
+  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scdDashboardUserApi', '$q',
+    function($scope, scdRepositoryApi, scceStudentsApi, scdDashboardUserApi, $q) {
       $scope.currentUser = null;
       $scope.files = null;
       $scope.showStudentSelector = false;
@@ -39,7 +39,7 @@
       });
 
       function listStudent() {
-        return scecStudentsApi.all().then(function(studentList) {
+        return scceStudentsApi.all().then(function(studentList) {
           $scope.students = studentList;
         });
       }

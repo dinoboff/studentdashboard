@@ -13,7 +13,7 @@
     return resp;
   };
 
-  angular.module('scDashboard.services', ['restangular', 'scDashboard.config', 'scecUser.services']).
+  angular.module('scDashboard.services', ['restangular', 'scDashboard.config', 'scceUser.services']).
 
   service('scdDashboardApi', ['Restangular', 'SCD_API_BASE',
     function(Restangular, SCD_API_BASE) {
@@ -24,8 +24,8 @@
     }
   ]).
 
-  service('scdDashboardUserApi', ['scecCurrentUserApi', '$q',
-    function(scecCurrentUserApi, $q) {
+  service('scdDashboardUserApi', ['scceCurrentUserApi', '$q',
+    function(scceCurrentUserApi, $q) {
       var user = {
         currentUser: null,
         _currentPromise: null,
@@ -38,7 +38,7 @@
             return user._currentPromise;
           }
 
-          user._currentPromise = scecCurrentUserApi.get(returnUrl).then(function(data) {
+          user._currentPromise = scceCurrentUserApi.get(returnUrl).then(function(data) {
             user.currentUser = data;
             return data;
           });

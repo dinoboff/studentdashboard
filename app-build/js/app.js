@@ -45,7 +45,7 @@
     return resp;
   };
 
-  angular.module('scDashboard.services', ['restangular', 'scDashboard.config', 'scecUser.services']).
+  angular.module('scDashboard.services', ['restangular', 'scDashboard.config', 'scceUser.services']).
 
   service('scdDashboardApi', ['Restangular', 'SCD_API_BASE',
     function(Restangular, SCD_API_BASE) {
@@ -56,8 +56,8 @@
     }
   ]).
 
-  service('scdDashboardUserApi', ['scecCurrentUserApi', '$q',
-    function(scecCurrentUserApi, $q) {
+  service('scdDashboardUserApi', ['scceCurrentUserApi', '$q',
+    function(scceCurrentUserApi, $q) {
       var user = {
         currentUser: null,
         _currentPromise: null,
@@ -70,7 +70,7 @@
             return user._currentPromise;
           }
 
-          user._currentPromise = scecCurrentUserApi.get(returnUrl).then(function(data) {
+          user._currentPromise = scceCurrentUserApi.get(returnUrl).then(function(data) {
             user.currentUser = data;
             return data;
           });
@@ -140,15 +140,15 @@
   angular.module(
     'scdRepository.controllers', [
       'scdRepository.services',
-      'scecStudents.services',
+      'scceStudents.services',
       'scDashboard.services',
       'angularFileUpload',
       'scdRepository.directives'
     ]
   ).
 
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scecStudentsApi', 'scdDashboardUserApi', '$q',
-    function($scope, scdRepositoryApi, scecStudentsApi, scdDashboardUserApi, $q) {
+  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scdDashboardUserApi', '$q',
+    function($scope, scdRepositoryApi, scceStudentsApi, scdDashboardUserApi, $q) {
       $scope.currentUser = null;
       $scope.files = null;
       $scope.showStudentSelector = false;
@@ -175,7 +175,7 @@
       });
 
       function listStudent() {
-        return scecStudentsApi.all().then(function(studentList) {
+        return scceStudentsApi.all().then(function(studentList) {
           $scope.students = studentList;
         });
       }
