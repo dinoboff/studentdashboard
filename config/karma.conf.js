@@ -28,6 +28,7 @@ module.exports = function(config) {
       'app/lib/angular-file-upload/dist/angular-file-upload-shim.js',
       'app/lib/bootstrap/js/collapse.js',
       'app/lib/core-education/app-build/js/app.js',
+      'app/lib/core-education/app-build/js/app-templates.js',
       'app/lib/angular-mocks/angular-mocks.js',
       'app/js/*.js',
       'app/components/**/*.js'

@@ -54,33 +54,6 @@
         RestangularConfigurer.addResponseInterceptor(interceptor);
       });
     }
-  ]).
-
-  service('scdDashboardUserApi', ['scceCurrentUserApi', '$q',
-    function(scceCurrentUserApi, $q) {
-      var user = {
-        currentUser: null,
-        _currentPromise: null,
-        get: function(returnUrl) {
-          if (user.currentUser) {
-            return $q.when(user.currentUser);
-          }
-
-          if (user._currentPromise) {
-            return user._currentPromise;
-          }
-
-          user._currentPromise = scceCurrentUserApi.get(returnUrl).then(function(data) {
-            user.currentUser = data;
-            return data;
-          });
-
-          return user._currentPromise;
-        }
-      };
-
-      return user;
-    }
   ])
 
   ;
@@ -89,17 +62,10 @@
 (function() {
   'use strict';
 
-  angular.module('scDashboard.controllers', ['scDashboard.services']).
+  angular.module('scDashboard.controllers', ['scDashboard.services', 'scceUser.directives']).
 
-  controller('scdNavBarCtrl', ['$scope', '$location', 'scdDashboardUserApi',
-    function($scope, $location, userApi) {
-
-      $scope.activeUser = null;
-      $scope.login = userApi.get().then(function(info) {
-        $scope.activeUser = info;
-        return info;
-      });
-
+  controller('scdNavBarCtrl', ['$scope', '$location',
+    function($scope, $location) {
       $scope.isActive = function(route) {
         return route === $location.path();
       };
@@ -141,21 +107,22 @@
     'scdRepository.controllers', [
       'scdRepository.services',
       'scceStudents.services',
+      'scceUser.services',
       'scDashboard.services',
       'angularFileUpload',
       'scdRepository.directives'
     ]
   ).
 
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scdDashboardUserApi', '$q',
-    function($scope, scdRepositoryApi, scceStudentsApi, scdDashboardUserApi, $q) {
+  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scceCurrentUserApi', '$q',
+    function($scope, scdRepositoryApi, scceStudentsApi, scceCurrentUserApi, $q) {
       $scope.currentUser = null;
       $scope.files = null;
       $scope.showStudentSelector = false;
       $scope.selected = {};
       $scope.students = null;
 
-      scdDashboardUserApi.get().then(function(user) {
+      scceCurrentUserApi.auth().then(function(user) {
         if (user.error) {
           $scope.error = 'You need to be logged to list a repository';
           $scope.files = [];
@@ -163,7 +130,7 @@
         }
 
         $scope.currentUser = user;
-        if (!user.isStaff && !user.isAdmin) {
+        if (!user.staffId && !user.isAdmin) {
           $scope.listFile(user.id);
           return user;
         }

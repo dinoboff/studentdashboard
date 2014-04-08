@@ -5,21 +5,22 @@
     'scdRepository.controllers', [
       'scdRepository.services',
       'scceStudents.services',
+      'scceUser.services',
       'scDashboard.services',
       'angularFileUpload',
       'scdRepository.directives'
     ]
   ).
 
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scdDashboardUserApi', '$q',
-    function($scope, scdRepositoryApi, scceStudentsApi, scdDashboardUserApi, $q) {
+  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scceCurrentUserApi', '$q',
+    function($scope, scdRepositoryApi, scceStudentsApi, scceCurrentUserApi, $q) {
       $scope.currentUser = null;
       $scope.files = null;
       $scope.showStudentSelector = false;
       $scope.selected = {};
       $scope.students = null;
 
-      scdDashboardUserApi.get().then(function(user) {
+      scceCurrentUserApi.auth().then(function(user) {
         if (user.error) {
           $scope.error = 'You need to be logged to list a repository';
           $scope.files = [];
@@ -27,7 +28,7 @@
         }
 
         $scope.currentUser = user;
-        if (!user.isStaff && !user.isAdmin) {
+        if (!user.staffId && !user.isAdmin) {
           $scope.listFile(user.id);
           return user;
         }

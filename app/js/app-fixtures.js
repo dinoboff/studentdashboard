@@ -31,9 +31,9 @@
     data: {
       user: {
         isAdmin: true,
-        isStaff: false,
+        staffId: null,
         logoutUrl: '/logout',
-        isStudent: false,
+        studentId: null,
         name: 'test@example.com'
       },
       students: {

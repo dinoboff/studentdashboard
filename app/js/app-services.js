@@ -22,33 +22,6 @@
         RestangularConfigurer.addResponseInterceptor(interceptor);
       });
     }
-  ]).
-
-  service('scdDashboardUserApi', ['scceCurrentUserApi', '$q',
-    function(scceCurrentUserApi, $q) {
-      var user = {
-        currentUser: null,
-        _currentPromise: null,
-        get: function(returnUrl) {
-          if (user.currentUser) {
-            return $q.when(user.currentUser);
-          }
-
-          if (user._currentPromise) {
-            return user._currentPromise;
-          }
-
-          user._currentPromise = scceCurrentUserApi.get(returnUrl).then(function(data) {
-            user.currentUser = data;
-            return data;
-          });
-
-          return user._currentPromise;
-        }
-      };
-
-      return user;
-    }
   ])
 
   ;
