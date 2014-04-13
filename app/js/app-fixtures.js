@@ -31,6 +31,7 @@
     data: {
       user: {
         isAdmin: true,
+        isLoggedIn: true,
         staffId: null,
         logoutUrl: '/logout',
         studentId: null,
