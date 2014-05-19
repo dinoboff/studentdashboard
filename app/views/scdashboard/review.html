@@ -1,77 +1,81 @@
 <h1>Review</h1>
 
-<form role="form" class="form-inline filter-selectors well">
+<div class="well">
+  <form role="form" class="form-inline filter-selectors">
 
-  <div class="form-group">
-    <label for="resident">Show: </label>
-    <select id="resident" class="form-control"
-      ng-model="filters.resident"
-      ng-options="opt for opt in residents"
-      required="true"
-      ng-change="setResident()"
-    ></select>
-  </div>
+    <div class="form-group">
+      <label for="resident">Show: </label>
+      <select id="resident" class="form-control"
+        ng-model="filters.resident"
+        ng-options="opt for opt in residents"
+        required="true"
+        ng-change="setResident()"
+      ></select>
+    </div>
 
-  <div class="form-group">
-    <label class="sr-only" for="cotegory">filter by category: </label>
-    <select id="cotegory" class="form-control"
-      ng-model="filters.category"
-      ng-options="opt for opt in categories"
-      required="true"
-    ></select>
-  </div>
+    <div class="form-group">
+      <label class="sr-only" for="cotegory"> filter by category: </label>
+      <select id="cotegory" class="form-control"
+        ng-model="filters.category"
+        ng-options="opt for opt in categories"
+        required="true"
+      ></select>
+    </div>
 
-  <span> Compared to program average</span>
+    <span> Compared to program average</span>
 
-</form>
+  </form>
 
-<scce-svg-container scce-viewbox="layout">
+  <scce-svg-container scce-viewbox="layout">
 
-  <svg>
+    <svg>
 
-    <g class="ticks x-ticks">
-      <line ng-repeat="tick in scales.x.ticks(10)"
-        ng-attr-y2="{{layout.innerHeight}}"
-        ng-attr-transform="translate({{scales.x(tick)}},0)"
-      />
-    </g>
-
-    <g class="data">
-      <g class="student" ng-repeat="student in review.students track by student.id"
-        ng-attr-transform="translate(0,{{$index * 20}})"
-        ng-class="{failing: student[filters.category] < review.average[filters.resident][filters.category]}"
-      >
-        <rect y="6" height="8" ng-attr-width="{{scales.x(student[filters.category])}}" />
-        <text ng-attr-x="{{scales.x(student[filters.category])}}" y="10" dx="5">
-          {{student[filters.category]}}%
-        </text>
-      </g>
-    </g>
-
-    <g class="axis y-axis students">
-
-      <line ng-attr-y2="{{layout.innerHeight}}" class="axis-line"/>
-
-      <g class="student" ng-repeat="student in review.students track by student.id"
-        ng-attr-transform="translate(0,{{$index * 20}})"
-      >
-        <line x2="-5"/>
-        <line y1="20" y2="20" x2="-5"/>
-
-        <text x="-10" y="10">
-          {{student.fullName}}
-        </text>
-
+      <g class="ticks x-ticks">
+        <g ng-repeat="tick in scales.x.ticks(20)"
+          ng-attr-transform="translate({{scales.x(tick)}},0)"
+        >
+          <line ng-attr-y2="{{layout.innerHeight}}"/>
+          <text ng-attr-y="{{layout.innerHeight + 5}}">{{tick}}</text>
+        </g>
       </g>
 
-    </g>
+      <g class="data">
+        <g class="student" ng-repeat="student in review.students track by student.id"
+          ng-attr-transform="translate(0,{{$index * 20}})"
+          ng-class="{failing: student[filters.category] < review.average[filters.resident][filters.category]}"
+        >
+          <rect y="6" height="8" ng-attr-width="{{scales.x(student[filters.category])}}" />
+          <text ng-attr-x="{{scales.x(student[filters.category])}}" y="10" dx="5">
+            {{student[filters.category]}}%
+          </text>
+        </g>
+      </g>
 
-    <g class="average"
-      ng-attr-transform="translate({{scales.x(review.average[filters.resident][filters.category])}})"
-    >
-        <line y1="-10" ng-attr-y2="{{layout.innerHeight + 10}}"/>
-        <text x="5" y="-10">Average ({{review.average[filters.resident][filters.category]}}%)</text>
-    </g>
+      <g class="axis y-axis students">
 
-  </svg>
-</scce-svg-container>
+        <line ng-attr-y2="{{layout.innerHeight}}" class="axis-line"/>
+
+        <g class="student" ng-repeat="student in review.students track by student.id"
+          ng-attr-transform="translate(0,{{$index * 20}})"
+        >
+          <line x2="-5"/>
+          <line y1="20" y2="20" x2="-5"/>
+
+          <text x="-10" y="10">
+            {{student.fullName}}
+          </text>
+
+        </g>
+
+      </g>
+
+      <g class="average"
+        ng-attr-transform="translate({{scales.x(review.average[filters.resident][filters.category])}})"
+      >
+          <line y1="-5" ng-attr-y2="{{layout.innerHeight + 5}}"/>
+          <text x="5" y="-10">Average ({{review.average[filters.resident][filters.category]}}%)</text>
+      </g>
+
+    </svg>
+  </scce-svg-container>
+</div>

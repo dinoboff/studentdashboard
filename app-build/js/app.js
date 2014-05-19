@@ -342,7 +342,7 @@
   };
 
   function layout(innerHeight, margin, width) {
-    margin = margin || {top: 10, right: 50, bottom:10, left: 150};
+    margin = margin || {top: 20, right: 50, bottom:30, left: 150};
     width = width || 900;
 
     return {
