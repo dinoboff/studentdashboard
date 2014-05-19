@@ -1,16 +1,28 @@
 (function() {
   'use strict';
 
-  angular.module('scDashboard', ['ngRoute', 'scDashboard.controllers', 'scdRepository.controllers']).
+  angular.module('scDashboard', [
+    'ngRoute',
+    'scDashboard.controllers',
+    'scdRepository.controllers',
+    'scdReview.controllers'
+  ]).
 
   config(['$routeProvider',
     function($routeProvider) {
-      $routeProvider
-        .when('/', {
+      $routeProvider.
+
+        when('/', {
           templateUrl: 'views/scdashboard/repository.html',
           controller: 'scdRepositoryListCtrl'
-        })
-        .otherwise({
+        }).
+
+        when('/review', {
+          templateUrl: 'views/scdashboard/review.html',
+          controller: 'scdReviewCtrl'
+        }).
+
+        otherwise({
           redirectTo: '/'
         });
 
