@@ -1,10 +1,6 @@
 .filter-selectors {
   text-align: center;
-  margin-bottom: 40px;
-}
-
-svg {
-  background-color: #f5f5f5;
+  margin-bottom: 20px;
 }
 
 text {
@@ -39,8 +35,15 @@ rect {
 
 /** axis **/
 
-.ticks line {
+.axis line, .ticks line {
   stroke: #bbb;
+}
+
+.ticks text {
+  dominant-baseline: hanging;
+  text-anchor: middle;
+  font-size: 10px;
+  fill: #333;
 }
 
 .average text {
