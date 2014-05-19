@@ -17,6 +17,7 @@
 
     <!-- build:css(app) css/app.css -->
     <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/chart.css">
     <!-- endbuild -->
 </head>
 
@@ -37,6 +38,9 @@
                     <ul class="nav navbar-nav">
                         <li ng-class="{active: isActive('/')}">
                             <a ng-href="#/">Repository</a>
+                        </li>
+                        <li ng-class="{active: isActive('/review')}" ng-if="currentUser.isAdmin">
+                            <a ng-href="#/review">Rosh Review</a>
                         </li>
                     </ul>
                     <scce-user-login></scce-user-login>
@@ -60,6 +64,7 @@
     <!-- build:js(app) js/vendor.js -->
     <script src="lib/jquery/dist/jquery.js"></script>
     <script src="lib/lodash/dist/lodash.js"></script>
+    <script src="lib/d3/d3.js"></script>
     <script src="lib/angular-file-upload/dist/angular-file-upload-shim.js"></script>
     <script src="lib/angular/angular.js"></script>
     <script src="lib/angular-cookies/angular-cookies.js"></script>
@@ -80,6 +85,7 @@
     <script src="components/repository/repository-services.js"></script>
     <script src="components/repository/repository-controllers.js"></script>
     <script src="components/repository/repository-directives.js"></script>
+    <script src="components/review/review-controllers.js"></script>
     <!-- endbuild -->
 
     <!--(if target dev || e2e)><!-->
