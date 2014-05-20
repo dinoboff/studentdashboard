@@ -1,49 +1,13 @@
 (function() {
   'use strict';
 
-  var data = {
-    review: {
-      average: {
-        'All residents': {
-          'All Categories': 70,
-          'Traumatic Disorders': 71,
-          'Cardiovascular Disorders': 69
-        },
-        'PGY 1': {
-          'All Categories': 69,
-          'Traumatic Disorders': 70,
-          'Cardiovascular Disorders': 68
-        },
-        'PGY 2': {
-          'All Categories': 71,
-          'Traumatic Disorders': 72,
-          'Cardiovascular Disorders': 70
-        }
-      },
-      students: [{
-        'id': 'x1',
-        'firstName': 'Alice',
-        'lastName': 'Smith',
-        'PGY': 2,
-        'All Categories': 71,
-        'Traumatic Disorders': 72,
-        'Cardiovascular Disorders': 70
-      }, {
-        'id': 'x2',
-        'firstName': 'Bob',
-        'lastName': 'Taylor',
-        'PGY': 1,
-        'All Categories': 69,
-        'Traumatic Disorders': 70,
-        'Cardiovascular Disorders': 68
-      }]
-    },
-    prev: '',
-    next: ''
-  };
-
   function layout(innerHeight, margin, width) {
-    margin = margin || {top: 20, right: 50, bottom:30, left: 150};
+    margin = margin || {
+      top: 20,
+      right: 150,
+      bottom: 30,
+      left: 150
+    };
     width = width || 900;
 
     return {
@@ -56,33 +20,55 @@
 
   }
 
-  function ReviewCtrl($scope, window) {
+  function ReviewCtrl($scope, window, reviewApi) {
     this._ = window._;
     this.d3 = window.d3;
+    this.reviewApi = reviewApi;
     this.scope = $scope;
 
-    $scope.residents = [
-      'All residents',
-      'PGY 1',
-      'PGY 2'
-    ];
-    $scope.categories = [
-      'All Categories',
-      'Traumatic Disorders',
-      'Cardiovascular Disorders'
-    ];
+    $scope.residents = reviewApi.residents;
+    $scope.categories = reviewApi.categories;
+    $scope.stats = reviewApi.stats;
+    $scope.cursor = {};
+
     $scope.filters = {
-      category: $scope.categories[0],
-      resident: $scope.residents[0]
+      chart: {
+        year: reviewApi.residents[0],
+        sortBy: {
+          category: reviewApi.categories[0],
+          property: reviewApi.stats[0]
+        }
+      },
+      table: {}
     };
-    $scope.layout = layout(data.review.students.length * 20); // 20px per student
 
-    $scope.setResident = this.filterData.bind(this);
+    $scope.chartFiltersChanged = this.getData.bind(this);
+    $scope.next = this.nextData.bind(this);
+    $scope.prev = this.prevData.bind(this);
+    $scope.chartFiltersChanged = this.getData.bind(this);
 
-    this.filterData();
-    this.setScales();
+    this.getData();
   }
 
+  ReviewCtrl.prototype.getData = function() {
+    this.reviewApi.next('', this.scope.filters.chart).then(this.updateData.bind(this));
+  };
+
+  ReviewCtrl.prototype.nextData = function() {
+    this.reviewApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateData.bind(this));
+  };
+
+  ReviewCtrl.prototype.prevData = function() {
+    this.reviewApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateData.bind(this));
+  };
+
+  ReviewCtrl.prototype.updateData = function (data) {
+    this.scope.cursor.next = data.next;
+    this.scope.cursor.prev = data.prev;
+    this.scope.review = data.review;
+    this.setLayout();
+    this.setScales();
+  };
 
   ReviewCtrl.prototype.setScales = function() {
     var self = this;
@@ -106,38 +92,14 @@
   };
 
 
-  ReviewCtrl.prototype.filterData = function() {
-    var target;
-
-    if (
-      !this.scope.filters ||
-      !this.scope.filters.resident ||
-      this.scope.filters.resident.length <= 4 ||
-      this.scope.filters.resident === 'All residents'
-    ) {
-      this.scope.review = data.review;
-      this.setLayout();
-      return;
-    } else {
-      target = this.scope.filters.resident;
-    }
-
-    this.scope.review = this._.clone(data.review);
-    this.scope.review.students = this._.filter(data.review.students, function(s){
-      return s.PGY === parseInt(target[4], 10);
-    });
-    this.setLayout();
-  };
-
-
   ReviewCtrl.prototype.setLayout = function() {
     this.scope.layout = layout(this.scope.review.students.length * 20); // 20px per student
   };
 
 
-  angular.module('scdReview.controllers', ['scceSvg.directives']).
+  angular.module('scdReview.controllers', ['scceSvg.directives', 'scdReview.services']).
 
-  controller('scdReviewCtrl', ['$scope', '$window', ReviewCtrl])
+  controller('scdReviewCtrl', ['$scope', '$window', 'scdReviewApi', ReviewCtrl])
 
   ;
 

@@ -6,25 +6,43 @@
     <div class="form-group">
       <label for="resident">Show: </label>
       <select id="resident" class="form-control"
-        ng-model="filters.resident"
-        ng-options="opt for opt in residents"
+        ng-model="filters.chart.year"
+        ng-options="opt.title for opt in residents"
         required="true"
-        ng-change="setResident()"
+        ng-change="chartFiltersChanged()"
       ></select>
     </div>
 
     <div class="form-group">
       <label class="sr-only" for="cotegory"> filter by category: </label>
       <select id="cotegory" class="form-control"
-        ng-model="filters.category"
+        ng-model="filters.chart.sortBy.category"
         ng-options="opt for opt in categories"
         required="true"
+        ng-change="chartFiltersChanged()"
       ></select>
     </div>
 
-    <span> Compared to program average</span>
+    <div class="form-group">
+      <label for="resident"> Compared to: </label>
+      <select id="resident" class="form-control"
+        ng-model="filters.chart.sortBy.property"
+        ng-options="opt.title for opt in stats"
+        required="true"
+        ng-change="chartFiltersChanged()"
+      ></select>
+    </div>
 
   </form>
+
+  <div class="chart-nav">
+    <div class="btn-group">
+      <button type="button" class="btn btn-default" ng-disabled="!cursor.prev" ng-click="prev()">Prev</button>
+      <button type="button" class="btn btn-default" ng-disabled="!cursor.next" ng-click="next()">Next</button>
+    </div>
+  </div>
+
+
 
   <scce-svg-container scce-viewbox="layout">
 
@@ -42,11 +60,11 @@
       <g class="data">
         <g class="student" ng-repeat="student in review.students track by student.id"
           ng-attr-transform="translate(0,{{$index * 20}})"
-          ng-class="{failing: student[filters.category] < review.average[filters.resident][filters.category]}"
+          ng-class="{failing: student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] < review.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id]}"
         >
-          <rect y="6" height="8" ng-attr-width="{{scales.x(student[filters.category])}}" />
-          <text ng-attr-x="{{scales.x(student[filters.category])}}" y="10" dx="5">
-            {{student[filters.category]}}%
+          <rect y="6" height="8" ng-attr-width="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" />
+          <text ng-attr-x="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" y="10" dx="5">
+            {{student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%
           </text>
         </g>
       </g>
@@ -70,12 +88,13 @@
       </g>
 
       <g class="average"
-        ng-attr-transform="translate({{scales.x(review.average[filters.resident][filters.category])}})"
+        ng-attr-transform="translate({{scales.x(review.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id])}})"
       >
           <line y1="-5" ng-attr-y2="{{layout.innerHeight + 5}}"/>
-          <text x="5" y="-10">Average ({{review.average[filters.resident][filters.category]}}%)</text>
+          <text x="5" y="-10">Average ({{review.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%)</text>
       </g>
 
     </svg>
   </scce-svg-container>
+
 </div>
