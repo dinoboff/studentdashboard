@@ -300,49 +300,13 @@
 (function() {
   'use strict';
 
-  var data = {
-    review: {
-      average: {
-        'All residents': {
-          'All Categories': 70,
-          'Traumatic Disorders': 71,
-          'Cardiovascular Disorders': 69
-        },
-        'PGY 1': {
-          'All Categories': 69,
-          'Traumatic Disorders': 70,
-          'Cardiovascular Disorders': 68
-        },
-        'PGY 2': {
-          'All Categories': 71,
-          'Traumatic Disorders': 72,
-          'Cardiovascular Disorders': 70
-        }
-      },
-      students: [{
-        'id': 'x1',
-        'firstName': 'Alice',
-        'lastName': 'Smith',
-        'PGY': 2,
-        'All Categories': 71,
-        'Traumatic Disorders': 72,
-        'Cardiovascular Disorders': 70
-      }, {
-        'id': 'x2',
-        'firstName': 'Bob',
-        'lastName': 'Taylor',
-        'PGY': 1,
-        'All Categories': 69,
-        'Traumatic Disorders': 70,
-        'Cardiovascular Disorders': 68
-      }]
-    },
-    prev: '',
-    next: ''
-  };
-
   function layout(innerHeight, margin, width) {
-    margin = margin || {top: 20, right: 50, bottom:30, left: 150};
+    margin = margin || {
+      top: 20,
+      right: 150,
+      bottom: 30,
+      left: 150
+    };
     width = width || 900;
 
     return {
@@ -355,33 +319,55 @@
 
   }
 
-  function ReviewCtrl($scope, window) {
+  function ReviewCtrl($scope, window, reviewApi) {
     this._ = window._;
     this.d3 = window.d3;
+    this.reviewApi = reviewApi;
     this.scope = $scope;
 
-    $scope.residents = [
-      'All residents',
-      'PGY 1',
-      'PGY 2'
-    ];
-    $scope.categories = [
-      'All Categories',
-      'Traumatic Disorders',
-      'Cardiovascular Disorders'
-    ];
+    $scope.residents = reviewApi.residents;
+    $scope.categories = reviewApi.categories;
+    $scope.stats = reviewApi.stats;
+    $scope.cursor = {};
+
     $scope.filters = {
-      category: $scope.categories[0],
-      resident: $scope.residents[0]
+      chart: {
+        year: reviewApi.residents[0],
+        sortBy: {
+          category: reviewApi.categories[0],
+          property: reviewApi.stats[0]
+        }
+      },
+      table: {}
     };
-    $scope.layout = layout(data.review.students.length * 20); // 20px per student
 
-    $scope.setResident = this.filterData.bind(this);
+    $scope.chartFiltersChanged = this.getData.bind(this);
+    $scope.next = this.nextData.bind(this);
+    $scope.prev = this.prevData.bind(this);
+    $scope.chartFiltersChanged = this.getData.bind(this);
 
-    this.filterData();
-    this.setScales();
+    this.getData();
   }
 
+  ReviewCtrl.prototype.getData = function() {
+    this.reviewApi.next('', this.scope.filters.chart).then(this.updateData.bind(this));
+  };
+
+  ReviewCtrl.prototype.nextData = function() {
+    this.reviewApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateData.bind(this));
+  };
+
+  ReviewCtrl.prototype.prevData = function() {
+    this.reviewApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateData.bind(this));
+  };
+
+  ReviewCtrl.prototype.updateData = function (data) {
+    this.scope.cursor.next = data.next;
+    this.scope.cursor.prev = data.prev;
+    this.scope.review = data.review;
+    this.setLayout();
+    this.setScales();
+  };
 
   ReviewCtrl.prototype.setScales = function() {
     var self = this;
@@ -405,38 +391,218 @@
   };
 
 
-  ReviewCtrl.prototype.filterData = function() {
-    var target;
-
-    if (
-      !this.scope.filters ||
-      !this.scope.filters.resident ||
-      this.scope.filters.resident.length <= 4 ||
-      this.scope.filters.resident === 'All residents'
-    ) {
-      this.scope.review = data.review;
-      this.setLayout();
-      return;
-    } else {
-      target = this.scope.filters.resident;
-    }
-
-    this.scope.review = this._.clone(data.review);
-    this.scope.review.students = this._.filter(data.review.students, function(s){
-      return s.PGY === parseInt(target[4], 10);
-    });
-    this.setLayout();
-  };
-
-
   ReviewCtrl.prototype.setLayout = function() {
     this.scope.layout = layout(this.scope.review.students.length * 20); // 20px per student
   };
 
 
-  angular.module('scdReview.controllers', ['scceSvg.directives']).
+  angular.module('scdReview.controllers', ['scceSvg.directives', 'scdReview.services']).
 
-  controller('scdReviewCtrl', ['$scope', '$window', ReviewCtrl])
+  controller('scdReviewCtrl', ['$scope', '$window', 'scdReviewApi', ReviewCtrl])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  var firstNames = [
+      'Noah', 'Liam', 'Jacob', 'Mason', 'William', 'Ethan', 'Michael',
+      'Sophia', 'Emma', 'Olivia', 'Isabella', 'Ava', 'Mia', 'Emily'
+    ],
+    lastNames = [
+      'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis',
+      'Garcia', 'Rodriguez', 'Wilson', 'Martinez', 'Anderson', 'Taylor',
+      'Thomas', 'Hernandez', 'Moore', 'Martin', 'Jackson', 'Thompson',
+      'White', 'Lopez', 'Lee', 'Gonzalez', 'Harris', 'Clark', 'Lewis'
+    ],
+    residents = [{
+      'id': 1,
+      'title': 'PGY 1',
+    }, {
+      'id': 2,
+      'title': 'PGY 2',
+    }, {
+      'id': 3,
+      'title': 'PGY 3'
+    }],
+    categories = [
+      'Traumatic Disorders',
+      'Cardiovascular Disorders'
+    ],
+    stats = [{
+      'id': 'result',
+      'title': 'Program Average'
+    }, {
+      'id': 'completed',
+      'title': 'Percentage Completed'
+    }, {
+      'id': 'probabilityOfPassing',
+      'title': 'Probability of Passing ABEM'
+    }];
+
+  function newUser(index, _) {
+    return {
+      'id': 'x' + index,
+      'firstName': _.sample(firstNames),
+      'lastName': _.sample(lastNames),
+      'PGY': _.sample(residents).id,
+      'data': newResults(_)
+      // 'completed': _.random(0, 100),
+      // 'probabilityOfPassing': _.random(50, 100)
+    };
+  }
+
+  function newResults(_) {
+    var results = {},
+      allCategories = {};
+
+    categories.forEach(function(name) {
+      results[name] = newCategoryResults(_);
+    });
+
+    stats.map(function(s) {
+      var avg = _.reduce(results, function(avg, result) {
+        avg.count++;
+        avg.sum += result[s.id];
+        return avg;
+      }, {
+        count: 0,
+        sum: 0
+      });
+
+      allCategories[s.id] = avg.sum / avg.count; // assume all categories weight the same
+    });
+
+    results['All Categories'] = allCategories;
+
+    return results;
+  }
+
+  function newCategoryResults(_) {
+    return {
+      'result': _.random(50, 99),
+      'completed': _.random(1, 100),
+      'probabilityOfPassing': _.random(50, 100),
+    };
+  }
+
+  function calcOverallAverage(users, _) {
+    var results = {
+      'All Residents': _calcOverallAverage(users, _)
+    };
+
+    residents.forEach(function(year) {
+      results[year.title] = _calcOverallAverage(_.filter(users, {
+        'PGY': year.id
+      }), _);
+    });
+
+    return results;
+  }
+
+  function _calcOverallAverage(users, _) {
+    var results = {};
+
+    categories.concat(['All Categories']).forEach(function(category) {
+      results[category] = {};
+      stats.forEach(function(stat) {
+        var avg = _.reduce(users, function(avg, user) {
+          avg.count++;
+          avg.sum += user.data[category][stat.id];
+          return avg;
+        }, {
+          count: 0,
+          sum: 0
+        });
+
+        results[category][stat.id] = avg.sum / avg.count;
+      });
+    });
+
+    return results;
+  }
+
+  function getCursor(cursor, defaultValue) {
+    if (!cursor) {
+      return defaultValue;
+    } else {
+      return parseInt(cursor, 10);
+    }
+  }
+
+  function setCursor(results, pool, prev, next) {
+    results.prev = prev > 0 ? prev : '';
+    results.next = next < pool.length ? next : '';
+    return results;
+  }
+
+  angular.module('scdReview.services', []).
+
+  factory('scdReviewApi', ['$window', '$q',
+    function(window, $q) {
+      var _ = window._,
+        users = _.range(1, 61).map(function(index) {
+          return newUser(index, _);
+        }),
+        average = calcOverallAverage(users, _);
+
+      return {
+        categories: ['All Categories'].concat(categories),
+        residents: [{'title': 'All Residents', 'id': ''}].concat(residents),
+        stats: stats,
+
+        _get: function(start, end, opt) {
+          var pool = users;
+
+          if (opt && opt.year && opt.year.id) {
+            pool = _.filter(pool, {
+              'PGY': opt.year.id
+            });
+          }
+
+
+          if (opt && opt.sortBy && opt.sortBy.category && opt.sortBy.property && opt.sortBy.property.id) {
+            pool = _.sortBy(pool, function(student) {
+              if (
+                student.data[opt.sortBy.category] &&
+                student.data[opt.sortBy.category][opt.sortBy.property.id]
+              ) {
+                return -student.data[opt.sortBy.category][opt.sortBy.property.id];
+              }
+            });
+          }
+
+          return $q.when(
+            setCursor({
+              review: {
+                overallAverage: average,
+                students: pool.slice(start, end)
+              }
+            }, pool, start, end)
+          );
+        },
+
+        next: function(cursor, options) {
+          var start, end;
+
+          cursor = getCursor(cursor, 0);
+          start = cursor;
+          end = cursor + 20;
+          return this._get(start, end, options);
+        },
+
+        prev: function(cursor, options) {
+          var start, end;
+
+          cursor = getCursor(cursor, 20);
+          start = cursor - 20;
+          end = cursor;
+          return this._get(start, end, options);
+        }
+      };
+    }
+  ])
 
   ;
 
