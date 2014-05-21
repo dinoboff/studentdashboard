@@ -41,7 +41,7 @@
       },
       table: {
         year: reviewApi.residents[0],
-        sortBy: {
+        show: {
           category: reviewApi.categories[0],
           property: reviewApi.stats[0]
         }
@@ -52,6 +52,7 @@
       chart: {},
       table: {
         sortedBy: 'firstName',
+        reversed: null,
         source: {},
         students: [],
       }
@@ -87,23 +88,57 @@
       this.scope.review.table.students = this.scope.review.table.source.students;
     }
 
-    this.sortTableDataBy();
+    this.sortTableDataBy(this.scope.review.table.sortedBy);
   };
 
   ReviewCtrl.prototype.sortTableDataBy = function(sortBy) {
+    var getKey,
+      self = this;
 
-    if (sortBy) {
-      this.scope.review.table.sortedBy = sortBy;
-    } else {
-      sortBy = this.scope.review.table.sortedBy;
+    this.scope.review.table.reversed = (
+      this.scope.review.table.sortedBy === sortBy &&
+      this.scope.review.table.reversed === false
+    );
+
+    this.scope.review.table.sortedBy = sortBy;
+
+    if (this.scope.review.table.reversed) {
+      this.scope.review.table.students.reverse();
+      return;
+    }
+
+    switch(sortBy) {
+    case 'selected-category':
+      getKey = function(student) {
+        return student.data[self.scope.filters.table.show.category].result;
+      };
+      break;
+    case 'PGY-average':
+      getKey = function(student) {
+        return self.scope.review.table.source.overallAverage['PGY ' + student.PGY][self.scope.filters.table.show.category][self.scope.filters.table.show.property.id];
+      };
+      break;
+    case '%-completed':
+      getKey = function(student) {
+        return student.data[self.scope.filters.table.show.category].completed;
+      };
+      break;
+    case 'probability-of-passing':
+      getKey = function(student) {
+        return student.data[self.scope.filters.table.show.category].probabilityOfPassing;
+      };
+      break;
+    default:
+      getKey = function(student) {
+        return student[sortBy];
+      };
+      break;
     }
 
     this.scope.review.table.students = this._.sortBy(
-      this.scope.review.table.students,
-      function(student) {
-        return student[sortBy];
-      }
+      this.scope.review.table.students, getKey
     );
+
   };
 
   ReviewCtrl.prototype.getChartData = function() {

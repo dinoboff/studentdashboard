@@ -119,7 +119,7 @@
     <div class="form-group">
       <label class="sr-only" for="cotegory"> filter by category: </label>
       <select id="cotegory" class="form-control"
-        ng-model="filters.table.sortBy.category"
+        ng-model="filters.table.show.category"
         ng-options="opt for opt in categories"
         required="true"
       ></select>
@@ -128,7 +128,7 @@
     <div class="form-group">
       <label for="resident"> Compared to: </label>
       <select id="resident" class="form-control"
-        ng-model="filters.table.sortBy.property"
+        ng-model="filters.table.show.property"
         ng-options="opt.title for opt in stats"
         required="true"
       ></select>
@@ -139,22 +139,50 @@
   <table class="table table-striped">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>PGY</th>
-        <th>{{filters.table.sortBy.category}}</th>
-        <th>PGY Average</th>
-        <th>Percentage Completed</th>
-        <th>Probability of passing ABEM</th>
+        <th>
+          <a ng-click="tableSortBy('firstName')">
+            Name <span ng-if="review.table.sortedBy == 'firstName'" class="glyphicon glyphicon-sort"></span>
+          </a>
+        </th>
+        <th>
+          <a ng-click="tableSortBy('PGY')">
+            PGY <span ng-if="review.table.sortedBy == 'PGY'" class="glyphicon glyphicon-sort"></span>
+          </a>
+        </th>
+        <th>
+          <a ng-click="tableSortBy('selected-category')">
+            {{filters.table.show.category}}
+            <span ng-if="review.table.sortedBy == 'selected-category'" class="glyphicon glyphicon-sort"></span>
+          </a>
+        </th>
+        <th>
+          <a ng-click="tableSortBy('PGY-average')">
+            PGY Average
+            <span ng-if="review.table.sortedBy == 'PGY-average'" class="glyphicon glyphicon-sort"></span>
+          </a>
+        </th>
+        <th>
+          <a ng-click="tableSortBy('%-completed')">
+            Percentage Completed
+            <span ng-if="review.table.sortedBy == '%-completed'" class="glyphicon glyphicon-sort"></span>
+          </a>
+        </th>
+        <th>
+          <a ng-click="tableSortBy('probability-of-passing')">
+            Probability of passing ABEM
+            <span ng-if="review.table.sortedBy == 'probability-of-passing'" class="glyphicon glyphicon-sort"></span>
+          </a>
+        </th>
       </tr>
     </thead>
     <tbody>
       <tr ng-repeat="student in review.table.students track by student.id">
         <td>{{student|fullName}}</td>
         <td>{{student.PGY}}</td>
-        <td>{{student.data[filters.table.sortBy.category].result | number:1}}%</td>
-        <td>{{review.table.source.overallAverage['PGY ' +student.PGY][filters.table.sortBy.category][filters.table.sortBy.property.id] | number:1}}%</td>
-        <td>{{student.data[filters.table.sortBy.category].completed | number:1}}%</td>
-        <td>{{student.data[filters.table.sortBy.category].probabilityOfPassing | number:1}}%</td>
+        <td>{{student.data[filters.table.show.category].result| number:1}}%</td>
+        <td>{{review.table.source.overallAverage['PGY ' + student.PGY][filters.table.show.category][filters.table.show.property.id] | number:1}}%</td>
+        <td>{{student.data[filters.table.show.category].completed | number:1}}%</td>
+        <td>{{student.data[filters.table.show.category].probabilityOfPassing | number:1}}%</td>
       </tr>
     </tbody>
   </table>
