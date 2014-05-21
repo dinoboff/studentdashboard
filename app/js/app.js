@@ -5,7 +5,8 @@
     'ngRoute',
     'scDashboard.controllers',
     'scdRepository.controllers',
-    'scdReview.controllers'
+    'scdReview.controllers',
+    'scdMisc.filters'
   ]).
 
   config(['$routeProvider',

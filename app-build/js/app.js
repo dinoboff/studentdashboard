@@ -5,7 +5,8 @@
     'ngRoute',
     'scDashboard.controllers',
     'scdRepository.controllers',
-    'scdReview.controllers'
+    'scdReview.controllers',
+    'scdMisc.filters'
   ]).
 
   config(['$routeProvider',
@@ -338,33 +339,89 @@
           property: reviewApi.stats[0]
         }
       },
-      table: {}
+      table: {
+        year: reviewApi.residents[0],
+        sortBy: {
+          category: reviewApi.categories[0],
+          property: reviewApi.stats[0]
+        }
+      }
     };
 
-    $scope.chartFiltersChanged = this.getData.bind(this);
-    $scope.next = this.nextData.bind(this);
-    $scope.prev = this.prevData.bind(this);
-    $scope.chartFiltersChanged = this.getData.bind(this);
+    $scope.review = {
+      chart: {},
+      table: {
+        sortedBy: 'firstName',
+        source: {},
+        students: [],
+      }
+    };
 
-    this.getData();
+    $scope.next = this.nextChartData.bind(this);
+    $scope.prev = this.prevChartData.bind(this);
+    $scope.chartFiltersChanged = this.getChartData.bind(this);
+    $scope.tableFiltersChanged = this.filterTableData.bind(this);
+    $scope.tableSortBy = this.sortTableDataBy.bind(this);
+
+    this.getChartData();
+    this.getTableData();
   }
 
-  ReviewCtrl.prototype.getData = function() {
-    this.reviewApi.next('', this.scope.filters.chart).then(this.updateData.bind(this));
+  ReviewCtrl.prototype.getTableData = function() {
+    this.reviewApi.all().then(this.updateTableData.bind(this));
   };
 
-  ReviewCtrl.prototype.nextData = function() {
-    this.reviewApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateData.bind(this));
+  ReviewCtrl.prototype.updateTableData = function(data) {
+    this.scope.review.table.source = data.review;
+    this.filterTableData();
   };
 
-  ReviewCtrl.prototype.prevData = function() {
-    this.reviewApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateData.bind(this));
+  ReviewCtrl.prototype.filterTableData = function() {
+    if (this.scope.filters.table.year.id) {
+      this.scope.review.table.students = this._.filter(
+        this.scope.review.table.source.students, {
+          'PGY': this.scope.filters.table.year.id
+        }
+      );
+    } else {
+      this.scope.review.table.students = this.scope.review.table.source.students;
+    }
+
+    this.sortTableDataBy();
   };
 
-  ReviewCtrl.prototype.updateData = function (data) {
+  ReviewCtrl.prototype.sortTableDataBy = function(sortBy) {
+
+    if (sortBy) {
+      this.scope.review.table.sortedBy = sortBy;
+    } else {
+      sortBy = this.scope.review.table.sortedBy;
+    }
+
+    this.scope.review.table.students = this._.sortBy(
+      this.scope.review.table.students,
+      function(student) {
+        return student[sortBy];
+      }
+    );
+  };
+
+  ReviewCtrl.prototype.getChartData = function() {
+    this.reviewApi.next('', this.scope.filters.chart).then(this.updateChartData.bind(this));
+  };
+
+  ReviewCtrl.prototype.nextChartData = function() {
+    this.reviewApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateChartData.bind(this));
+  };
+
+  ReviewCtrl.prototype.prevChartData = function() {
+    this.reviewApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateChartData.bind(this));
+  };
+
+  ReviewCtrl.prototype.updateChartData = function(data) {
     this.scope.cursor.next = data.next;
     this.scope.cursor.prev = data.prev;
-    this.scope.review = data.review;
+    this.scope.review.chart = data.review;
     this.setLayout();
     this.setScales();
   };
@@ -383,8 +440,7 @@
     }
 
     this.scope.scales.y = this.d3.scale.ordinal();
-    this.scope.review.students.forEach(function(student) {
-      student.fullName = student.firstName + ' ' + student.lastName;
+    this.scope.review.chart.students.forEach(function(student) {
       self.scope.scales.y(student.id);
     });
     this.scope.scales.y = this.scope.scales.y.rangePoints([this.scope.layout.innerHeight, 0], 1);
@@ -392,7 +448,7 @@
 
 
   ReviewCtrl.prototype.setLayout = function() {
-    this.scope.layout = layout(this.scope.review.students.length * 20); // 20px per student
+    this.scope.layout = layout(this.scope.review.chart.students.length * 20); // 20px per student
   };
 
 
@@ -549,7 +605,10 @@
 
       return {
         categories: ['All Categories'].concat(categories),
-        residents: [{'title': 'All Residents', 'id': ''}].concat(residents),
+        residents: [{
+          'title': 'All Residents',
+          'id': ''
+        }].concat(residents),
         stats: stats,
 
         _get: function(start, end, opt) {
@@ -575,9 +634,9 @@
 
           return $q.when(
             setCursor({
-              review: {
-                overallAverage: average,
-                students: pool.slice(start, end)
+              'review': {
+                'overallAverage': average,
+                'students': pool.slice(start, end)
               }
             }, pool, start, end)
           );
@@ -599,10 +658,36 @@
           start = cursor - 20;
           end = cursor;
           return this._get(start, end, options);
+        },
+
+        all: function() {
+          return $q.when({
+            'review': {
+              'overallAverage': average,
+              'students': _.clone(users)
+            },
+            'prev': '',
+            'next': ''
+          });
         }
       };
     }
   ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  angular.module('scdMisc.filters', []).
+
+  filter('fullName', function() {
+    return function(obj) {
+      return obj.firstName + ' ' + obj.lastName;
+    };
+  })
+
 
   ;
 
