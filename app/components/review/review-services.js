@@ -144,7 +144,10 @@
 
       return {
         categories: ['All Categories'].concat(categories),
-        residents: [{'title': 'All Residents', 'id': ''}].concat(residents),
+        residents: [{
+          'title': 'All Residents',
+          'id': ''
+        }].concat(residents),
         stats: stats,
 
         _get: function(start, end, opt) {
@@ -170,9 +173,9 @@
 
           return $q.when(
             setCursor({
-              review: {
-                overallAverage: average,
-                students: pool.slice(start, end)
+              'review': {
+                'overallAverage': average,
+                'students': pool.slice(start, end)
               }
             }, pool, start, end)
           );
@@ -194,6 +197,17 @@
           start = cursor - 20;
           end = cursor;
           return this._get(start, end, options);
+        },
+
+        all: function() {
+          return $q.when({
+            'review': {
+              'overallAverage': average,
+              'students': _.clone(users)
+            },
+            'prev': '',
+            'next': ''
+          });
         }
       };
     }
