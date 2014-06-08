@@ -1,4 +1,4 @@
-<h1>Review</h1>
+<h1>First Aid</h1>
 
 <div class="well graph-view">
   <form role="form" class="form-inline filter-selectors">
@@ -60,9 +60,9 @@
       </g>
 
       <g class="data">
-        <g class="student" ng-repeat="student in review.chart.students track by student.id"
+        <g class="student" ng-repeat="student in firstAid.chart.students track by student.id"
           ng-attr-transform="translate(0,{{$index * 20}})"
-          ng-class="{failing: student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] < review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id]}"
+          ng-class="{failing: student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] < firstAid.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id]}"
         >
           <rect y="6" height="8" ng-attr-width="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" />
           <text ng-attr-x="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" y="10" dx="5">
@@ -75,7 +75,7 @@
 
         <line ng-attr-y2="{{layout.innerHeight}}" class="axis-line"/>
 
-        <g class="student" ng-repeat="student in review.chart.students track by student.id"
+        <g class="student" ng-repeat="student in firstAid.chart.students track by student.id"
           ng-attr-transform="translate(0,{{$index * 20}})"
         >
           <line x2="-5"/>
@@ -90,10 +90,10 @@
       </g>
 
       <g class="average"
-        ng-attr-transform="translate({{scales.x(review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id])}})"
+        ng-attr-transform="translate({{scales.x(firstAid.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id])}})"
       >
           <line y1="-5" ng-attr-y2="{{layout.innerHeight + 5}}"/>
-          <text x="5" y="-10">Average ({{review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%)</text>
+          <text x="5" y="-10">Average ({{firstAid.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%)</text>
       </g>
 
     </svg>
@@ -142,7 +142,7 @@
 
         <div class="form-group">
           <input type="text" class="form-control" placeholder="Search"
-            ng-model="review.table.searchFor"
+            ng-model="firstAid.table.searchFor"
           />
         </div>
 
@@ -153,7 +153,7 @@
 
   <form role="form" class="form-inline filter-selectors">
 
-  {{review.table.searchFor}}
+  {{firstAid.table.searchFor}}
 
   </form>
 
@@ -162,46 +162,46 @@
       <tr>
         <th>
           <a ng-click="tableSortBy('firstName')">
-            Name <span ng-if="review.table.sortedBy == 'firstName'" class="glyphicon glyphicon-sort"></span>
+            Name <span ng-if="firstAid.table.sortedBy == 'firstName'" class="glyphicon glyphicon-sort"></span>
           </a>
         </th>
         <th>
           <a ng-click="tableSortBy('PGY')">
-            PGY <span ng-if="review.table.sortedBy == 'PGY'" class="glyphicon glyphicon-sort"></span>
+            PGY <span ng-if="firstAid.table.sortedBy == 'PGY'" class="glyphicon glyphicon-sort"></span>
           </a>
         </th>
         <th>
           <a ng-click="tableSortBy('selected-category')">
             {{filters.table.show.category}}
-            <span ng-if="review.table.sortedBy == 'selected-category'" class="glyphicon glyphicon-sort"></span>
+            <span ng-if="firstAid.table.sortedBy == 'selected-category'" class="glyphicon glyphicon-sort"></span>
           </a>
         </th>
         <th>
           <a ng-click="tableSortBy('PGY-average')">
             PGY Average
-            <span ng-if="review.table.sortedBy == 'PGY-average'" class="glyphicon glyphicon-sort"></span>
+            <span ng-if="firstAid.table.sortedBy == 'PGY-average'" class="glyphicon glyphicon-sort"></span>
           </a>
         </th>
         <th>
           <a ng-click="tableSortBy('%-completed')">
             Percentage Completed
-            <span ng-if="review.table.sortedBy == '%-completed'" class="glyphicon glyphicon-sort"></span>
+            <span ng-if="firstAid.table.sortedBy == '%-completed'" class="glyphicon glyphicon-sort"></span>
           </a>
         </th>
         <th>
           <a ng-click="tableSortBy('probability-of-passing')">
             Probability of passing ABEM
-            <span ng-if="review.table.sortedBy == 'probability-of-passing'" class="glyphicon glyphicon-sort"></span>
+            <span ng-if="firstAid.table.sortedBy == 'probability-of-passing'" class="glyphicon glyphicon-sort"></span>
           </a>
         </th>
       </tr>
     </thead>
     <tbody>
-      <tr ng-repeat="student in review.table.students | filter:{$: review.table.searchFor} track by student.id">
+      <tr ng-repeat="student in firstAid.table.students | filter:{$: firstAid.table.searchFor} track by student.id">
         <td>{{student|fullName}}</td>
         <td>{{student.PGY}}</td>
         <td>{{student.data[filters.table.show.category].result| number:1}}%</td>
-        <td>{{review.table.source.overallAverage['PGY ' + student.PGY][filters.table.show.category][filters.table.show.property.id] | number:1}}%</td>
+        <td>{{firstAid.table.source.overallAverage['PGY ' + student.PGY][filters.table.show.category][filters.table.show.property.id] | number:1}}%</td>
         <td>{{student.data[filters.table.show.category].completed | number:1}}%</td>
         <td>{{student.data[filters.table.show.category].probabilityOfPassing | number:1}}%</td>
       </tr>

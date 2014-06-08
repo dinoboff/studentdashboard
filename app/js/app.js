@@ -5,6 +5,7 @@
     'ngRoute',
     'scDashboard.controllers',
     'scdRepository.controllers',
+    'scdFirstAid.controllers',
     'scdReview.controllers',
     'scdMisc.filters'
   ]).
@@ -21,6 +22,11 @@
         when('/review', {
           templateUrl: 'views/scdashboard/review.html',
           controller: 'scdReviewCtrl'
+        }).
+
+        when('/first-aid', {
+          templateUrl: 'views/scdashboard/first-aid.html',
+          controller: 'scdFirstAidCtrl'
         }).
 
         otherwise({

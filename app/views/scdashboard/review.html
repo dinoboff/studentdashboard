@@ -103,36 +103,57 @@
 
 <div class="well table-view">
 
+  <nav class="navbar navbar-default well" role="navigation">
+    <div class="container-fluid">
+
+      <form class="navbar-form navbar-left" role="search">
+
+        <div class="form-group">
+          <label for="resident">Show: </label>
+          <select id="resident" class="form-control"
+            ng-model="filters.table.year"
+            ng-options="opt.title for opt in residents"
+            required="true"
+            ng-change="tableFiltersChanged()"
+          ></select>
+        </div>
+
+        <div class="form-group">
+          <label class="sr-only" for="cotegory"> filter by category: </label>
+          <select id="cotegory" class="form-control"
+            ng-model="filters.table.show.category"
+            ng-options="opt for opt in categories"
+            required="true"
+          ></select>
+        </div>
+
+        <div class="form-group">
+          <label for="resident"> Compared to: </label>
+          <select id="resident" class="form-control"
+            ng-model="filters.table.show.property"
+            ng-options="opt.title for opt in stats"
+            required="true"
+          ></select>
+        </div>
+
+      </form>
+
+      <form class="navbar-form navbar-right" role="search">
+
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search"
+            ng-model="review.table.searchFor"
+          />
+        </div>
+
+      </form>
+
+    </div>
+  </nav>
+
   <form role="form" class="form-inline filter-selectors">
-    <h2>Performance by Residents</h2>
 
-    <div class="form-group">
-      <label for="resident">Show: </label>
-      <select id="resident" class="form-control"
-        ng-model="filters.table.year"
-        ng-options="opt.title for opt in residents"
-        required="true"
-        ng-change="tableFiltersChanged()"
-      ></select>
-    </div>
-
-    <div class="form-group">
-      <label class="sr-only" for="cotegory"> filter by category: </label>
-      <select id="cotegory" class="form-control"
-        ng-model="filters.table.show.category"
-        ng-options="opt for opt in categories"
-        required="true"
-      ></select>
-    </div>
-
-    <div class="form-group">
-      <label for="resident"> Compared to: </label>
-      <select id="resident" class="form-control"
-        ng-model="filters.table.show.property"
-        ng-options="opt.title for opt in stats"
-        required="true"
-      ></select>
-    </div>
+  {{review.table.searchFor}}
 
   </form>
 
@@ -176,7 +197,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr ng-repeat="student in review.table.students track by student.id">
+      <tr ng-repeat="student in review.table.students | filter:{$: review.table.searchFor} track by student.id">
         <td>{{student|fullName}}</td>
         <td>{{student.PGY}}</td>
         <td>{{student.data[filters.table.show.category].result| number:1}}%</td>
