@@ -20,35 +20,35 @@
 
   }
 
-  function ReviewCtrl($scope, window, reviewApi) {
+  function FirstAidCtrl($scope, window, firstAidApi) {
     this._ = window._;
     this.d3 = window.d3;
-    this.reviewApi = reviewApi;
+    this.firstAidApi = firstAidApi;
     this.scope = $scope;
 
-    $scope.residents = reviewApi.residents;
-    $scope.categories = reviewApi.categories;
-    $scope.stats = reviewApi.stats;
+    $scope.residents = firstAidApi.residents;
+    $scope.categories = firstAidApi.categories;
+    $scope.stats = firstAidApi.stats;
     $scope.cursor = {};
 
     $scope.filters = {
       chart: {
-        year: reviewApi.residents[0],
+        year: firstAidApi.residents[0],
         sortBy: {
-          category: reviewApi.categories[0],
-          property: reviewApi.stats[0]
+          category: firstAidApi.categories[0],
+          property: firstAidApi.stats[0]
         }
       },
       table: {
-        year: reviewApi.residents[0],
+        year: firstAidApi.residents[0],
         show: {
-          category: reviewApi.categories[0],
-          property: reviewApi.stats[0]
+          category: firstAidApi.categories[0],
+          property: firstAidApi.stats[0]
         }
       }
     };
 
-    $scope.review = {
+    $scope.firstAid = {
       chart: {},
       table: {
         sortedBy: 'firstName',
@@ -69,42 +69,42 @@
     this.getTableData();
   }
 
-  ReviewCtrl.prototype.getTableData = function() {
-    this.reviewApi.all().then(this.updateTableData.bind(this));
+  FirstAidCtrl.prototype.getTableData = function() {
+    this.firstAidApi.all().then(this.updateTableData.bind(this));
   };
 
-  ReviewCtrl.prototype.updateTableData = function(data) {
-    this.scope.review.table.source = data.review;
+  FirstAidCtrl.prototype.updateTableData = function(data) {
+    this.scope.firstAid.table.source = data.firstAid;
     this.filterTableData();
   };
 
-  ReviewCtrl.prototype.filterTableData = function() {
+  FirstAidCtrl.prototype.filterTableData = function() {
     if (this.scope.filters.table.year.id) {
-      this.scope.review.table.students = this._.filter(
-        this.scope.review.table.source.students, {
+      this.scope.firstAid.table.students = this._.filter(
+        this.scope.firstAid.table.source.students, {
           'PGY': this.scope.filters.table.year.id
         }
       );
     } else {
-      this.scope.review.table.students = this.scope.review.table.source.students;
+      this.scope.firstAid.table.students = this.scope.firstAid.table.source.students;
     }
 
-    this.sortTableDataBy(this.scope.review.table.sortedBy);
+    this.sortTableDataBy(this.scope.firstAid.table.sortedBy);
   };
 
-  ReviewCtrl.prototype.sortTableDataBy = function(sortBy) {
+  FirstAidCtrl.prototype.sortTableDataBy = function(sortBy) {
     var getKey,
       self = this;
 
-    this.scope.review.table.reversed = (
-      this.scope.review.table.sortedBy === sortBy &&
-      this.scope.review.table.reversed === false
+    this.scope.firstAid.table.reversed = (
+      this.scope.firstAid.table.sortedBy === sortBy &&
+      this.scope.firstAid.table.reversed === false
     );
 
-    this.scope.review.table.sortedBy = sortBy;
+    this.scope.firstAid.table.sortedBy = sortBy;
 
-    if (this.scope.review.table.reversed) {
-      this.scope.review.table.students.reverse();
+    if (this.scope.firstAid.table.reversed) {
+      this.scope.firstAid.table.students.reverse();
       return;
     }
 
@@ -116,7 +116,7 @@
       break;
     case 'PGY-average':
       getKey = function(student) {
-        return self.scope.review.table.source.overallAverage['PGY ' + student.PGY][self.scope.filters.table.show.category][self.scope.filters.table.show.property.id];
+        return self.scope.firstAid.table.source.overallAverage['PGY ' + student.PGY][self.scope.filters.table.show.category][self.scope.filters.table.show.property.id];
       };
       break;
     case '%-completed':
@@ -136,33 +136,33 @@
       break;
     }
 
-    this.scope.review.table.students = this._.sortBy(
-      this.scope.review.table.students, getKey
+    this.scope.firstAid.table.students = this._.sortBy(
+      this.scope.firstAid.table.students, getKey
     );
 
   };
 
-  ReviewCtrl.prototype.getChartData = function() {
-    this.reviewApi.next('', this.scope.filters.chart).then(this.updateChartData.bind(this));
+  FirstAidCtrl.prototype.getChartData = function() {
+    this.firstAidApi.next('', this.scope.filters.chart).then(this.updateChartData.bind(this));
   };
 
-  ReviewCtrl.prototype.nextChartData = function() {
-    this.reviewApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateChartData.bind(this));
+  FirstAidCtrl.prototype.nextChartData = function() {
+    this.firstAidApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateChartData.bind(this));
   };
 
-  ReviewCtrl.prototype.prevChartData = function() {
-    this.reviewApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateChartData.bind(this));
+  FirstAidCtrl.prototype.prevChartData = function() {
+    this.firstAidApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateChartData.bind(this));
   };
 
-  ReviewCtrl.prototype.updateChartData = function(data) {
+  FirstAidCtrl.prototype.updateChartData = function(data) {
     this.scope.cursor.next = data.next;
     this.scope.cursor.prev = data.prev;
-    this.scope.review.chart = data.review;
+    this.scope.firstAid.chart = data.firstAid;
     this.setLayout();
     this.setScales();
   };
 
-  ReviewCtrl.prototype.setScales = function() {
+  FirstAidCtrl.prototype.setScales = function() {
     var self = this;
 
     if (!this.scope.scales) {
@@ -176,21 +176,21 @@
     }
 
     this.scope.scales.y = this.d3.scale.ordinal();
-    this.scope.review.chart.students.forEach(function(student) {
+    this.scope.firstAid.chart.students.forEach(function(student) {
       self.scope.scales.y(student.id);
     });
     this.scope.scales.y = this.scope.scales.y.rangePoints([this.scope.layout.innerHeight, 0], 1);
   };
 
 
-  ReviewCtrl.prototype.setLayout = function() {
-    this.scope.layout = layout(this.scope.review.chart.students.length * 20); // 20px per student
+  FirstAidCtrl.prototype.setLayout = function() {
+    this.scope.layout = layout(this.scope.firstAid.chart.students.length * 20); // 20px per student
   };
 
 
-  angular.module('scdReview.controllers', ['scceSvg.directives', 'scdReview.services']).
+  angular.module('scdFirstAid.controllers', ['scceSvg.directives', 'scdFirstAid.services']).
 
-  controller('scdReviewCtrl', ['$scope', '$window', 'scdReviewApi', ReviewCtrl])
+  controller('scdFirstAidCtrl', ['$scope', '$window', 'scdFirstAidApi', FirstAidCtrl])
 
   ;
 
