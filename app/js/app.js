@@ -6,6 +6,7 @@
     'scDashboard.controllers',
     'scdRepository.controllers',
     'scdFirstAid.controllers',
+    'scdPortfolio.controllers',
     'scdReview.controllers',
     'scdMisc.filters'
   ]).
@@ -27,6 +28,12 @@
         when('/first-aid', {
           templateUrl: 'views/scdashboard/first-aid.html',
           controller: 'scdFirstAidCtrl'
+        }).
+
+        when('/portfolio', {
+          templateUrl: 'views/scdashboard/portfolio.html',
+          controller: 'scdPortfolioCtrl',
+          controllerAs: 'ctrl'
         }).
 
         otherwise({

@@ -1,12 +1,12 @@
 
 <h1>Repository</h1>
 
-<form role="form" class="form-inline" ng-if="showStudentSelector">
+<form role="form" class="form-inline" ng-if="selector.available">
   <div class="form-group">
     <label for="selected-student">Show repository of </label>
-    <select id="selected-student" class="form-control " ng-model="selected.student"
-      ng-options="s.firstName + ' ' + s.lastName for s in students track by s.id"
-      ng-change="listFile(selected.student.id)"
+    <select id="selected-student" class="form-control " ng-model="selector.selectedId"
+      ng-options="s.id as s.firstName + ' ' + s.lastName for s in selector.students"
+      ng-change="listFile(selector.selectedId)"
     >
       <option value="">Select a student</option>
     </select>
@@ -48,7 +48,7 @@
   </div>
 
   <div class="col-md-4">
-    <div ng-if="selected.student.id">
+    <div ng-if="selector.selectedId">
       <form role="form" ng-controller="scdRepositoryUploadFileCtrl" id="upload-form">
         <fielset>
           <legend>Upload File</legend>

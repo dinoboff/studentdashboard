@@ -3,47 +3,28 @@
 
   angular.module(
     'scdRepository.controllers', [
-      'scdRepository.services',
+      'angularFileUpload',
       'scceStudents.services',
       'scceUser.services',
       'scDashboard.services',
-      'angularFileUpload',
-      'scdRepository.directives'
+      'scdRepository.directives',
+      'scdRepository.services',
+      'scdSelector.services'
     ]
   ).
 
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scceCurrentUserApi', '$q',
-    function($scope, scdRepositoryApi, scceStudentsApi, scceCurrentUserApi, $q) {
-      $scope.currentUser = null;
+  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', '$q', 'scdSelectedStudent',
+    function($scope, scdRepositoryApi, $q, selectedStudent) {
       $scope.files = null;
-      $scope.showStudentSelector = false;
-      $scope.selected = {};
-      $scope.students = null;
+      $scope.selector = null;
 
-      scceCurrentUserApi.auth().then(function(user) {
-        if (user.error) {
-          $scope.error = 'You need to be logged to list a repository';
-          $scope.files = [];
-          return $q.reject('You need to be logged to list a repository');
-        }
-
-        $scope.currentUser = user;
-        if (!user.staffId && !user.isAdmin) {
-          $scope.listFile(user.id);
-          return user;
-        }
-
-        $scope.showStudentSelector = true;
+      selectedStudent().then(function(selector) {
+        $scope.selector = selector;
+        $scope.listFile(selector.selectedId);
+      }).catch(function(){
+        $scope.error = 'You need to be logged to list a repository';
         $scope.files = [];
-        listStudent();
-        return user;
       });
-
-      function listStudent() {
-        return scceStudentsApi.all().then(function(studentList) {
-          $scope.students = studentList;
-        });
-      }
 
       $scope.listFile = function(studentId) {
         if (!studentId) {
@@ -56,6 +37,7 @@
           $scope.files = list;
           return list;
         }).catch (function(resp) {
+          $scope.files = [];
           if (resp.status === 401) {
             $scope.error = 'You need to be logged to list a repository';
           } else if (resp.status === 403) {
@@ -71,6 +53,7 @@
   controller('scdRepositoryUploadFileCtrl', ['$scope', '$upload', 'scdRepositoryApi',
     function($scope,$upload, scdRepositoryApi) {
       $scope.docTypes = ['SHELF', 'USMLE', 'Peer Evaluations'];
+      $scope.selected = {};
 
       function onProgress(evt) {
         $scope.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
@@ -84,7 +67,7 @@
       }
 
       function uploadFile(file) {
-        scdRepositoryApi.newUploadUrl($scope.selected.student.id).then(function(uploadInfo) {
+        scdRepositoryApi.newUploadUrl($scope.selector.selectedId).then(function(uploadInfo) {
           $scope.upload = $upload.upload({
             url: uploadInfo.url,
             method: 'POST',
@@ -92,7 +75,7 @@
             data: {
               name: $scope.fileMeta.name || file.name,
               docType: $scope.fileMeta.docType,
-              destId: $scope.selected.student.id
+              destId: $scope.selector.selectedId
             },
             file: file
           }).progress(
