@@ -8,6 +8,18 @@
       return {
         getById: function(studentId) {
           return dashboardApi.all('portfolio').get(studentId);
+        },
+
+        getExamById: function(studentId, examId) {
+          return dashboardApi.one(
+            'portfolio', studentId
+          ).all('exam').get(examId);
+        },
+
+        getEvaluationById: function(studentId, evaluationId) {
+          return dashboardApi.one(
+            'portfolio', studentId
+          ).all('evaluation').get(evaluationId);
         }
       };
     }

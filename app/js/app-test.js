@@ -76,6 +76,20 @@
         }];
       });
 
+      // exam result
+      $httpBackend.whenGET(fixtures.urls.portfolioExam).respond(function(m, url) {
+        var examId = fixtures.urls.portfolioExam.exec(url)[2];
+
+        return [200, fixtures.data.examResults[examId]];
+      });
+
+      // evaluation result
+      $httpBackend.whenGET(fixtures.urls.portfolioEvaluation).respond(function(m, url) {
+        var evaluationId = fixtures.urls.portfolioEvaluation.exec(url)[2];
+
+        return [200, fixtures.data.evaluationResults[evaluationId]];
+      });
+
       // Everything else go.
       $httpBackend.whenGET(/.*/).passThrough();
     }

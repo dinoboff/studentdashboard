@@ -72,6 +72,13 @@ rect {
   fill: #F08080
 }
 
+/** Border **/
+
+rect.border {
+  fill: none;
+  stroke: #bbb;
+}
+
 /** axis **/
 
 .axis line, .ticks line {
@@ -95,4 +102,54 @@ rect {
 .y-axis text {
   dominant-baseline: middle;
   text-anchor: end;
+}
+
+/** Exam **/
+
+.exam .results line {
+  stroke: #B22222;
+}
+
+.exam .results rect {
+  fill: #B22222;
+  stroke: #ddd;
+}
+
+.exam .mean {
+  stroke: #32CD32;
+}
+
+.exam .results:hover text {
+  font-weight: 800;
+  font-size: 1.1em;
+}
+
+.exam .results:hover line {
+  stroke-width: 2px;
+}
+
+
+/** Evaluation **/
+
+.evaluation {
+  display: block;
+  padding-bottom: 20px;
+}
+
+.evaluation h4 {
+  text-align: center;
+}
+
+.evaluation rect.You {
+  fill: #1E90FF;
+  stroke: #ddd;
+}
+
+.evaluation rect.All-others {
+  fill: #B22222;
+  stroke: #ddd;
+}
+
+.evaluation .ticks text {
+  font-size: 12px
 }

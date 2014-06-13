@@ -8,6 +8,7 @@
     'scdFirstAid.controllers',
     'scdPortfolio.controllers',
     'scdReview.controllers',
+    'scdPortFolio.directives',
     'scdMisc.filters'
   ]).
 
@@ -33,6 +34,18 @@
         when('/portfolio', {
           templateUrl: 'views/scdashboard/portfolio.html',
           controller: 'scdPortfolioCtrl',
+          controllerAs: 'ctrl'
+        }).
+
+        when('/portfolio/:studentId/exam/:examId', {
+          templateUrl: 'views/scdashboard/exam.html',
+          controller: 'scdPfExamCtrl',
+          controllerAs: 'ctrl'
+        }).
+
+        when('/portfolio/:studentId/evaluation/:evaluationId', {
+          templateUrl: 'views/scdashboard/evaluation.html',
+          controller: 'scdPfEvaluationCtrl',
           controllerAs: 'ctrl'
         }).
 
