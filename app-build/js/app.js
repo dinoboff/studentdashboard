@@ -6,7 +6,9 @@
     'scDashboard.controllers',
     'scdRepository.controllers',
     'scdFirstAid.controllers',
+    'scdPortfolio.controllers',
     'scdReview.controllers',
+    'scdPortFolio.directives',
     'scdMisc.filters'
   ]).
 
@@ -27,6 +29,24 @@
         when('/first-aid', {
           templateUrl: 'views/scdashboard/first-aid.html',
           controller: 'scdFirstAidCtrl'
+        }).
+
+        when('/portfolio', {
+          templateUrl: 'views/scdashboard/portfolio.html',
+          controller: 'scdPortfolioCtrl',
+          controllerAs: 'ctrl'
+        }).
+
+        when('/portfolio/:studentId/exam/:examId', {
+          templateUrl: 'views/scdashboard/exam.html',
+          controller: 'scdPfExamCtrl',
+          controllerAs: 'ctrl'
+        }).
+
+        when('/portfolio/:studentId/evaluation/:evaluationId', {
+          templateUrl: 'views/scdashboard/evaluation.html',
+          controller: 'scdPfEvaluationCtrl',
+          controllerAs: 'ctrl'
         }).
 
         otherwise({
@@ -103,202 +123,6 @@
 
   controller('scdHomeCtrl', ['$scope',
 
-  ])
-
-  ;
-
-})();
-(function() {
-  'use strict';
-
-  angular.module('scdRepository.services', ['scDashboard.services']).
-
-  factory('scdRepositoryApi', ['scdDashboardApi',
-    function(scdDashboardApi) {
-      return {
-        getRepositoryById: function(studentId) {
-          return scdDashboardApi.one('repository', studentId).all('files').getList();
-        },
-        newUploadUrl: function(studentId) {
-          return scdDashboardApi.one('repository', studentId).one('uploadurl').post();
-        }
-      };
-    }
-  ])
-
-  ;
-
-})();
-(function() {
-  'use strict';
-
-  angular.module(
-    'scdRepository.controllers', [
-      'scdRepository.services',
-      'scceStudents.services',
-      'scceUser.services',
-      'scDashboard.services',
-      'angularFileUpload',
-      'scdRepository.directives'
-    ]
-  ).
-
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', 'scceStudentsApi', 'scceCurrentUserApi', '$q',
-    function($scope, scdRepositoryApi, scceStudentsApi, scceCurrentUserApi, $q) {
-      $scope.currentUser = null;
-      $scope.files = null;
-      $scope.showStudentSelector = false;
-      $scope.selected = {};
-      $scope.students = null;
-
-      scceCurrentUserApi.auth().then(function(user) {
-        if (user.error) {
-          $scope.error = 'You need to be logged to list a repository';
-          $scope.files = [];
-          return $q.reject('You need to be logged to list a repository');
-        }
-
-        $scope.currentUser = user;
-        if (!user.staffId && !user.isAdmin) {
-          $scope.listFile(user.id);
-          return user;
-        }
-
-        $scope.showStudentSelector = true;
-        $scope.files = [];
-        listStudent();
-        return user;
-      });
-
-      function listStudent() {
-        return scceStudentsApi.all().then(function(studentList) {
-          $scope.students = studentList;
-        });
-      }
-
-      $scope.listFile = function(studentId) {
-        if (!studentId) {
-          $scope.files = [];
-          return $q.reject('You need to select a student.');
-        }
-
-        $scope.files = null;
-        return scdRepositoryApi.getRepositoryById(studentId).then(function(list) {
-          $scope.files = list;
-          return list;
-        }).catch (function(resp) {
-          if (resp.status === 401) {
-            $scope.error = 'You need to be logged to list a repository';
-          } else if (resp.status === 403) {
-            $scope.error = 'Only admin or staff can list the files of a student.';
-          } else {
-            $scope.error = 'Unexpected error while trying to fetch the file list';
-          }
-        });
-      };
-    }
-  ]).
-
-  controller('scdRepositoryUploadFileCtrl', ['$scope', '$upload', 'scdRepositoryApi',
-    function($scope,$upload, scdRepositoryApi) {
-      $scope.docTypes = ['SHELF', 'USMLE', 'Peer Evaluations'];
-
-      function onProgress(evt) {
-        $scope.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
-      }
-
-      function onSucess(data) {
-        $scope.files.unshift(data);
-        $scope.success = 'New file uploaded.';
-        $scope.selected.file = null;
-        $scope.reset();
-      }
-
-      function uploadFile(file) {
-        scdRepositoryApi.newUploadUrl($scope.selected.student.id).then(function(uploadInfo) {
-          $scope.upload = $upload.upload({
-            url: uploadInfo.url,
-            method: 'POST',
-            withCredentials: true,
-            data: {
-              name: $scope.fileMeta.name || file.name,
-              docType: $scope.fileMeta.docType,
-              destId: $scope.selected.student.id
-            },
-            file: file
-          }).progress(
-            onProgress
-          ).success(
-            onSucess
-          );
-        });
-
-      }
-
-      $scope.reset = function() {
-        $scope.fileMeta = {};
-        $scope.selected.file = null;
-        $scope.showProgress = false;
-        $scope.progress = 0;
-      };
-
-      $scope.onFileSelect = function(file) {
-        $scope.fileMeta.name = file.name;
-      };
-
-      $scope.uploadButtonClicked = function(file) {
-        uploadFile(file);
-        $scope.showProgress = true;
-      };
-
-      $scope.reset();
-    }
-  ])
-
-  ;
-
-})();
-(function() {
-  'use strict';
-
-  angular.module('scdRepository.directives', []).
-
-
-  directive('scdFile', ['$parse',
-    function($parse) {
-      return {
-        link: function($scope, elem, attr) {
-          var onSelect = $parse(attr.scdSelected),
-            fileSetter = $parse(attr.scdFile).assign;
-
-          elem.bind('change', function(evt) {
-            var files = [],
-              fileList, i;
-
-            fileList = evt.target.files;
-            if (fileList !== null) {
-              for (i = 0; i < fileList.length; i++) {
-                files.push(fileList.item(i));
-              }
-            }
-
-            fileSetter($scope, files.length > 0 ? files[0] : null);
-            onSelect($scope);
-            $scope.$digest();
-          });
-
-          elem.bind('click', function() {
-            this.value = null;
-          });
-
-          $scope.$watch(attr.scdFile, function(newVal) {
-            if (!newVal) {
-              elem.get(0).value = null;
-            }
-          });
-        }
-      };
-    }
   ])
 
   ;
@@ -711,6 +535,406 @@
             'prev': '',
             'next': ''
           });
+        }
+      };
+    }
+  ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  angular.module('scdMisc.filters', []).
+
+  filter('fullName', function() {
+    return function(obj) {
+      return obj.firstName + ' ' + obj.lastName;
+    };
+  }).
+
+  filter('percent',  ['$window', function(window){
+    var d3 = window.d3,
+      formatter = d3.format('.00%');
+
+    return function(v) {
+      return formatter(v);
+    };
+  }]).
+
+  filter('dash', function(){
+    return function(v) {
+      return v.replace(' ', '-');
+    };
+  }).
+
+
+  filter('isEmpty', function(){
+    return function(o){
+      return !o || Object.keys(o).length === 0;
+    };
+  })
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  /**
+   * Portfolio controller
+   *
+   */
+  function PortfolioCtrl(selectedStudent, pfApi) {
+    var self = this;
+
+    this.pfApi = pfApi;
+    this.portfolio = null;
+    this.selector = null;
+
+    selectedStudent().then(function(selector) {
+      self.selector = selector;
+      if (selector.selectedId) {
+        self.loadPortfolio(selector.selectedId);
+      }
+    });
+  }
+
+  PortfolioCtrl.prototype.loadPortfolio = function(studentId) {
+    var self = this;
+
+    if (!studentId) {
+      self.portfolio = null;
+      return;
+    }
+
+    this.pfApi.getById(studentId).then(function(pf) {
+      self.portfolio = pf;
+    });
+  };
+
+  /**
+   * Exam controller
+   *
+   */
+  function PfExamCtrl($routeParams, currentUserApi, $q, pfApi, window, layout) {
+    var self = this,
+      studentId = $routeParams.studentId,
+      examId = $routeParams.examId,
+      d3 = window.d3,
+      _ = window._;
+
+    this.exam = null;
+    this.layout = layout({
+      top: 10,
+      right: 10,
+      bottom: 30,
+      left: 300
+    });
+
+    this.xScale = d3.scale.linear().domain(
+      [-2, 2]
+    ).range(
+      [0, this.layout.innerWidth]
+    );
+    this.ticks = _.range(-20, 21).map(function(x) {
+      return x / 10;
+    });
+    this.yScale = d3.scale.ordinal();
+
+    currentUserApi.auth().then(function(user) {
+      if (!user.staffId && !user.isAdmin && user.studenId !== studentId) {
+        return $q.reject('You do not have permission to see those results');
+      }
+      return pfApi.getExamById(studentId, examId);
+    }).then(function(exam) {
+
+      self.exam = exam;
+
+      _.forEach(exam.results, function(result) {
+        self.yScale(result.topic.name);
+      });
+      self.yScale = self.yScale.rangePoints([self.layout.innerHeight, 0], 1);
+    }).catch(function() {
+      // TODO: proper handling of error.
+      window.alert('failed to load the exam results.');
+    });
+  }
+
+  /**
+   * Evaluation controller
+   *
+   */
+  function PfEvaluationCtrl(params, currentUserApi, $q, pfApi) {
+    var self = this,
+      studentId = params.studentId,
+      evaluationId = params.evaluationId;
+
+    this.evaluation = null;
+
+    currentUserApi.auth().then(function(user) {
+      if (!user.staffId && !user.isAdmin && user.studenId !== studentId) {
+        return $q.reject('You do not have permission to see those results');
+      }
+      return pfApi.getEvaluationById(studentId, evaluationId);
+    }).then(function(evaluation) {
+      self.evaluation = evaluation;
+    }).catch(function() {
+      // TODO: proper handling of error.
+      window.alert('failed to load the evaluation results.');
+    });
+  }
+
+
+  angular.module('scdPortfolio.controllers', ['scceUser.services', 'scdSelector.services', 'scdPortFolio.services']).
+
+  controller('scdPortfolioCtrl', ['scdSelectedStudent', 'scdPorfolioApi', PortfolioCtrl]).
+  controller('scdPfExamCtrl', [
+    '$routeParams',
+    'scceCurrentUserApi',
+    '$q',
+    'scdPorfolioApi',
+    '$window',
+    'scdPfSvgLayout',
+    PfExamCtrl
+  ]).
+  controller('scdPfEvaluationCtrl', [
+    '$routeParams',
+    'scceCurrentUserApi',
+    '$q',
+    'scdPorfolioApi',
+    PfEvaluationCtrl
+  ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  angular.module('scdPortFolio.services', ['scDashboard.services']).
+
+  factory('scdPorfolioApi', ['scdDashboardApi',
+    function(dashboardApi) {
+      return {
+        getById: function(studentId) {
+          return dashboardApi.all('portfolio').get(studentId);
+        },
+
+        getExamById: function(studentId, examId) {
+          return dashboardApi.one(
+            'portfolio', studentId
+          ).all('exam').get(examId);
+        },
+
+        getEvaluationById: function(studentId, evaluationId) {
+          return dashboardApi.one(
+            'portfolio', studentId
+          ).all('evaluation').get(evaluationId);
+        }
+      };
+    }
+  ]).
+
+  factory('scdPfSvgLayout', [
+    function() {
+      return function(margin, width, height) {
+        margin = margin || {
+          top: 10,
+          right: 10,
+          bottom: 10,
+          left: 10
+        };
+        width = width || 600;
+        height = height || 450;
+
+        return {
+          margin: margin,
+          width: width,
+          height: height,
+          innerWidth: width - margin.right - margin.left,
+          innerHeight: height - margin.top - margin.bottom
+        };
+
+      };
+    }
+  ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  angular.module(
+    'scdRepository.controllers', [
+      'angularFileUpload',
+      'scceStudents.services',
+      'scceUser.services',
+      'scDashboard.services',
+      'scdRepository.directives',
+      'scdRepository.services',
+      'scdSelector.services'
+    ]
+  ).
+
+  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', '$q', 'scdSelectedStudent',
+    function($scope, scdRepositoryApi, $q, selectedStudent) {
+      $scope.files = null;
+      $scope.selector = null;
+
+      selectedStudent().then(function(selector) {
+        $scope.selector = selector;
+        $scope.listFile(selector.selectedId);
+      }).catch(function(){
+        $scope.error = 'You need to be logged to list a repository';
+        $scope.files = [];
+      });
+
+      $scope.listFile = function(studentId) {
+        if (!studentId) {
+          $scope.files = [];
+          return $q.reject('You need to select a student.');
+        }
+
+        $scope.files = null;
+        return scdRepositoryApi.getRepositoryById(studentId).then(function(list) {
+          $scope.files = list;
+          return list;
+        }).catch (function(resp) {
+          $scope.files = [];
+          if (resp.status === 401) {
+            $scope.error = 'You need to be logged to list a repository';
+          } else if (resp.status === 403) {
+            $scope.error = 'Only admin or staff can list the files of a student.';
+          } else {
+            $scope.error = 'Unexpected error while trying to fetch the file list';
+          }
+        });
+      };
+    }
+  ]).
+
+  controller('scdRepositoryUploadFileCtrl', ['$scope', '$upload', 'scdRepositoryApi',
+    function($scope,$upload, scdRepositoryApi) {
+      $scope.docTypes = ['SHELF', 'USMLE', 'Peer Evaluations'];
+      $scope.selected = {};
+
+      function onProgress(evt) {
+        $scope.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
+      }
+
+      function onSucess(data) {
+        $scope.files.unshift(data);
+        $scope.success = 'New file uploaded.';
+        $scope.selected.file = null;
+        $scope.reset();
+      }
+
+      function uploadFile(file) {
+        scdRepositoryApi.newUploadUrl($scope.selector.selectedId).then(function(uploadInfo) {
+          $scope.upload = $upload.upload({
+            url: uploadInfo.url,
+            method: 'POST',
+            withCredentials: true,
+            data: {
+              name: $scope.fileMeta.name || file.name,
+              docType: $scope.fileMeta.docType,
+              destId: $scope.selector.selectedId
+            },
+            file: file
+          }).progress(
+            onProgress
+          ).success(
+            onSucess
+          );
+        });
+
+      }
+
+      $scope.reset = function() {
+        $scope.fileMeta = {};
+        $scope.selected.file = null;
+        $scope.showProgress = false;
+        $scope.progress = 0;
+      };
+
+      $scope.onFileSelect = function(file) {
+        $scope.fileMeta.name = file.name;
+      };
+
+      $scope.uploadButtonClicked = function(file) {
+        uploadFile(file);
+        $scope.showProgress = true;
+      };
+
+      $scope.reset();
+    }
+  ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  angular.module('scdRepository.directives', []).
+
+
+  directive('scdFile', ['$parse',
+    function($parse) {
+      return {
+        link: function($scope, elem, attr) {
+          var onSelect = $parse(attr.scdSelected),
+            fileSetter = $parse(attr.scdFile).assign;
+
+          elem.bind('change', function(evt) {
+            var files = [],
+              fileList, i;
+
+            fileList = evt.target.files;
+            if (fileList !== null) {
+              for (i = 0; i < fileList.length; i++) {
+                files.push(fileList.item(i));
+              }
+            }
+
+            fileSetter($scope, files.length > 0 ? files[0] : null);
+            onSelect($scope);
+            $scope.$digest();
+          });
+
+          elem.bind('click', function() {
+            this.value = null;
+          });
+
+          $scope.$watch(attr.scdFile, function(newVal) {
+            if (!newVal) {
+              elem.get(0).value = null;
+            }
+          });
+        }
+      };
+    }
+  ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+  angular.module('scdRepository.services', ['scDashboard.services']).
+
+  factory('scdRepositoryApi', ['scdDashboardApi',
+    function(scdDashboardApi) {
+      return {
+        getRepositoryById: function(studentId) {
+          return scdDashboardApi.one('repository', studentId).all('files').getList();
+        },
+        newUploadUrl: function(studentId) {
+          return scdDashboardApi.one('repository', studentId).one('uploadurl').post();
         }
       };
     }
@@ -1137,14 +1361,150 @@
 (function() {
   'use strict';
 
-  angular.module('scdMisc.filters', []).
+  angular.module('scdSelector.services', [
+    'scceStudents.services',
+    'scceUser.services',
+  ]).
 
-  filter('fullName', function() {
-    return function(obj) {
-      return obj.firstName + ' ' + obj.lastName;
-    };
-  })
+  /**
+   * Get a list of student and keep tract of a selected student.
+   *
+   * Can be share by directive and controller to keep track of which student
+   * the current user is watching or editing.
+   *
+   * If the current user is not an admin or staff, he won't be able to pick and
+   * the selected user will be the current user (assuming he's a student).
+   *
+   * Return a promising resolving to a selector object with the
+   * following properties:
+   *
+   * - `students` (list of student selectable),
+   * - `selectedId` (id of the selected student),
+   * - `available` (can the current user select a student other than
+   *   him / herself)
+   *
+   */
+  factory('scdSelectedStudent', ['scceCurrentUserApi', 'scceStudentsApi', '$q',
+    function(scceCurrentUserApi, scceStudentsApi, $q) {
+      var selector = null,
+        selectorPromise = null,
+        studentsPromise = null;
 
+      function listStudents(selector) {
+        if (selector.students || studentsPromise) {
+          return;
+        }
+
+        studentsPromise = scceStudentsApi.all().then(function(studentList) {
+          selector.students = studentList;
+        })['finally'](function() {
+          studentsPromise = null;
+        });
+      }
+
+      return function() {
+        if (selector) {
+          return $q.when(selector);
+        }
+
+        if (selectorPromise) {
+          return $q.when(selectorPromise);
+        }
+
+        selectorPromise = scceCurrentUserApi.auth().then(function(user) {
+
+          if (user.error) {
+            return $q.reject('You need to be login.');
+          }
+
+          selector = {
+            students: null,
+            selectedId: null,
+            available: false
+          };
+
+          if (user.studentId) {
+            selector.selectedId = user.studentId;
+          }
+
+          if (user.staffId || user.isAdmin) {
+            selector.available = true;
+            listStudents(selector);
+          }
+
+          return selector;
+        })['finally'](function(){
+          selectorPromise = null;
+        });
+
+        return selectorPromise;
+      };
+    }
+  ])
+
+  ;
+
+})();
+
+(function(){
+  'use strict';
+
+  angular.module('scdPortFolio.directives', ['scdPortFolio.services']).
+
+    directive('scdPfBars', ['scdPfSvgLayout', '$window', function(layout, window) {
+      return {
+        restrict: 'E',
+        templateUrl: 'views/scdashboard/charts/bars.html',
+        scope: {
+          'data': '=scdPfData',
+          'width': '&scdPfWidth',
+          'height': '&scdPfHeight'
+        },
+        link: function(scope) {
+          var onDataChange, d3 = window.d3;
+
+          scope.layout = layout(
+            {top: 10, right: 10, bottom:70, left: 60},
+            scope.width(),
+            scope.height()
+          );
+
+          onDataChange = function() {
+            if (!scope.data) {
+              return;
+            }
+
+            scope.xScale = d3.scale.ordinal();
+            scope.xSubScale = d3.scale.ordinal();
+            scope.yScale = d3.scale.linear();
+
+            // set domains
+            scope.data.data.forEach(function(type){
+              scope.xScale(type.name);
+            });
+            scope.xSubScale = scope.xSubScale.domain(['value', 'mean']);
+            scope.yScale = scope.yScale.domain([0, 1]);
+
+            // set ranges
+            scope.xScale = scope.xScale.rangeBands([0, scope.layout.innerWidth], 0, 0);
+            scope.xSubScale = scope.xSubScale.rangeBands(
+              [0, scope.layout.innerWidth/scope.xScale.domain().length], 0, 1)
+            ;
+            scope.legendScale = scope.xSubScale.copy().rangeBands([0, scope.layout.innerWidth], 0.1, 1);
+            scope.yScale = scope.yScale.range([0, scope.layout.innerHeight]).nice();
+            scope.yAxisScale = scope.yScale.copy().range([scope.layout.innerHeight, 0]).nice();
+
+            // Translate legend name
+            scope.translate = function(fieldName) {
+              var t = {'value': 'You', 'mean': 'All others'};
+              return t[fieldName] ? t[fieldName] : fieldName;
+            };
+          };
+
+          scope.$watch('data', onDataChange);
+        }
+      };
+    }])
 
   ;
 

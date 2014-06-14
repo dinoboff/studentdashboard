@@ -1,0 +1,67 @@
+<h1>Results and Evaluations</h1>
+
+<form role="form" class="form-inline" ng-if="ctrl.selector.available">
+  <div class="form-group">
+    <label for="selected-student">Show portfolio of </label>
+    <select id="selected-student" class="form-control " ng-model="ctrl.selector.selectedId"
+      ng-options="s.id as s.firstName + ' ' + s.lastName for s in ctrl.selector.students"
+      ng-change="ctrl.loadPortfolio(ctrl.selector.selectedId)"
+    >
+      <option value="">Select a student</option>
+    </select>
+  </div>
+  <hr/>
+</form>
+
+<p ng-if="!ctrl.selector.selectedId">No student selected</p>
+<p ng-if="ctrl.selector.selectedId &amp;&amp; !ctrl.portfolio">Loading portfolio...</p>
+
+<div class="row" ng-if="ctrl.portfolio">
+  <div class="col-md-8">
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <p ng-if="ctrl.portfolio.examSeries|isEmpty">You have not taken part to any exam.</p>
+
+        <div ng-repeat="(_, series) in ctrl.portfolio.examSeries">
+
+          <h3 ng-bind="series.name">Exam type</h3>
+          <ul>
+            <li ng-repeat="(_, exam) in series.exams">
+              <a ng-href="#/portfolio/{{ctrl.portfolio.student.id}}/exam/{{exam.id}}" ng-bind="exam.name">No exam</a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="col-md-6">
+        <p ng-if="ctrl.portfolio.evaluationSeries|isEmpty">You have not taken part to any evaluation.</p>
+
+        <div ng-repeat="(_, series) in ctrl.portfolio.evaluationSeries">
+
+          <h3 ng-bind="series.name">Evaluation type</h3>
+          <ul>
+            <li ng-repeat="(_, evaluation) in series.evaluations">
+              <a ng-href="#/portfolio/{{ctrl.portfolio.student.id}}/evaluation/{{evaluation.id}}" ng-bind="evaluation.name">No evaluation</a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col-md-4">
+    <img ng-src="{{ctrl.portfolio.student.photo}}" alt="student portrait" class="img-thumbnail"/>
+    <h3>
+      <span ng-bind="ctrl.portfolio.student.firstName">Student first name</span>
+      <span ng-bind="ctrl.portfolio.student.lastName">Student last name</span>
+      <small ng-bind="ctrl.portfolio.student.id">student studentId</small>
+    </h3>
+
+  </div>
+</div>
