@@ -56,7 +56,7 @@
             isLoggedIn: true,
             staffId: null,
             logoutUrl: '/logout',
-            studentId: 'x1',
+            studentId: 'X2010200001',
             name: 'test@example.com'
           },
           students: {

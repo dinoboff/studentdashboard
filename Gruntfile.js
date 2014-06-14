@@ -203,7 +203,7 @@ module.exports = function(grunt) {
     protractor: {
       options: {
         configFile: 'config/e2e.conf.js',
-        keepAlive: true,
+        keepAlive: false,
         noColor: false,
       },
       dev: {
@@ -334,8 +334,7 @@ module.exports = function(grunt) {
     'copy:e2e',
     'targethtml:e2e',
     'connect:e2e',
-    'protractor:dev',
-    'watch:e2e'
+    'protractor:dev'
   ]);
 
   grunt.registerTask(

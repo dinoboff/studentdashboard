@@ -7,6 +7,7 @@
   var path = require('path'),
     readMe = path.resolve(__dirname, '../../README.md');
 
+
   describe('dashboard', function() {
 
     var ptor = protractor.getInstance(),
@@ -24,7 +25,7 @@
             });
 
             $httpBackend.whenGET(fix.urls.studentFiles).respond({
-              'files': fix.data.files(students.x1, 2),
+              'files': fix.data.files(students.X2010200001, 2),
               'cursor': 'E-ABAOsB8gELdXBsb2FkZWRfYXT6AQkI98SWrqPCvQLsAYICOmoUZGV2fnN0dWRlbnRkYXNoYm9hcmRyIgsSBEZpbGUiGDRSYlBuS0xBUFgtb1JfR0xQQUZ3N1E9PQwU'
             });
 
@@ -33,7 +34,7 @@
             );
 
             $httpBackend.whenPOST(fix.urls.upload).respond(
-              fix.data.newFile('new file', 'x1', 'Alice Smith')
+              fix.data.newFile('new file', 'X2010200001', 'Alice Smith')
             );
 
             $httpBackend.whenGET(/.*/).passThrough();
@@ -52,7 +53,7 @@
       };
 
       this.studentOptions = function() {
-        return this.studentSelector.findElements(by.tagName('option'));
+        return this.studentSelector.all(by.tagName('option'));
       };
 
       this.fileSelect = function() {
@@ -60,8 +61,7 @@
       };
 
       this.fileTypeSelectOptions = function() {
-        return element(by.css('#selected-doc-type')).
-          findElements(by.tagName('option'));
+        return element(by.css('#selected-doc-type')).all(by.tagName('option'));
       };
 
       this.fileName = function() {
