@@ -31,7 +31,7 @@
           controller: 'scdFirstAidCtrl'
         }).
 
-        when('/portfolio', {
+        when('/assessments', {
           templateUrl: 'views/scdashboard/portfolio.html',
           controller: 'scdPortfolioCtrl',
           controllerAs: 'ctrl'
