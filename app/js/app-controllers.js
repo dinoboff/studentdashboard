@@ -19,10 +19,6 @@
         $scope.currentUser = user;
       });
     }
-  ]).
-
-  controller('scdHomeCtrl', ['$scope',
-
   ])
 
   ;

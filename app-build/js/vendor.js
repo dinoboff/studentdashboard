@@ -50862,8 +50862,13 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
         );
 
         scope.$watch('viewBox', function() {
-          var vb = scope.viewBox,
-            ratio = vb.height / vb.width;
+          var vb = scope.viewBox, ratio;
+
+          if (!vb || !vb.height || !vb.width || !vb.margin) {
+            return;
+          }
+
+          ratio = vb.height / vb.width;
 
           // set / update svg view port
           svg.get(0).setAttribute(

@@ -1,210 +1,212 @@
 <h1>Review</h1>
 
-<div class="well graph-view">
-  <form role="form" class="form-inline filter-selectors">
+<div ng-if="showGlobals" ng-controller="scdGlobalReviewCtrl">
+  <div class="well graph-view">
+    <form role="form" class="form-inline filter-selectors">
 
-    <h2>Performance by Category</h2>
+      <h2>Performance by Category</h2>
 
-    <div class="form-group">
-      <label for="resident">Show: </label>
-      <select id="resident" class="form-control"
-        ng-model="filters.chart.year"
-        ng-options="opt.title for opt in residents"
-        required="true"
-        ng-change="chartFiltersChanged()"
-      ></select>
+      <div class="form-group">
+        <label for="resident">Show: </label>
+        <select id="resident" class="form-control"
+          ng-model="filters.chart.year"
+          ng-options="opt.title for opt in residents"
+          required="true"
+          ng-change="chartFiltersChanged()"
+        ></select>
+      </div>
+
+      <div class="form-group">
+        <label class="sr-only" for="cotegory"> filter by category: </label>
+        <select id="cotegory" class="form-control"
+          ng-model="filters.chart.sortBy.category"
+          ng-options="opt for opt in categories"
+          required="true"
+          ng-change="chartFiltersChanged()"
+        ></select>
+      </div>
+
+      <div class="form-group">
+        <label for="resident"> Compared to: </label>
+        <select id="resident" class="form-control"
+          ng-model="filters.chart.sortBy.property"
+          ng-options="opt.title for opt in stats"
+          required="true"
+          ng-change="chartFiltersChanged()"
+        ></select>
+      </div>
+
+    </form>
+
+    <div class="chart-nav">
+      <div class="btn-group">
+        <button type="button" class="btn btn-default" ng-disabled="!cursor.prev" ng-click="prev()">Prev</button>
+        <button type="button" class="btn btn-default" ng-disabled="!cursor.next" ng-click="next()">Next</button>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label class="sr-only" for="cotegory"> filter by category: </label>
-      <select id="cotegory" class="form-control"
-        ng-model="filters.chart.sortBy.category"
-        ng-options="opt for opt in categories"
-        required="true"
-        ng-change="chartFiltersChanged()"
-      ></select>
-    </div>
 
-    <div class="form-group">
-      <label for="resident"> Compared to: </label>
-      <select id="resident" class="form-control"
-        ng-model="filters.chart.sortBy.property"
-        ng-options="opt.title for opt in stats"
-        required="true"
-        ng-change="chartFiltersChanged()"
-      ></select>
-    </div>
 
-  </form>
+    <scce-svg-container scce-viewbox="layout">
 
-  <div class="chart-nav">
-    <div class="btn-group">
-      <button type="button" class="btn btn-default" ng-disabled="!cursor.prev" ng-click="prev()">Prev</button>
-      <button type="button" class="btn btn-default" ng-disabled="!cursor.next" ng-click="next()">Next</button>
-    </div>
+      <svg>
+
+        <g class="ticks x-ticks">
+          <g ng-repeat="tick in scales.x.ticks(20)"
+            ng-attr-transform="translate({{scales.x(tick)}},0)"
+          >
+            <line ng-attr-y2="{{layout.innerHeight}}"/>
+            <text ng-attr-y="{{layout.innerHeight + 5}}">{{tick}}</text>
+          </g>
+        </g>
+
+        <g class="data">
+          <g class="student" ng-repeat="student in review.chart.students track by student.id"
+            ng-attr-transform="translate(0,{{$index * 20}})"
+            ng-class="{failing: student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] < review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id]}"
+          >
+            <rect y="6" height="8" ng-attr-width="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" />
+            <text ng-attr-x="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" y="10" dx="5">
+              {{student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%
+            </text>
+          </g>
+        </g>
+
+        <g class="axis y-axis students">
+
+          <line ng-attr-y2="{{layout.innerHeight}}" class="axis-line"/>
+
+          <g class="student" ng-repeat="student in review.chart.students track by student.id"
+            ng-attr-transform="translate(0,{{$index * 20}})"
+          >
+            <line x2="-5"/>
+            <line y1="20" y2="20" x2="-5"/>
+
+            <text x="-10" y="10">
+              {{student|fullName}}
+            </text>
+
+          </g>
+
+        </g>
+
+        <g class="average" ng-if="filters.chart.year.title"
+          ng-attr-transform="translate({{scales.x(review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id])}})"
+        >
+            <line y1="-5" ng-attr-y2="{{layout.innerHeight + 5}}"/>
+            <text x="5" y="-10">Average ({{review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%)</text>
+        </g>
+
+      </svg>
+    </scce-svg-container>
+
   </div>
 
+  <div class="well table-view">
 
+    <nav class="navbar navbar-default well" role="navigation">
+      <div class="container-fluid">
 
-  <scce-svg-container scce-viewbox="layout">
+        <form class="navbar-form navbar-left" role="search">
 
-    <svg>
+          <div class="form-group">
+            <label for="resident">Show: </label>
+            <select id="resident" class="form-control"
+              ng-model="filters.table.year"
+              ng-options="opt.title for opt in residents"
+              required="true"
+              ng-change="tableFiltersChanged()"
+            ></select>
+          </div>
 
-      <g class="ticks x-ticks">
-        <g ng-repeat="tick in scales.x.ticks(20)"
-          ng-attr-transform="translate({{scales.x(tick)}},0)"
-        >
-          <line ng-attr-y2="{{layout.innerHeight}}"/>
-          <text ng-attr-y="{{layout.innerHeight + 5}}">{{tick}}</text>
-        </g>
-      </g>
+          <div class="form-group">
+            <label class="sr-only" for="cotegory"> filter by category: </label>
+            <select id="cotegory" class="form-control"
+              ng-model="filters.table.show.category"
+              ng-options="opt for opt in categories"
+              required="true"
+            ></select>
+          </div>
 
-      <g class="data">
-        <g class="student" ng-repeat="student in review.chart.students track by student.id"
-          ng-attr-transform="translate(0,{{$index * 20}})"
-          ng-class="{failing: student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] < review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id]}"
-        >
-          <rect y="6" height="8" ng-attr-width="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" />
-          <text ng-attr-x="{{scales.x(student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id])}}" y="10" dx="5">
-            {{student.data[filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%
-          </text>
-        </g>
-      </g>
+          <div class="form-group">
+            <label for="resident"> Compared to: </label>
+            <select id="resident" class="form-control"
+              ng-model="filters.table.show.property"
+              ng-options="opt.title for opt in stats"
+              required="true"
+            ></select>
+          </div>
 
-      <g class="axis y-axis students">
+        </form>
 
-        <line ng-attr-y2="{{layout.innerHeight}}" class="axis-line"/>
+        <form class="navbar-form navbar-right" role="search">
 
-        <g class="student" ng-repeat="student in review.chart.students track by student.id"
-          ng-attr-transform="translate(0,{{$index * 20}})"
-        >
-          <line x2="-5"/>
-          <line y1="20" y2="20" x2="-5"/>
+          <div class="form-group">
+            <input type="text" class="form-control" placeholder="Search"
+              ng-model="review.table.searchFor"
+            />
+          </div>
 
-          <text x="-10" y="10">
-            {{student|fullName}}
-          </text>
+        </form>
 
-        </g>
+      </div>
+    </nav>
 
-      </g>
+    <form role="form" class="form-inline filter-selectors">
 
-      <g class="average"
-        ng-attr-transform="translate({{scales.x(review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id])}})"
-      >
-          <line y1="-5" ng-attr-y2="{{layout.innerHeight + 5}}"/>
-          <text x="5" y="-10">Average ({{review.chart.overallAverage[filters.chart.year.title][filters.chart.sortBy.category][filters.chart.sortBy.property.id] | number:1}}%)</text>
-      </g>
+    {{review.table.searchFor}}
 
-    </svg>
-  </scce-svg-container>
+    </form>
 
-</div>
-
-<div class="well table-view">
-
-  <nav class="navbar navbar-default well" role="navigation">
-    <div class="container-fluid">
-
-      <form class="navbar-form navbar-left" role="search">
-
-        <div class="form-group">
-          <label for="resident">Show: </label>
-          <select id="resident" class="form-control"
-            ng-model="filters.table.year"
-            ng-options="opt.title for opt in residents"
-            required="true"
-            ng-change="tableFiltersChanged()"
-          ></select>
-        </div>
-
-        <div class="form-group">
-          <label class="sr-only" for="cotegory"> filter by category: </label>
-          <select id="cotegory" class="form-control"
-            ng-model="filters.table.show.category"
-            ng-options="opt for opt in categories"
-            required="true"
-          ></select>
-        </div>
-
-        <div class="form-group">
-          <label for="resident"> Compared to: </label>
-          <select id="resident" class="form-control"
-            ng-model="filters.table.show.property"
-            ng-options="opt.title for opt in stats"
-            required="true"
-          ></select>
-        </div>
-
-      </form>
-
-      <form class="navbar-form navbar-right" role="search">
-
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Search"
-            ng-model="review.table.searchFor"
-          />
-        </div>
-
-      </form>
-
-    </div>
-  </nav>
-
-  <form role="form" class="form-inline filter-selectors">
-
-  {{review.table.searchFor}}
-
-  </form>
-
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>
-          <a ng-click="tableSortBy('firstName')">
-            Name <span ng-if="review.table.sortedBy == 'firstName'" class="glyphicon glyphicon-sort"></span>
-          </a>
-        </th>
-        <th>
-          <a ng-click="tableSortBy('PGY')">
-            PGY <span ng-if="review.table.sortedBy == 'PGY'" class="glyphicon glyphicon-sort"></span>
-          </a>
-        </th>
-        <th>
-          <a ng-click="tableSortBy('selected-category')">
-            {{filters.table.show.category}}
-            <span ng-if="review.table.sortedBy == 'selected-category'" class="glyphicon glyphicon-sort"></span>
-          </a>
-        </th>
-        <th>
-          <a ng-click="tableSortBy('PGY-average')">
-            PGY Average
-            <span ng-if="review.table.sortedBy == 'PGY-average'" class="glyphicon glyphicon-sort"></span>
-          </a>
-        </th>
-        <th>
-          <a ng-click="tableSortBy('%-completed')">
-            Percentage Completed
-            <span ng-if="review.table.sortedBy == '%-completed'" class="glyphicon glyphicon-sort"></span>
-          </a>
-        </th>
-        <th>
-          <a ng-click="tableSortBy('probability-of-passing')">
-            Probability of passing ABEM
-            <span ng-if="review.table.sortedBy == 'probability-of-passing'" class="glyphicon glyphicon-sort"></span>
-          </a>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr ng-repeat="student in review.table.students | filter:{$: review.table.searchFor} track by student.id">
-        <td>{{student|fullName}}</td>
-        <td>{{student.PGY}}</td>
-        <td>{{student.data[filters.table.show.category].result| number:1}}%</td>
-        <td>{{review.table.source.overallAverage['PGY ' + student.PGY][filters.table.show.category][filters.table.show.property.id] | number:1}}%</td>
-        <td>{{student.data[filters.table.show.category].completed | number:1}}%</td>
-        <td>{{student.data[filters.table.show.category].probabilityOfPassing | number:1}}%</td>
-      </tr>
-    </tbody>
-  </table>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>
+            <a ng-click="tableSortBy('firstName')">
+              Name <span ng-if="review.table.sortedBy == 'firstName'" class="glyphicon glyphicon-sort"></span>
+            </a>
+          </th>
+          <th>
+            <a ng-click="tableSortBy('PGY')">
+              PGY <span ng-if="review.table.sortedBy == 'PGY'" class="glyphicon glyphicon-sort"></span>
+            </a>
+          </th>
+          <th>
+            <a ng-click="tableSortBy('selected-category')">
+              {{filters.table.show.category}}
+              <span ng-if="review.table.sortedBy == 'selected-category'" class="glyphicon glyphicon-sort"></span>
+            </a>
+          </th>
+          <th>
+            <a ng-click="tableSortBy('PGY-average')">
+              PGY Average
+              <span ng-if="review.table.sortedBy == 'PGY-average'" class="glyphicon glyphicon-sort"></span>
+            </a>
+          </th>
+          <th>
+            <a ng-click="tableSortBy('%-completed')">
+              Percentage Completed
+              <span ng-if="review.table.sortedBy == '%-completed'" class="glyphicon glyphicon-sort"></span>
+            </a>
+          </th>
+          <th>
+            <a ng-click="tableSortBy('probability-of-passing')">
+              Probability of passing ABEM
+              <span ng-if="review.table.sortedBy == 'probability-of-passing'" class="glyphicon glyphicon-sort"></span>
+            </a>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="student in review.table.students | filter:{$: review.table.searchFor} track by student.id">
+          <td>{{student|fullName}}</td>
+          <td>{{student.PGY}}</td>
+          <td>{{student.data[filters.table.show.category].result| number:1}}%</td>
+          <td>{{review.table.source.overallAverage['PGY ' + student.PGY][filters.table.show.category][filters.table.show.property.id] | number:1}}%</td>
+          <td>{{student.data[filters.table.show.category].completed | number:1}}%</td>
+          <td>{{student.data[filters.table.show.category].probabilityOfPassing | number:1}}%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>

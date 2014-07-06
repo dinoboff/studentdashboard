@@ -20,7 +20,7 @@
 
   }
 
-  function ReviewCtrl($scope, window, reviewApi) {
+  function GlobalReviewCtrl($scope, window, reviewApi) {
     this._ = window._;
     this.d3 = window.d3;
     this.reviewApi = reviewApi;
@@ -69,16 +69,16 @@
     this.getTableData();
   }
 
-  ReviewCtrl.prototype.getTableData = function() {
+  GlobalReviewCtrl.prototype.getTableData = function() {
     this.reviewApi.all().then(this.updateTableData.bind(this));
   };
 
-  ReviewCtrl.prototype.updateTableData = function(data) {
+  GlobalReviewCtrl.prototype.updateTableData = function(data) {
     this.scope.review.table.source = data.review;
     this.filterTableData();
   };
 
-  ReviewCtrl.prototype.filterTableData = function() {
+  GlobalReviewCtrl.prototype.filterTableData = function() {
     if (this.scope.filters.table.year.id) {
       this.scope.review.table.students = this._.filter(
         this.scope.review.table.source.students, {
@@ -92,7 +92,7 @@
     this.sortTableDataBy(this.scope.review.table.sortedBy);
   };
 
-  ReviewCtrl.prototype.sortTableDataBy = function(sortBy) {
+  GlobalReviewCtrl.prototype.sortTableDataBy = function(sortBy) {
     var getKey,
       self = this;
 
@@ -108,7 +108,7 @@
       return;
     }
 
-    switch(sortBy) {
+    switch (sortBy) {
     case 'selected-category':
       getKey = function(student) {
         return student.data[self.scope.filters.table.show.category].result;
@@ -142,19 +142,19 @@
 
   };
 
-  ReviewCtrl.prototype.getChartData = function() {
+  GlobalReviewCtrl.prototype.getChartData = function() {
     this.reviewApi.next('', this.scope.filters.chart).then(this.updateChartData.bind(this));
   };
 
-  ReviewCtrl.prototype.nextChartData = function() {
+  GlobalReviewCtrl.prototype.nextChartData = function() {
     this.reviewApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateChartData.bind(this));
   };
 
-  ReviewCtrl.prototype.prevChartData = function() {
+  GlobalReviewCtrl.prototype.prevChartData = function() {
     this.reviewApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateChartData.bind(this));
   };
 
-  ReviewCtrl.prototype.updateChartData = function(data) {
+  GlobalReviewCtrl.prototype.updateChartData = function(data) {
     this.scope.cursor.next = data.next;
     this.scope.cursor.prev = data.prev;
     this.scope.review.chart = data.review;
@@ -162,7 +162,7 @@
     this.setScales();
   };
 
-  ReviewCtrl.prototype.setScales = function() {
+  GlobalReviewCtrl.prototype.setScales = function() {
     var self = this;
 
     if (!this.scope.scales) {
@@ -183,14 +183,30 @@
   };
 
 
-  ReviewCtrl.prototype.setLayout = function() {
+  GlobalReviewCtrl.prototype.setLayout = function() {
     this.scope.layout = layout(this.scope.review.chart.students.length * 20); // 20px per student
   };
 
 
-  angular.module('scdReview.controllers', ['scceSvg.directives', 'scdReview.services']).
+  angular.module('scdReview.controllers', [
+    'scceSvg.directives',
+    'scdReview.services',
+    'scdSelector.services'
+  ]).
 
-  controller('scdReviewCtrl', ['$scope', '$window', 'scdReviewApi', ReviewCtrl])
+  controller('scdReviewCtrl', ['$scope',
+    function($scope){
+      $scope.showGlobals = true;
+    }
+  ]).
+
+  controller('scdGlobalReviewCtrl', [
+    '$scope',
+    '$window',
+    'scdReviewApi',
+    'scdSelectedStudent',
+    GlobalReviewCtrl
+  ])
 
   ;
 
