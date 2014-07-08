@@ -1,3 +1,7 @@
+.graph-view h2 {
+  text-align: center;
+}
+
 .filter-selectors {
   text-align: center;
   margin-bottom: 20px;
@@ -69,9 +73,14 @@ rect.border {
 
 /** y-axis **/
 
-.y-axis text {
+.y-axis text, .y-ticks text {
   dominant-baseline: middle;
   text-anchor: end;
+}
+
+.axis .legend text {
+  dominant-baseline: hanging;
+  text-anchor: middle;
 }
 
 /** Exam **/
@@ -123,3 +132,21 @@ rect.border {
 .evaluation .ticks text {
   font-size: 12px
 }
+
+/** cumulative-perfomance **/
+
+.cumulative-perfomance .data rect {
+  stroke: none;
+}
+
+.current-performance text, .current-performance tspan {
+  text-align: center;
+  dominant-baseline: middle;
+  text-anchor: middle;
+  font-size: 125%
+}
+
+.current-performance text.subtitle {
+  font-size: 75%;
+}
+

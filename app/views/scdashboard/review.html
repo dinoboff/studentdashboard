@@ -1,10 +1,130 @@
-<h1>Review</h1>
+<h1>Rosh Review</h1>
 
-<div ng-if="showGlobals" ng-controller="scdGlobalReviewCtrl">
+<div class="well">
+  <form role="form" class="form-inline" ng-if="ctrl.selector.available">
+    <div class="form-group">
+      <label for="selected-student">Show performance details of </label>
+      <select id="selected-student" class="form-control " ng-model="ctrl.selector.selectedId"
+        ng-options="s.id as s.firstName + ' ' + s.lastName for s in ctrl.selector.students"
+        ng-change="ctrl.showStudentPerformance(ctrl.selector.selectedId)"
+      >
+        <option value="">Select a student</option>
+      </select>
+    </div>
+    <div class="form-group" ng-show="!ctrl.showGlobals">
+      or <a ng-click="ctrl.showGlobalPerformance(true)">Show global performances</a>
+    </div>
+  </form>
+</div>
+
+<div class="row graph-view" ng-if="ctrl.selector.selectedId &amp;&amp; ctrl.performances.data">
+  <div class="col-sm-7">
+    <div class="well">
+      <h2>Cumulative performance</h2>
+      <hr/>
+
+        <form role="form" class="form-inline filter-selectors">
+
+          <div class="form-group">
+            <label for="compare-user-to"> Compared to: </label>
+            <select id="compare-user-to" class="form-control"
+              ng-model="ctrl.comparison.selected"
+              ng-options="opt as opt.label for opt in ctrl.comparison.available track by opt.id"
+              required="true"
+            ></select>
+          </div>
+
+        </form>
+
+      <scce-svg-container scce-viewbox="ctrl.performances.cumulative.layout" ng-if="ctrl.performances.cumulative.layout">
+        <svg class="cumulative-perfomance">
+
+          <g class="ticks x-ticks">
+            <g ng-repeat="tick in ctrl.performances.cumulative.xTicks"
+              ng-attr-transform="translate({{ctrl.performances.cumulative.xScale(tick) + (ctrl.performances.cumulative.xScale.rangeBand() / 2)}},0)"
+            >
+              <line ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight + 5 }}"/>
+              <text ng-attr-y="{{ctrl.performances.cumulative.layout.innerHeight + 6}}">
+                {{ctrl.performances.cumulative.ticksFormatter(tick)}}
+              </text>
+            </g>
+          </g>
+
+          <g class="ticks y-ticks">
+            <g ng-repeat="tick in ctrl.performances.cumulative.yScale.ticks(5)"
+              ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(tick)}})"
+            >
+              <line x1="-5" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth }}"/>
+              <text x="-10">
+                {{tick}}%
+              </text>
+            </g>
+          </g>
+
+          <g class="data">
+            <rect class="day" ng-repeat="day in ctrl.performances.data.progress"
+              ng-attr-x="{{ctrl.performances.cumulative.xScale(day.date)}}"
+              ng-attr-y="{{ctrl.performances.cumulative.yScaleReversed(day.performance)}}"
+              ng-attr-width="{{ctrl.performances.cumulative.xScale.rangeBand()}}"
+              ng-attr-height="{{ctrl.performances.cumulative.yScale(day.performance)}}"
+            />
+          </g>
+
+          <g class="axis x-axis" ng-attr-transform="translate(0,{{ctrl.performances.cumulative.layout.innerHeight}})">
+            <line class="axis-line" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}"></line>
+          </g>
+
+          <g class="axis y-axis">
+            <line class="axis-line" ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight}}"></line>
+            <g class="legend"
+              ng-attr-transform="translate(-{{ctrl.performances.cumulative.layout.margin.left}},{{ctrl.performances.cumulative.layout.innerHeight/2}})"
+            >
+              <text transform="rotate(-90)">
+                Percentage Correct
+              </text>
+            </g>
+          </g>
+
+          <g class="compareTo"
+            ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(ctrl.performances.data[ctrl.comparison.selected.id])}})"
+          >
+            <line ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}"/>
+            <text dx="15" dy="-0.5em">
+              <tspan>{{ctrl.comparison.selected.type}}</tspan>
+              <tspan> (</tspan>
+              <tspan>{{ctrl.performances.data[ctrl.comparison.selected.id]}}</tspan>
+              <tspan>%)</tspan>
+            </text>
+          </g>
+
+          <g class="current-performance"
+            ng-attr-transform="translate({{ctrl.performances.cumulative.layout.innerWidth + ctrl.performances.cumulative.layout.margin.right/2}},{{ctrl.performances.cumulative.layout.innerHeight/2}})"
+          >
+            <text>
+              <tspan class="value">{{ctrl.performances.data.cumulativePerformance}}</tspan>
+              <tspan class="unit">%</tspan>
+            </text>
+            <text class="subtitle" dy="1.5em">
+              Overall percent correct
+            </text>
+          </g>
+
+        </svg>
+      </scce-svg-container>
+    </div>
+  </div>
+  <div class="col-sm-5">
+    <div class="well">
+      TODO
+    </div>
+  </div>
+</div>
+
+<div ng-if="ctrl.showGlobals" ng-controller="scdGlobalReviewCtrl" class="global-performance">
   <div class="well graph-view">
     <form role="form" class="form-inline filter-selectors">
 
-      <h2>Performance by Category</h2>
+      <h2>Students Performance by Category</h2>
 
       <div class="form-group">
         <label for="resident">Show: </label>
@@ -47,7 +167,7 @@
 
 
 
-    <scce-svg-container scce-viewbox="layout">
+    <scce-svg-container scce-viewbox="layout" ng-if="layout">
 
       <svg>
 

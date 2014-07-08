@@ -23,7 +23,8 @@
 
         when('/review', {
           templateUrl: 'views/scdashboard/review.html',
-          controller: 'scdReviewCtrl'
+          controller: 'scdReviewCtrl',
+          controllerAs: 'ctrl'
         }).
 
         when('/first-aid', {
@@ -942,7 +943,21 @@
 (function() {
   'use strict';
 
-  function layout(innerHeight, margin, width) {
+  function layout(opts) {
+    opts = opts || {};
+    opts.innerHeight = opts.innerHeight || 400;
+    opts.innerWidth = opts.innerWidth || 300;
+    opts.margin = opts.margin || {};
+    opts.margin.top = opts.margin.top || 20;
+    opts.margin.right = opts.margin.right || 20;
+    opts.margin.bottom = opts.margin.bottom || 20;
+    opts.margin.left = opts.margin.left || 20;
+    opts.width = opts.innerWidth + opts.margin.right + opts.margin.left;
+    opts.height = opts.innerHeight + opts.margin.top + opts.margin.bottom;
+    return opts;
+  }
+
+  function layoutFromInnerHeight(innerHeight, margin, width) {
     margin = margin || {
       top: 20,
       right: 150,
@@ -1050,31 +1065,31 @@
     }
 
     switch (sortBy) {
-    case 'selected-category':
-      getKey = function(student) {
-        return student.data[self.scope.filters.table.show.category].result;
-      };
-      break;
-    case 'PGY-average':
-      getKey = function(student) {
-        return self.scope.review.table.source.overallAverage['PGY ' + student.PGY][self.scope.filters.table.show.category][self.scope.filters.table.show.property.id];
-      };
-      break;
-    case '%-completed':
-      getKey = function(student) {
-        return student.data[self.scope.filters.table.show.category].completed;
-      };
-      break;
-    case 'probability-of-passing':
-      getKey = function(student) {
-        return student.data[self.scope.filters.table.show.category].probabilityOfPassing;
-      };
-      break;
-    default:
-      getKey = function(student) {
-        return student[sortBy];
-      };
-      break;
+      case 'selected-category':
+        getKey = function(student) {
+          return student.data[self.scope.filters.table.show.category].result;
+        };
+        break;
+      case 'PGY-average':
+        getKey = function(student) {
+          return self.scope.review.table.source.overallAverage['PGY ' + student.PGY][self.scope.filters.table.show.category][self.scope.filters.table.show.property.id];
+        };
+        break;
+      case '%-completed':
+        getKey = function(student) {
+          return student.data[self.scope.filters.table.show.category].completed;
+        };
+        break;
+      case 'probability-of-passing':
+        getKey = function(student) {
+          return student.data[self.scope.filters.table.show.category].probabilityOfPassing;
+        };
+        break;
+      default:
+        getKey = function(student) {
+          return student[sortBy];
+        };
+        break;
     }
 
     this.scope.review.table.students = this._.sortBy(
@@ -1125,7 +1140,7 @@
 
 
   GlobalReviewCtrl.prototype.setLayout = function() {
-    this.scope.layout = layout(this.scope.review.chart.students.length * 20); // 20px per student
+    this.scope.layout = layoutFromInnerHeight(this.scope.review.chart.students.length * 20); // 20px per student
   };
 
 
@@ -1135,18 +1150,118 @@
     'scdSelector.services'
   ]).
 
-  controller('scdReviewCtrl', ['$scope',
-    function($scope){
-      $scope.showGlobals = true;
-    }
-  ]).
-
   controller('scdGlobalReviewCtrl', [
     '$scope',
     '$window',
     'scdReviewApi',
     'scdSelectedStudent',
     GlobalReviewCtrl
+  ]).
+
+  controller('scdReviewCtrl', ['scdSelectedStudent', 'scdReviewApi', '$window',
+    function(scdSelectedStudent, scdReviewApi, $window) {
+      var self = this,
+        d3 = $window.d3;
+
+      /** Student selector **/
+
+      this.selector = null;
+      this.showGlobals = null;
+      this.studentPerformance = null;
+
+      this.showGlobalPerformance = function(doShow) {
+        self.showGlobals = doShow;
+        if (!doShow) {
+          return;
+        }
+
+        if (!self.selector.available) {
+          self.showGlobals = false;
+          // TODO: redirect.
+        } else {
+          self.selector.selectedId = null;
+        }
+      };
+
+      this.showStudentPerformance = function(studentId) {
+        if (!studentId) {
+          self.studentPerformance = null;
+          self.showGlobalPerformance(true);
+          return;
+        }
+
+        self.showGlobals = false;
+        self.setPerformances();
+      };
+
+      scdSelectedStudent().then(function(selector) {
+        self.selector = selector;
+        self.showStudentPerformance(selector.selectedId);
+      });
+
+      /** Student performance **/
+
+      this.comparison = {
+        available: [
+          {label: 'National Average', id: 'nationalAvg', type: 'Average'},
+          {label: 'University Average', id: 'uniAvg', type: 'Average'},
+        ],
+      };
+      this.comparison.selected = this.comparison.available[0];
+
+      this.performances = {
+        data: null,
+        cumulative: {
+          layout: layout({
+            innerWidth: 400,
+            innerHeight: 250,
+            margin: {top: 20, right: 150, bottom: 30, left: 70},
+          })
+        }
+      };
+
+      this.setPerformances = function(studentId) {
+        self.performances.data = null;
+        scdReviewApi.performancesById(studentId).then(function(data) {
+          var xTicks;
+
+          self.performances.data = data;
+
+          // init scales
+          self.performances.cumulative.xScale = d3.scale.ordinal();
+          self.performances.cumulative.yScale = d3.scale.linear();
+          xTicks = d3.time.scale();
+          self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
+
+          // setup scale domains
+          self.performances.cumulative.yScale.domain([0, 100]);
+          xTicks.domain([
+            data.progress[0].date,
+            data.progress[data.progress.length - 1].date
+          ]);
+          data.progress.forEach(function(day) {
+            self.performances.cumulative.xScale(day.date);
+          });
+
+          // setup scale ranges
+          self.performances.cumulative.yScaleReversed = (
+            self.performances.cumulative.yScale.copy().range(
+              [self.performances.cumulative.layout.innerHeight, 0]
+            )
+          );
+          self.performances.cumulative.yScale.range(
+            [0, self.performances.cumulative.layout.innerHeight]
+          );
+          self.performances.cumulative.xScale.rangeBands(
+            [0, self.performances.cumulative.layout.innerWidth], 0, 0
+          );
+
+          // Set x ticks
+          self.performances.cumulative.xTicks = xTicks.ticks(3);
+          self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
+        });
+      };
+    }
   ])
 
   ;
@@ -1291,6 +1406,7 @@
   factory('scdReviewApi', ['$window', '$q',
     function(window, $q) {
       var _ = window._,
+        d3 = window.d3,
         users = _.range(1, 61).map(function(index) {
           return newUser(index, _);
         }),
@@ -1362,6 +1478,29 @@
             'prev': '',
             'next': ''
           });
+        },
+
+        performancesById: function() {
+          var today = new Date(),
+            start = d3.time.year.offset(today, -1),
+            data = {
+              nationalAvg: _.random(65,80),
+              uniAvg: _.random(60,85),
+              cumulativePerformance: 70,
+              progress: []
+            };
+
+          data.progress = d3.time.day.range(start, today).map(function(date) {
+            data.cumulativePerformance = _.random(
+              data.cumulativePerformance - 1, data.cumulativePerformance + 1
+            );
+            return {
+              date: date,
+              performance: data.cumulativePerformance
+            };
+          });
+
+          return $q.when(data);
         }
       };
     }
