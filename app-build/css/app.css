@@ -48,6 +48,7 @@ footer > .container {
 
 text {
   font-size: 12px;
+  line-height: 1em;
 }
 
 line {
@@ -165,14 +166,15 @@ rect.border {
 
 /** cumulative-perfomance **/
 
-.cumulative-perfomance .data rect {
+.cumulative-perfomance rect {
   stroke: none;
 }
 
 .current-performance text, .current-performance tspan {
-  dominant-baseline: middle;
+  dominant-baseline: hanging;
   text-anchor: middle;
 }
+
 
 /** User progress **/
 
@@ -197,13 +199,13 @@ rect.border {
   text-anchor: start;
 }
 
-.slice text.past-center {
+.slice text.past-center, text.pie-label.past-center {
   text-anchor: end;
 }
 
 .progress text, .progress tspan {
   text-anchor: middle;
-  dominant-baseline: middle;
+  dominant-baseline: hanging;
 }
 
 /** Meters **/
@@ -222,10 +224,10 @@ rect.border {
 
 .reading text, .reading tspan {
   text-anchor: middle;
-  dominant-baseline: middle;
+  dominant-baseline: hanging;
 }
 
-.tick text {
+.meter .ticks-main text {
   font-size: 7px;
   dominant-baseline: initial;
 }
@@ -244,4 +246,9 @@ rect.border {
   fill: none;
 }
 
-
+.pointer {
+  -webkit-transition: -webkit-transform 1s ease;
+  -o-transition: -o-transform 1s ease;
+  -moz-transition: -moz-transform 1s ease;
+  transition: transform 1s ease;
+}

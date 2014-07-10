@@ -225,9 +225,11 @@
             };
 
           data.progress = d3.time.day.range(start, today).map(function(date) {
-            data.cumulativePerformance = _.random(
+            var newVal = _.random(
               data.cumulativePerformance - 1, data.cumulativePerformance + 1
             );
+
+            data.cumulativePerformance = _.max([0, _.min([newVal, 100])]);
             return {
               date: date,
               performance: data.cumulativePerformance

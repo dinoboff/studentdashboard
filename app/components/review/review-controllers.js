@@ -205,7 +205,8 @@
   angular.module('scdReview.controllers', [
     'scceSvg.directives',
     'scdReview.services',
-    'scdSelector.services'
+    'scdSelector.services',
+    'scdMisc.filters'
   ]).
 
   controller('scdGlobalReviewCtrl', [
@@ -278,7 +279,7 @@
         cumulative: {
           layout: layout({
             innerWidth: 400,
-            innerHeight: 350,
+            innerHeight: 360,
             margin: {
               top: 20,
               right: 150,
@@ -296,7 +297,7 @@
             margin: {
               top: 30,
               right: 50,
-              bottom: 100,
+              bottom: 110,
               left: 50
             },
           })
@@ -312,7 +313,14 @@
               bottom: 50,
               left: 12
             },
-          })
+          }),
+          steps: [{
+            value: 75,
+            id: 'danger'
+          }, {
+            value: 25,
+            id: 'ok'
+          }]
         },
 
         passing: {
@@ -325,18 +333,46 @@
               bottom: 50,
               left: 12
             },
-          })
+          }),
+          steps: [{
+            value: 75,
+            id: 'danger'
+          }, {
+            value: 15,
+            id: 'warning'
+          }, {
+            value: 10,
+            id: 'ok'
+          }]
         }
       };
 
+      // Set meters data
+      function meterScales(config) {
+        var outerRadius = config.outerRadius = layout2HalfPieRadius(
+            self.performances.abem.layout, 2
+          ),
+          innerRadius = config.innerRadius = outerRadius - 12;
+
+        // setup arcs
+        config.arc = arc(outerRadius, innerRadius);
+
+        // slices
+        config.slices = d3.layout.pie().sort(null).value(function(d) {
+          return d.value;
+        }).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)(config.steps);
+      }
+
+      meterScales(this.performances.abem);
+      meterScales(this.performances.passing);
+
+      // Other charts needs the data
       this.setPerformances = function(studentId) {
         self.performances.data = null;
         scdReviewApi.performancesById(studentId).then(function(data) {
           self.performances.data = data;
           self.setCumulativePerformanceScales(data);
           self.setProgressScales(data);
-          self.setABEMScales(data);
-          self.setPasingScales(data);
         });
       };
 
@@ -462,46 +498,6 @@
         };
 
       };
-
-      function meterScales(config, sliceData) {
-        var outerRadius = config.outerRadius = layout2HalfPieRadius(
-            self.performances.abem.layout, 2
-          ),
-          innerRadius = config.innerRadius = outerRadius - 12;
-
-        // setup arcs
-        config.arc = arc(outerRadius, innerRadius);
-
-        // slices
-        config.slices = d3.layout.pie().sort(null).value(function(d) {
-          return d.value;
-        }).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)(sliceData);
-      }
-
-      this.setABEMScales = function() {
-        meterScales(this.performances.abem, [{
-          value: 75,
-          id: 'danger'
-        }, {
-          value: 25,
-          id: 'ok'
-        }]);
-
-      };
-
-      this.setPasingScales = function() {
-        meterScales(this.performances.passing, [{
-          value: 75,
-          id: 'danger'
-        }, {
-          value: 15,
-          id: 'warning'
-        }, {
-          value: 10,
-          id: 'ok'
-        }]);
-      };
-
     }
   ])
 
