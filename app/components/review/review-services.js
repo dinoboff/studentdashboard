@@ -137,6 +137,7 @@
   factory('scdReviewApi', ['$window', '$q',
     function(window, $q) {
       var _ = window._,
+        d3 = window.d3,
         users = _.range(1, 61).map(function(index) {
           return newUser(index, _);
         }),
@@ -208,6 +209,32 @@
             'prev': '',
             'next': ''
           });
+        },
+
+        performancesById: function() {
+          var today = new Date(),
+            start = d3.time.year.offset(today, -1),
+            data = {
+              nationalAvg: _.random(65,80),
+              uniAvg: _.random(60,85),
+              percentageComplete: _.random(0, 100),
+              abem: _.random(50, 100),
+              passingProbability: _.random(50, 100),
+              cumulativePerformance: 70,
+              progress: []
+            };
+
+          data.progress = d3.time.day.range(start, today).map(function(date) {
+            data.cumulativePerformance = _.random(
+              data.cumulativePerformance - 1, data.cumulativePerformance + 1
+            );
+            return {
+              date: date,
+              performance: data.cumulativePerformance
+            };
+          });
+
+          return $q.when(data);
         }
       };
     }

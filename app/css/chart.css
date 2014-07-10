@@ -1,3 +1,7 @@
+.graph-view h2 {
+  text-align: center;
+}
+
 .filter-selectors {
   text-align: center;
   margin-bottom: 20px;
@@ -69,9 +73,14 @@ rect.border {
 
 /** y-axis **/
 
-.y-axis text {
+.y-axis text, .y-ticks text {
   dominant-baseline: middle;
   text-anchor: end;
+}
+
+.axis .legend text {
+  dominant-baseline: hanging;
+  text-anchor: middle;
 }
 
 /** Exam **/
@@ -123,3 +132,86 @@ rect.border {
 .evaluation .ticks text {
   font-size: 12px
 }
+
+/** cumulative-perfomance **/
+
+.cumulative-perfomance .data rect {
+  stroke: none;
+}
+
+.current-performance text, .current-performance tspan {
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+
+/** User progress **/
+
+.pie path {
+  stroke: white;
+  stroke-width: 1px;
+}
+
+.pie-progress-correct path {
+  fill: #32CD32;
+}
+
+.pie-progress-incorrect path {
+  fill: #B22222;
+}
+
+.pie-progress-unattempted path {
+  fill: #FFF8DC;
+}
+
+.slice text {
+  text-anchor: start;
+}
+
+.slice text.past-center {
+  text-anchor: end;
+}
+
+.progress text, .progress tspan {
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+/** Meters **/
+
+.meter .slices path {
+  fill: #B22222;
+}
+
+.meter .slices path.pie-meter-slice-warning {
+  fill: #FFFF00;
+}
+
+.meter .slices path.pie-meter-slice-ok {
+  fill: #32CD32;
+}
+
+.reading text, .reading tspan {
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.tick text {
+  font-size: 7px;
+  dominant-baseline: initial;
+}
+
+.meter .tick line, .meter .tick path {
+  stroke-width: 1px;
+  stroke-opacity: 0.7;
+  stroke: #bbb;
+}
+
+.meter .ticks-main line, .meter .ticks-main path {
+  stroke-width: 2px;
+}
+
+.meter .ticks-main path {
+  fill: none;
+}
+
+

@@ -23,7 +23,8 @@
 
         when('/review', {
           templateUrl: 'views/scdashboard/review.html',
-          controller: 'scdReviewCtrl'
+          controller: 'scdReviewCtrl',
+          controllerAs: 'ctrl'
         }).
 
         when('/first-aid', {
