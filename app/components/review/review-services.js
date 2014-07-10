@@ -217,6 +217,9 @@
             data = {
               nationalAvg: _.random(65,80),
               uniAvg: _.random(60,85),
+              percentageComplete: _.random(0, 100),
+              abem: _.random(50, 100),
+              passingProbability: _.random(50, 100),
               cumulativePerformance: 70,
               progress: []
             };

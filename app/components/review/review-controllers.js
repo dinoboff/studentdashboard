@@ -260,20 +260,71 @@
       /** Student performance **/
 
       this.comparison = {
-        available: [
-          {label: 'National Average', id: 'nationalAvg', type: 'Average'},
-          {label: 'University Average', id: 'uniAvg', type: 'Average'},
-        ],
+        available: [{
+          label: 'National Average',
+          id: 'nationalAvg',
+          type: 'Average'
+        }, {
+          label: 'University Average',
+          id: 'uniAvg',
+          type: 'Average'
+        }, ],
       };
       this.comparison.selected = this.comparison.available[0];
 
       this.performances = {
         data: null,
+
         cumulative: {
           layout: layout({
             innerWidth: 400,
-            innerHeight: 250,
-            margin: {top: 20, right: 150, bottom: 30, left: 70},
+            innerHeight: 350,
+            margin: {
+              top: 20,
+              right: 150,
+              bottom: 30,
+              left: 70
+            },
+          })
+        },
+
+        progress: {
+          pieData: null,
+          layout: layout({
+            innerWidth: 300,
+            innerHeight: 149,
+            margin: {
+              top: 30,
+              right: 50,
+              bottom: 100,
+              left: 50
+            },
+          })
+        },
+
+        abem: {
+          layout: layout({
+            innerWidth: 100,
+            innerHeight: 50,
+            margin: {
+              top: 12,
+              right: 12,
+              bottom: 50,
+              left: 12
+            },
+          })
+        },
+
+        passing: {
+          layout: layout({
+            innerWidth: 100,
+            innerHeight: 55,
+            margin: {
+              top: 12,
+              right: 12,
+              bottom: 50,
+              left: 12
+            },
           })
         }
       };
@@ -281,44 +332,176 @@
       this.setPerformances = function(studentId) {
         self.performances.data = null;
         scdReviewApi.performancesById(studentId).then(function(data) {
-          var xTicks;
-
           self.performances.data = data;
-
-          // init scales
-          self.performances.cumulative.xScale = d3.scale.ordinal();
-          self.performances.cumulative.yScale = d3.scale.linear();
-          xTicks = d3.time.scale();
-          self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
-
-          // setup scale domains
-          self.performances.cumulative.yScale.domain([0, 100]);
-          xTicks.domain([
-            data.progress[0].date,
-            data.progress[data.progress.length - 1].date
-          ]);
-          data.progress.forEach(function(day) {
-            self.performances.cumulative.xScale(day.date);
-          });
-
-          // setup scale ranges
-          self.performances.cumulative.yScaleReversed = (
-            self.performances.cumulative.yScale.copy().range(
-              [self.performances.cumulative.layout.innerHeight, 0]
-            )
-          );
-          self.performances.cumulative.yScale.range(
-            [0, self.performances.cumulative.layout.innerHeight]
-          );
-          self.performances.cumulative.xScale.rangeBands(
-            [0, self.performances.cumulative.layout.innerWidth], 0, 0
-          );
-
-          // Set x ticks
-          self.performances.cumulative.xTicks = xTicks.ticks(3);
-          self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
+          self.setCumulativePerformanceScales(data);
+          self.setProgressScales(data);
+          self.setABEMScales(data);
+          self.setPasingScales(data);
         });
       };
+
+      this.setCumulativePerformanceScales = function(data) {
+        var xTicks;
+        // init scales
+        self.performances.cumulative.xScale = d3.scale.ordinal();
+        self.performances.cumulative.yScale = d3.scale.linear();
+        xTicks = d3.time.scale();
+        self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
+
+        // setup scale domains
+        self.performances.cumulative.yScale.domain([0, 100]);
+        xTicks.domain([
+          data.progress[0].date,
+          data.progress[data.progress.length - 1].date
+        ]);
+        data.progress.forEach(function(day) {
+          self.performances.cumulative.xScale(day.date);
+        });
+
+        // setup scale ranges
+        self.performances.cumulative.yScaleReversed = (
+          self.performances.cumulative.yScale.copy().range(
+            [self.performances.cumulative.layout.innerHeight, 0]
+          )
+        );
+        self.performances.cumulative.yScale.range(
+          [0, self.performances.cumulative.layout.innerHeight]
+        );
+        self.performances.cumulative.xScale.rangeBands(
+          [0, self.performances.cumulative.layout.innerWidth], 0, 0
+        );
+
+        // Set x ticks
+        self.performances.cumulative.xTicks = xTicks.ticks(3);
+        self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
+      };
+
+      function layout2Radius(layout) {
+        // Make sure the pie fits into the inner svg document
+        if (layout.innerHeight > layout.innerWidth) {
+          return layout.innerWidth / 2;
+        } else {
+          return layout.innerHeight / 2;
+        }
+      }
+
+      function layout2HalfPieRadius(layout) {
+        // Make sure the half pie fits into the inner svg height
+        if (layout.innerWidth / 2 < layout.innerHeight) {
+          return layout.innerWidth / 2;
+        } else {
+          return layout.innerHeight;
+        }
+      }
+
+      function arc(radius, innerRadius) {
+        return d3.svg.arc()
+          .startAngle(function(d) {
+            return d.startAngle;
+          })
+          .endAngle(function(d) {
+            return d.endAngle;
+          })
+          .innerRadius(innerRadius || 0)
+          .outerRadius(radius);
+      }
+
+      function shifter(arc) {
+        return function(slice, margin) {
+          var c = arc.centroid(slice),
+            x = c[0],
+            y = c[1],
+            h = Math.sqrt(x * x + y * y);
+
+          return 'translate(' +
+            (x / h * margin) + ',' +
+            (y / h * margin) +
+            ')';
+        };
+      }
+
+      this.setProgressScales = function(data) {
+        var correct = data.cumulativePerformance * data.percentageComplete / 100,
+          left = 100 - data.percentageComplete,
+          pieData = [{
+            label: 'Correct',
+            value: correct,
+            id: 'correct'
+          }, {
+            label: 'Incorrect',
+            value: 100 - correct - left,
+            id: 'incorrect'
+          }, {
+            label: 'Unattempted',
+            value: left,
+            id: 'unattempted'
+          }],
+          pieRadius = layout2Radius(self.performances.progress.layout),
+          labelMargin = pieRadius + this.performances.progress.layout.margin.top / 2;
+
+        // Calculate start and end angles of each slice of the pie.
+        this.performances.progress.slices = d3.layout.pie().sort(null).value(function(d) {
+          return d.value;
+        })(pieData);
+
+        // Setup the arc path generator.
+        this.performances.progress.arc = arc(pieRadius);
+
+        //Helper to shift a slice away from the center of of the pie
+        this.performances.progress.shiftSlice = shifter(this.performances.progress.arc);
+
+        //Helper method to position label
+        this.performances.progress.label = function(slice, margin) {
+          margin = (margin || 0) + labelMargin;
+
+          return self.performances.progress.shiftSlice(slice, margin);
+        };
+
+        this.performances.progress.pastCenter = function(slice) {
+          return (slice.endAngle + slice.startAngle) / 2 > Math.PI;
+        };
+
+      };
+
+      function meterScales(config, sliceData) {
+        var outerRadius = config.outerRadius = layout2HalfPieRadius(
+            self.performances.abem.layout, 2
+          ),
+          innerRadius = config.innerRadius = outerRadius - 12;
+
+        // setup arcs
+        config.arc = arc(outerRadius, innerRadius);
+
+        // slices
+        config.slices = d3.layout.pie().sort(null).value(function(d) {
+          return d.value;
+        }).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)(sliceData);
+      }
+
+      this.setABEMScales = function() {
+        meterScales(this.performances.abem, [{
+          value: 75,
+          id: 'danger'
+        }, {
+          value: 25,
+          id: 'ok'
+        }]);
+
+      };
+
+      this.setPasingScales = function() {
+        meterScales(this.performances.passing, [{
+          value: 75,
+          id: 'danger'
+        }, {
+          value: 15,
+          id: 'warning'
+        }, {
+          value: 10,
+          id: 'ok'
+        }]);
+      };
+
     }
   ])
 
