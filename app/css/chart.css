@@ -33,7 +33,7 @@ rect {
 
 /** data **/
 
-.data text {
+.data text, .data tspan {
   dominant-baseline: middle;
   text-anchor: start;
   font-size: 10px;
@@ -60,6 +60,10 @@ rect.border {
   stroke: #bbb;
 }
 
+.axis line.miner-tick {
+  stroke: #ddd;
+}
+
 .ticks text {
   dominant-baseline: hanging;
   text-anchor: middle;
@@ -72,9 +76,16 @@ rect.border {
   text-anchor: start;
 }
 
+/** x-axis **/
+
+.x-axis text {
+  dominant-baseline: hanging;
+  text-anchor: middle;
+}
+
 /** y-axis **/
 
-.y-axis text, .y-ticks text {
+.y-axis text, .y-ticks text, .chart-row .data-label {
   dominant-baseline: middle;
   text-anchor: end;
 }
