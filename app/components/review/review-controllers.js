@@ -220,7 +220,8 @@
   controller('scdReviewCtrl', ['scdSelectedStudent', 'scdReviewApi', '$window',
     function(scdSelectedStudent, scdReviewApi, $window) {
       var self = this,
-        d3 = $window.d3;
+        d3 = $window.d3,
+        _ = $window._;
 
       /** Student selector **/
 
@@ -275,6 +276,7 @@
 
       this.performances = {
         data: null,
+        statsByTopics: null,
 
         cumulative: {
           layout: layout({
@@ -344,6 +346,20 @@
             value: 10,
             id: 'ok'
           }]
+        },
+
+        byCategory: {
+          layout: null,
+          baseLayout: {
+            rowHeight: 27,
+            innerWidth: 500,
+            margin: {
+              top: 10,
+              right: 60,
+              bottom: 50,
+              left: 220
+            },
+          }
         }
       };
 
@@ -369,10 +385,17 @@
       // Other charts needs the data
       this.setPerformances = function(studentId) {
         self.performances.data = null;
+        self.performances.statsByTopics = null;
+
         scdReviewApi.performancesById(studentId).then(function(data) {
           self.performances.data = data;
           self.setCumulativePerformanceScales(data);
           self.setProgressScales(data);
+          self.setPerformanceByCategory(data);
+        });
+
+        scdReviewApi.topicsStats().then(function(stats) {
+          self.performances.statsByTopics = stats;
         });
       };
 
@@ -497,6 +520,31 @@
           return (slice.endAngle + slice.startAngle) / 2 > Math.PI;
         };
 
+      };
+
+      this.setPerformanceByCategory = function(data) {
+        var config = this.performances.byCategory;
+
+        config.layout = layout(
+          _.extend(
+            {innerHeight: config.baseLayout.rowHeight * data.categoryPerformances.length},
+            config.baseLayout
+          )
+        );
+
+        // init scales
+        config.xScale = d3.scale.linear();
+        config.yScale = d3.scale.ordinal();
+
+        // set domain
+        config.xScale.domain([0,100]);
+        config.yScale.domain(
+          _(data.categoryPerformances).map('id').sort().value()
+        );
+
+        // set ranges
+        config.xScale.range([0, config.layout.innerWidth]);
+        config.yScale.rangeBands([0, config.layout.innerHeight], 0, 0);
       };
     }
   ])

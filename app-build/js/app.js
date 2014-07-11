@@ -1175,7 +1175,8 @@
   controller('scdReviewCtrl', ['scdSelectedStudent', 'scdReviewApi', '$window',
     function(scdSelectedStudent, scdReviewApi, $window) {
       var self = this,
-        d3 = $window.d3;
+        d3 = $window.d3,
+        _ = $window._;
 
       /** Student selector **/
 
@@ -1230,6 +1231,7 @@
 
       this.performances = {
         data: null,
+        statsByTopics: null,
 
         cumulative: {
           layout: layout({
@@ -1299,6 +1301,20 @@
             value: 10,
             id: 'ok'
           }]
+        },
+
+        byCategory: {
+          layout: null,
+          baseLayout: {
+            rowHeight: 27,
+            innerWidth: 500,
+            margin: {
+              top: 10,
+              right: 60,
+              bottom: 50,
+              left: 220
+            },
+          }
         }
       };
 
@@ -1324,10 +1340,17 @@
       // Other charts needs the data
       this.setPerformances = function(studentId) {
         self.performances.data = null;
+        self.performances.statsByTopics = null;
+
         scdReviewApi.performancesById(studentId).then(function(data) {
           self.performances.data = data;
           self.setCumulativePerformanceScales(data);
           self.setProgressScales(data);
+          self.setPerformanceByCategory(data);
+        });
+
+        scdReviewApi.topicsStats().then(function(stats) {
+          self.performances.statsByTopics = stats;
         });
       };
 
@@ -1453,12 +1476,48 @@
         };
 
       };
+
+      this.setPerformanceByCategory = function(data) {
+        var config = this.performances.byCategory;
+
+        config.layout = layout(
+          _.extend(
+            {innerHeight: config.baseLayout.rowHeight * data.categoryPerformances.length},
+            config.baseLayout
+          )
+        );
+
+        // init scales
+        config.xScale = d3.scale.linear();
+        config.yScale = d3.scale.ordinal();
+
+        // set domain
+        config.xScale.domain([0,100]);
+        config.yScale.domain(
+          _(data.categoryPerformances).map('id').sort().value()
+        );
+
+        // set ranges
+        config.xScale.range([0, config.layout.innerWidth]);
+        config.yScale.rangeBands([0, config.layout.innerHeight], 0, 0);
+      };
     }
   ])
 
   ;
 
 })();
+/**
+ * Only used to feed the dummy rosh review charts.
+ *
+ * As more details emerges about the upcoming Rosh Review api, the client
+ * will be rewritten.
+ *
+ * TODO: replace all(), next() and prev() by something getAllStudents().
+ * TODO: get stats out of all() result.
+ *
+ *
+ */
 (function() {
   'use strict';
 
@@ -1672,17 +1731,63 @@
           });
         },
 
+        topics: [{
+          'name': 'Systemic Infectious Disorders',
+          'id': 'SYSTEMIC INFECTIOUS DISORDERS'
+        }, {
+          'name': 'Psychosocial Disorders',
+          'id': 'PSYCHOSOCIAL DISORDERS'
+        }, {
+          'name': 'Signs, Symptoms, & Presentations',
+          'id': 'SIGNS, SYMPTOMS, & PRESENTATIONS'
+        }, {
+          'name': 'Nervous System Disorders',
+          'id': 'NERVOUS SYSTEM DISORDERS'
+        }, {
+          'name': 'Mskl Disorders (Nontraumatic)',
+          'id': 'MSKL DISORDERS (NONTRAUMATIC)'
+        }, {
+          'name': 'Ob/Gyn Disorders',
+          'id': 'OB/GYN DISORDERS'
+        }, {
+          'name': 'Cutaneous Disorders',
+          'id': 'CUTANEOUS DISORDERS'
+        }, {
+          'name': 'Immune System Disorders',
+          'id': 'IMMUNE SYSTEM DISORDERS'
+        }, {
+          'name': 'Hematologic Disorders',
+          'id': 'HEMATOLOGIC DISORDERS'
+        }, {
+          'name': 'Cardiovascular Disorders',
+          'id': 'CARDIOVASCULAR DISORDERS'
+        }, {
+          'name': 'Endocrine/Metabolic Disorders',
+          'id': 'ENDOCRINE/METABOLIC DISORDERS'
+        }, {
+          'name': 'Abdominal And Gi Disorders',
+          'id': 'ABDOMINAL AND GI DISORDERS'
+        }],
+
         performancesById: function() {
-          var today = new Date(),
+          var self = this,
+            today = new Date(),
             start = d3.time.year.offset(today, -1),
             data = {
-              nationalAvg: _.random(65,80),
-              uniAvg: _.random(60,85),
+              nationalAvg: _.random(65, 80),
+              uniAvg: _.random(60, 85),
               percentageComplete: _.random(0, 100),
               abem: _.random(50, 100),
               passingProbability: _.random(50, 100),
               cumulativePerformance: 70,
-              progress: []
+              progress: [],
+              categoryPerformances: _.sample(
+                self.topics, _.random(1, self.topics.length)
+              ).map(function(topic) {
+                return _.extend({
+                  value: _.random(50, 100)
+                }, topic);
+              })
             };
 
           data.progress = d3.time.day.range(start, today).map(function(date) {
@@ -1695,6 +1800,19 @@
               date: date,
               performance: data.cumulativePerformance
             };
+          });
+
+          return $q.when(data);
+        },
+
+        topicsStats: function() {
+          var data = {};
+
+          this.topics.forEach(function(topic) {
+            data[topic.id] = _.extend({
+              nationalAvg: _.random(65, 80),
+              uniAvg: _.random(60, 85)
+            }, topic);
           });
 
           return $q.when(data);

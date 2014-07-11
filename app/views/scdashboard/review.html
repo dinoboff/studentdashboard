@@ -17,17 +17,331 @@
   </form>
 </div>
 
-<div class="row graph-view" ng-if="ctrl.selector.selectedId &amp;&amp; ctrl.performances.data">
-  <div class="col-sm-7">
-    <div class="well">
-      <h2>Cumulative Performance</h2>
-      <hr/>
+
+<!-- User performance charts -->
+
+
+<div class="graph-view" ng-if="ctrl.selector.selectedId &amp;&amp; ctrl.performances.data">
+  <div class="row">
+    <!-- Peromance history -->
+    <div class="col-sm-7">
+      <div class="well">
+        <h2>Cumulative Performance</h2>
+        <hr/>
+
+          <form role="form" class="form-inline filter-selectors">
+
+            <div class="form-group">
+              <label for="compare-user-to"> Compared to: </label>
+              <select id="compare-user-to" class="form-control"
+                ng-model="ctrl.comparison.selected"
+                ng-options="opt as opt.label for opt in ctrl.comparison.available track by opt.id"
+                required="true"
+              ></select>
+            </div>
+
+          </form>
+
+        <scce-svg-container scce-viewbox="ctrl.performances.cumulative.layout" ng-if="ctrl.performances.cumulative.layout">
+          <svg>
+            <g class="cumulative-perfomance">
+
+              <g class="ticks x-ticks">
+                <g ng-repeat="tick in ctrl.performances.cumulative.xTicks"
+                  ng-attr-transform="translate({{ctrl.performances.cumulative.xScale(tick) + (ctrl.performances.cumulative.xScale.rangeBand() / 2)}},0)"
+                >
+                  <line ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight + 5 }}"/>
+                  <text ng-attr-y="{{ctrl.performances.cumulative.layout.innerHeight + 6}}">
+                    {{ctrl.performances.cumulative.ticksFormatter(tick)}}
+                  </text>
+                </g>
+              </g>
+
+              <g class="ticks y-ticks">
+                <g ng-repeat="tick in ctrl.performances.cumulative.yScale.ticks(5)"
+                  ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(tick)}})"
+                >
+                  <line x1="-5" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth }}"/>
+                  <text x="-10">
+                    {{tick}}%
+                  </text>
+                </g>
+                <line class="tick miner-tick"
+                  ng-repeat="tick in ctrl.performances.cumulative.yScale.ticks(20)"
+                  ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(tick)}})"
+                  ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth }}"
+                />
+              </g>
+
+              <g class="data">
+                <rect class="day" ng-repeat="day in ctrl.performances.data.progress track by day.date"
+                  ng-attr-x="{{ctrl.performances.cumulative.xScale(day.date)}}"
+                  ng-attr-y="{{ctrl.performances.cumulative.yScaleReversed(day.performance)}}"
+                  ng-attr-width="{{ctrl.performances.cumulative.xScale.rangeBand()}}"
+                  ng-attr-height="{{ctrl.performances.cumulative.yScale(day.performance)}}"
+                />
+              </g>
+
+              <g class="axis x-axis" ng-attr-transform="translate(0,{{ctrl.performances.cumulative.layout.innerHeight}})">
+                <line class="axis-line" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}"></line>
+              </g>
+
+              <g class="axis y-axis">
+                <line class="axis-line" ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight}}"></line>
+                <g class="legend"
+                  ng-attr-transform="translate(-{{ctrl.performances.cumulative.layout.margin.left}},{{ctrl.performances.cumulative.layout.innerHeight/2}})"
+                >
+                  <text transform="rotate(-90)">
+                    Percentage Correct
+                  </text>
+                </g>
+              </g>
+
+              <g class="compareTo"
+                ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(ctrl.performances.data[ctrl.comparison.selected.id])}})"
+              >
+                <line ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}"/>
+                <text dx="15" dy="-0.5em">
+                  <tspan>{{ctrl.comparison.selected.type}}</tspan>
+                  <tspan> (</tspan>
+                  <tspan>{{ctrl.performances.data[ctrl.comparison.selected.id]}}</tspan>
+                  <tspan>%)</tspan>
+                </text>
+              </g>
+
+              <g class="current-performance"
+                ng-attr-transform="translate({{ctrl.performances.cumulative.layout.innerWidth + ctrl.performances.cumulative.layout.margin.right/2}},{{ctrl.performances.cumulative.layout.innerHeight/2}})"
+              >
+                <text y="-24" style="font-size:48px">
+                  <tspan>{{ctrl.performances.data.cumulativePerformance}}</tspan><tspan>%</tspan>
+                </text>
+                <text dy="24" style="font-size:12px; font-weight:200">Overall percent correct</text>
+              </g>
+
+            </g>
+          </svg>
+        </scce-svg-container>
+      </div>
+    </div>
+
+    <!-- Progress and probably of passing -->
+    <div class="col-sm-5">
+      <div class="well">
+        <scce-svg-container scce-viewbox="ctrl.performances.progress.layout" ng-if="ctrl.performances.progress.layout">
+          <svg>
+            <g class="user-progress">
+              <g class="pie" ng-attr-transform="translate({{ctrl.performances.progress.layout.innerWidth / 2}},{{ctrl.performances.progress.layout.innerHeight / 2}})">
+                <g class="slice"
+                  ng-repeat="slice in ctrl.performances.progress.slices track by slice.data.id"
+                  ng-class="'pie-progress-' + slice.data.id"
+                >
+                  <g ng-if="$index == 0">
+                    <path
+                      ng-attr-d="{{ctrl.performances.progress.arc(slice)}}"
+                      ng-attr-transform="{{ctrl.performances.progress.shiftSlice(slice, 10)}}"
+                      />
+                    <text class="pie-label"
+                      ng-attr-transform="{{ctrl.performances.progress.label(slice, 10)}}"
+                      dy=".35em"
+                      ng-class="{'past-center': ctrl.performances.progress.pastCenter(slice)}"
+                      ng-if="slice.data.value > 0"
+                    >
+                      {{slice.data.label}}
+                    </text>
+                  </g>
+                  <g ng-if="$index > 0">
+                    <path
+                      ng-attr-d="{{ctrl.performances.progress.arc(slice)}}"
+                      />
+                    <text
+                      ng-attr-transform="{{ctrl.performances.progress.label(slice)}}"
+                      dy=".35em"
+                      ng-class="{'pie-label': true, 'past-center': ctrl.performances.progress.pastCenter(slice)}"
+                      ng-if="slice.data.value > 0"
+                    >
+                      {{slice.data.label}}
+                    </text>
+                  </g>
+                </g>
+              </g>
+
+
+
+              <g class="progress"
+                ng-attr-transform="translate({{ctrl.performances.progress.layout.width/6 - ctrl.performances.progress.layout.margin.left}},{{ctrl.performances.progress.layout.innerHeight + ctrl.performances.progress.layout.margin.top/2}})"
+              >
+                <text style="font-size:24px; font-weight:200">Progress</text>
+                <text y="24" style="font-size:48px">
+                  <tspan>{{ctrl.performances.data.percentageComplete}}</tspan><tspan>%</tspan>
+                </text>
+                <text dy="72" style="font-size:12px; font-weight:200">Percentage completed</text>
+              </g>
+
+            </g>
+          </svg>
+        </scce-svg-container>
+      </div>
+
+      <div class="well">
+        <div class="row">
+          <div class="col-md-6">
+            <scce-svg-container scce-viewbox="ctrl.performances.abem.layout" ng-if="ctrl.performances.abem.layout">
+              <svg>
+                <g class="user-abem">
+
+                  <g class="meter"
+                    ng-attr-transform="translate({{ctrl.performances.abem.layout.innerWidth/2}},{{ctrl.performances.abem.layout.innerHeight}})"
+                  >
+
+                    <g class="slices">
+                      <path class="slice"
+                        ng-repeat="slice in ctrl.performances.abem.slices"
+                        ng-class="'pie-meter-slice-' + slice.data.id"
+                        ng-attr-d="{{ctrl.performances.abem.arc(slice)}}"
+                      />
+                    </g>
+
+                    <g class="ticks ticks-secondary">
+                      <g class="tick" ng-repeat="v in [10,20,30,40,60,70,80,90]"
+                        ng-attr-transform="rotate({{(v-50)*180/100}})"
+                      >
+                        <line
+                          ng-attr-y1="-{{ctrl.performances.abem.innerRadius}}"
+                          ng-attr-y2="-{{ctrl.performances.abem.outerRadius - 3}}"
+                        />
+                      </g>
+                    </g>
+
+                    <g class="ticks ticks-main">
+                      <path
+                        ng-attr-d="M-{{ctrl.performances.abem.innerRadius}},0 A{{ctrl.performances.abem.innerRadius}},{{ctrl.performances.abem.innerRadius}} 0 0,1 {{ctrl.performances.abem.innerRadius}},0"
+                      />
+                      <g class="tick" ng-repeat="v in [0,50,100]"
+                        ng-attr-transform="rotate({{(v-50)*180/100}})"
+                      >
+                        <text
+                          ng-attr-y="-{{ctrl.performances.abem.outerRadius}}"
+                          dy="-.35em"
+                        >
+                          {{v}}
+                        </text>
+                        <line
+                          ng-attr-y1="-{{ctrl.performances.abem.innerRadius}}"
+                          ng-attr-y2="-{{ctrl.performances.abem.outerRadius - 3}}"
+                        />
+                      </g>
+                    </g>
+
+                    <g class="pointer" ng-style="(ctrl.performances.data.abem*180/100)|rotate">
+                      <line x1="5" ng-attr-x2="-{{ctrl.performances.abem.innerRadius + 5}}"/>
+                      <circle r="2"/>
+                    </g>
+
+                  </g>
+
+
+                  <g class="reading"
+                    ng-attr-transform="translate({{ctrl.performances.abem.layout.innerWidth/2}},{{ctrl.performances.abem.layout.innerHeight + ctrl.performances.abem.layout.margin.bottom/2}})"
+                  >
+                    <text dy="-9" class="value" style="font-size:18px">
+                      <tspan>{{ctrl.performances.data.abem}}</tspan><tspan>%</tspan>
+                    </text>
+                    <text dy="9" style="font-size:8px; font-weight:200">Projected ABEM score</text>
+                  </g>
+
+                </g>
+              </svg>
+            </scce-svg-container>
+          </div>
+
+          <div class="col-md-6">
+            <scce-svg-container scce-viewbox="ctrl.performances.passing.layout" ng-if="ctrl.performances.passing.layout">
+              <svg>
+                <g class="user-passing">
+
+                  <g class="meter"
+                    ng-attr-transform="translate({{ctrl.performances.passing.layout.innerWidth/2}},{{ctrl.performances.passing.layout.innerHeight}})"
+                  >
+
+                    <g class="slices">
+                      <path class="slice"
+                        ng-repeat="slice in ctrl.performances.passing.slices"
+                        ng-class="'pie-meter-slice-' + slice.data.id"
+                        ng-attr-d="{{ctrl.performances.passing.arc(slice)}}"
+                      />
+                    </g>
+
+                    <g class="ticks ticks-secondary">
+                      <g class="tick" ng-repeat="v in [10,20,30,40,60,70,80,90]"
+                        ng-attr-transform="rotate({{(v-50)*180/100}})"
+                      >
+                        <line
+                          ng-attr-y1="-{{ctrl.performances.passing.innerRadius}}"
+                          ng-attr-y2="-{{ctrl.performances.passing.outerRadius - 3}}"
+                        />
+                      </g>
+                    </g>
+
+                    <g class="ticks ticks-main">
+                      <path
+                        ng-attr-d="M-{{ctrl.performances.passing.innerRadius}},0 A{{ctrl.performances.passing.innerRadius}},{{ctrl.performances.passing.innerRadius}} 0 0,1 {{ctrl.performances.passing.innerRadius}},0"
+                      />
+                      <g class="tick" ng-repeat="v in [0,50,100]"
+                        ng-attr-transform="rotate({{(v-50)*180/100}})"
+                      >
+                        <text
+                          ng-attr-y="-{{ctrl.performances.passing.outerRadius}}"
+                          dy="-.35em"
+                        >
+                          {{v}}
+                        </text>
+                        <line
+                          ng-attr-y1="-{{ctrl.performances.passing.innerRadius}}"
+                          ng-attr-y2="-{{ctrl.performances.passing.outerRadius - 3}}"
+                        />
+                      </g>
+                    </g>
+
+                    <g class="pointer" ng-style="(ctrl.performances.data.passingProbability*180/100)|rotate">
+                      <line x1="5" ng-attr-x2="-{{ctrl.performances.passing.innerRadius + 5}}"/>
+                      <circle r="2"/>
+                    </g>
+
+                  </g>
+
+
+                  <g class="reading"
+                    ng-attr-transform="translate({{ctrl.performances.passing.layout.innerWidth/2}},{{ctrl.performances.passing.layout.innerHeight + ctrl.performances.abem.layout.margin.bottom/2}})"
+                  >
+                    <text dy="-9" class="value" style="font-size:18px">
+                      <tspan>{{ctrl.performances.data.passingProbability}}</tspan><tspan>%</tspan>
+                    </text>
+                    <text dy="9" style="font-size:8px; font-weight:200">Probability of Passing</text>
+                  </g>
+
+                </g>
+              </svg>
+            </scce-svg-container>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Result breakdown by topics -->
+    <div class="col-md-12">
+
+      <div class="well">
+        <h2>Performance by Category - Entire Program</h2>
+        <hr/>
 
         <form role="form" class="form-inline filter-selectors">
 
           <div class="form-group">
-            <label for="compare-user-to"> Compared to: </label>
-            <select id="compare-user-to" class="form-control"
+            <label for="compare-user-category-to"> Compared to: </label>
+            <select id="compare-user-category-to" class="form-control"
               ng-model="ctrl.comparison.selected"
               ng-options="opt as opt.label for opt in ctrl.comparison.available track by opt.id"
               required="true"
@@ -36,285 +350,78 @@
 
         </form>
 
-      <scce-svg-container scce-viewbox="ctrl.performances.cumulative.layout" ng-if="ctrl.performances.cumulative.layout">
-        <svg>
-          <g class="cumulative-perfomance">
+        <scce-svg-container scce-viewbox="ctrl.performances.byCategory.layout" ng-if="ctrl.performances.byCategory.layout">
+          <svg>
+            <g class="performance-by-category">
 
-            <g class="ticks x-ticks">
-              <g ng-repeat="tick in ctrl.performances.cumulative.xTicks"
-                ng-attr-transform="translate({{ctrl.performances.cumulative.xScale(tick) + (ctrl.performances.cumulative.xScale.rangeBand() / 2)}},0)"
-              >
-                <line ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight + 5 }}"/>
-                <text ng-attr-y="{{ctrl.performances.cumulative.layout.innerHeight + 6}}">
-                  {{ctrl.performances.cumulative.ticksFormatter(tick)}}
-                </text>
-              </g>
-            </g>
-
-            <g class="ticks y-ticks">
-              <g ng-repeat="tick in ctrl.performances.cumulative.yScale.ticks(5)"
-                ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(tick)}})"
-              >
-                <line x1="-5" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth }}"/>
-                <text x="-10">
-                  {{tick}}%
-                </text>
-              </g>
-            </g>
-
-            <g class="data">
-              <rect class="day" ng-repeat="day in ctrl.performances.data.progress track by day.date"
-                ng-attr-x="{{ctrl.performances.cumulative.xScale(day.date)}}"
-                ng-attr-y="{{ctrl.performances.cumulative.yScaleReversed(day.performance)}}"
-                ng-attr-width="{{ctrl.performances.cumulative.xScale.rangeBand()}}"
-                ng-attr-height="{{ctrl.performances.cumulative.yScale(day.performance)}}"
-              />
-            </g>
-
-            <g class="axis x-axis" ng-attr-transform="translate(0,{{ctrl.performances.cumulative.layout.innerHeight}})">
-              <line class="axis-line" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}"></line>
-            </g>
-
-            <g class="axis y-axis">
-              <line class="axis-line" ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight}}"></line>
-              <g class="legend"
-                ng-attr-transform="translate(-{{ctrl.performances.cumulative.layout.margin.left}},{{ctrl.performances.cumulative.layout.innerHeight/2}})"
-              >
-                <text transform="rotate(-90)">
-                  Percentage Correct
-                </text>
-              </g>
-            </g>
-
-            <g class="compareTo"
-              ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(ctrl.performances.data[ctrl.comparison.selected.id])}})"
-            >
-              <line ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}"/>
-              <text dx="15" dy="-0.5em">
-                <tspan>{{ctrl.comparison.selected.type}}</tspan>
-                <tspan> (</tspan>
-                <tspan>{{ctrl.performances.data[ctrl.comparison.selected.id]}}</tspan>
-                <tspan>%)</tspan>
-              </text>
-            </g>
-
-            <g class="current-performance"
-              ng-attr-transform="translate({{ctrl.performances.cumulative.layout.innerWidth + ctrl.performances.cumulative.layout.margin.right/2}},{{ctrl.performances.cumulative.layout.innerHeight/2}})"
-            >
-              <text y="-24" style="font-size:48px">
-                <tspan>{{ctrl.performances.data.cumulativePerformance}}</tspan><tspan>%</tspan>
-              </text>
-              <text dy="24" style="font-size:12px; font-weight:200">Overall percent correct</text>
-            </g>
-
-          </g>
-        </svg>
-      </scce-svg-container>
-    </div>
-  </div>
-  <div class="col-sm-5">
-    <div class="well">
-      <scce-svg-container scce-viewbox="ctrl.performances.progress.layout" ng-if="ctrl.performances.progress.layout">
-        <svg>
-          <g class="user-progress">
-            <g class="pie" ng-attr-transform="translate({{ctrl.performances.progress.layout.innerWidth / 2}},{{ctrl.performances.progress.layout.innerHeight / 2}})">
-              <g class="slice"
-                ng-repeat="slice in ctrl.performances.progress.slices track by slice.data.id"
-                ng-class="'pie-progress-' + slice.data.id"
-              >
-                <g ng-if="$index == 0">
-                  <path
-                    ng-attr-d="{{ctrl.performances.progress.arc(slice)}}"
-                    ng-attr-transform="{{ctrl.performances.progress.shiftSlice(slice, 10)}}"
-                    />
-                  <text class="pie-label"
-                    ng-attr-transform="{{ctrl.performances.progress.label(slice, 10)}}"
-                    dy=".35em"
-                    ng-class="{'past-center': ctrl.performances.progress.pastCenter(slice)}"
-                    ng-if="slice.data.value > 0"
+              <g class="axis x-axis" ng-attr-transform="translate(0,{{ctrl.performances.byCategory.layout.innerHeight}})">
+                <g class="ticks">
+                  <g class="tick"
+                    ng-repeat="x in ctrl.performances.byCategory.xScale.ticks(10)"
+                    ng-attr-transform="translate({{ctrl.performances.byCategory.xScale(x)}})"
                   >
-                    {{slice.data.label}}
-                  </text>
+                    <line ng-attr-y1="-{{ctrl.performances.byCategory.layout.innerHeight}}" y2="5"/>
+                    <text dy="7">{{x}}</text>
+                  </g>
+                  <line class="tick miner-tick"
+                    ng-repeat="x in ctrl.performances.byCategory.xScale.ticks(50)"
+                    ng-attr-transform="translate({{ctrl.performances.byCategory.xScale(x)}})"
+                    ng-attr-y1="-{{ctrl.performances.byCategory.layout.innerHeight}}"
+                  />
                 </g>
-                <g ng-if="$index > 0">
-                  <path
-                    ng-attr-d="{{ctrl.performances.progress.arc(slice)}}"
-                    />
-                  <text
-                    ng-attr-transform="{{ctrl.performances.progress.label(slice)}}"
-                    dy=".35em"
-                    ng-class="{'pie-label': true, 'past-center': ctrl.performances.progress.pastCenter(slice)}"
-                    ng-if="slice.data.value > 0"
-                  >
-                    {{slice.data.label}}
+                <line x1="-5" ng-attr-x2="{{ctrl.performances.byCategory.layout.innerWidth}}"/>
+                <text class="label"
+                  ng-attr-transform="translate({{ctrl.performances.byCategory.layout.innerWidth/2}},25)"
+                >
+                  Score (%)
+                </text>
+              </g>
+
+              <g class="data">
+                <g class="chart-row"
+                  ng-class="{'failing': perf.value < ctrl.performances.statsByTopics[perf.id][ctrl.comparison.selected.id]}"
+                  ng-repeat="perf in ctrl.performances.data.categoryPerformances track by perf.id"
+                  ng-attr-transform="translate(0,{{ctrl.performances.byCategory.yScale(perf.id) + ctrl.performances.byCategory.yScale.rangeBand()/2}})"
+                >
+                  <text class="data-label" x="-7">{{perf.name}}</text>
+                  <rect y="-3" height="6"
+                    ng-attr-width="{{ctrl.performances.byCategory.xScale(perf.value)}}"
+                  />
+                  <line class="average"
+                    ng-attr-transform="translate({{ctrl.performances.byCategory.xScale(ctrl.performances.statsByTopics[perf.id][ctrl.comparison.selected.id])}},0)"
+                    y1='-5'
+                    y2='5'
+                  />
+                  <text class="data-value" dx="5" ng-attr-x="{{ctrl.performances.byCategory.xScale(perf.value)}}">
+                    <tspan>{{perf.value}}</tspan><tspan>%</tspan>
                   </text>
                 </g>
               </g>
+
+              <g class="axis y-axis">
+                <line ng-attr-y2="{{ctrl.performances.byCategory.layout.innerHeight}}"/>
+                <g class="ticks">
+                  <line class="tick"
+                    ng-repeat="y in ctrl.performances.byCategory.yScale.range()"
+                    ng-attr-transform="translate(0,{{y}})"
+                    x1="-5"
+                    ng-attr-x2="{{ctrl.performances.byCategory.layout.innerWidth}}"
+                  />
+                </g>
+              </g>
+
             </g>
+          </svg>
+        </scce-svg-container>
 
-
-
-            <g class="progress"
-              ng-attr-transform="translate({{ctrl.performances.progress.layout.width/6 - ctrl.performances.progress.layout.margin.left}},{{ctrl.performances.progress.layout.innerHeight + ctrl.performances.progress.layout.margin.top/2}})"
-            >
-              <text style="font-size:24px; font-weight:200">Progress</text>
-              <text y="24" style="font-size:48px">
-                <tspan>{{ctrl.performances.data.percentageComplete}}</tspan><tspan>%</tspan>
-              </text>
-              <text dy="72" style="font-size:12px; font-weight:200">Percentage completed</text>
-            </g>
-
-          </g>
-        </svg>
-      </scce-svg-container>
-    </div>
-
-    <div class="well">
-      <div class="row">
-        <div class="col-md-6">
-          <scce-svg-container scce-viewbox="ctrl.performances.abem.layout" ng-if="ctrl.performances.abem.layout">
-            <svg>
-              <g class="user-abem">
-
-                <g class="meter"
-                  ng-attr-transform="translate({{ctrl.performances.abem.layout.innerWidth/2}},{{ctrl.performances.abem.layout.innerHeight}})"
-                >
-
-                  <g class="slices">
-                    <path class="slice"
-                      ng-repeat="slice in ctrl.performances.abem.slices"
-                      ng-class="'pie-meter-slice-' + slice.data.id"
-                      ng-attr-d="{{ctrl.performances.abem.arc(slice)}}"
-                    />
-                  </g>
-
-                  <g class="ticks ticks-secondary">
-                    <g class="tick" ng-repeat="v in [10,20,30,40,60,70,80,90]"
-                      ng-attr-transform="rotate({{(v-50)*180/100}})"
-                    >
-                      <line
-                        ng-attr-y1="-{{ctrl.performances.abem.innerRadius}}"
-                        ng-attr-y2="-{{ctrl.performances.abem.outerRadius - 3}}"
-                      />
-                    </g>
-                  </g>
-
-                  <g class="ticks ticks-main">
-                    <path
-                      ng-attr-d="M-{{ctrl.performances.abem.innerRadius}},0 A{{ctrl.performances.abem.innerRadius}},{{ctrl.performances.abem.innerRadius}} 0 0,1 {{ctrl.performances.abem.innerRadius}},0"
-                    />
-                    <g class="tick" ng-repeat="v in [0,50,100]"
-                      ng-attr-transform="rotate({{(v-50)*180/100}})"
-                    >
-                      <text
-                        ng-attr-y="-{{ctrl.performances.abem.outerRadius}}"
-                        dy="-.35em"
-                      >
-                        {{v}}
-                      </text>
-                      <line
-                        ng-attr-y1="-{{ctrl.performances.abem.innerRadius}}"
-                        ng-attr-y2="-{{ctrl.performances.abem.outerRadius - 3}}"
-                      />
-                    </g>
-                  </g>
-
-                  <g class="pointer" ng-style="(ctrl.performances.data.abem*180/100)|rotate">
-                    <line x1="5" ng-attr-x2="-{{ctrl.performances.abem.innerRadius + 5}}"/>
-                    <circle r="2"/>
-                  </g>
-
-                </g>
-
-
-                <g class="reading"
-                  ng-attr-transform="translate({{ctrl.performances.abem.layout.innerWidth/2}},{{ctrl.performances.abem.layout.innerHeight + ctrl.performances.abem.layout.margin.bottom/2}})"
-                >
-                  <text dy="-9" class="value" style="font-size:18px">
-                    <tspan>{{ctrl.performances.data.abem}}</tspan><tspan>%</tspan>
-                  </text>
-                  <text dy="9" style="font-size:8px; font-weight:200">Projected ABEM score</text>
-                </g>
-
-              </g>
-            </svg>
-          </scce-svg-container>
-        </div>
-
-        <div class="col-md-6">
-          <scce-svg-container scce-viewbox="ctrl.performances.passing.layout" ng-if="ctrl.performances.passing.layout">
-            <svg>
-              <g class="user-passing">
-
-                <g class="meter"
-                  ng-attr-transform="translate({{ctrl.performances.passing.layout.innerWidth/2}},{{ctrl.performances.passing.layout.innerHeight}})"
-                >
-
-                  <g class="slices">
-                    <path class="slice"
-                      ng-repeat="slice in ctrl.performances.passing.slices"
-                      ng-class="'pie-meter-slice-' + slice.data.id"
-                      ng-attr-d="{{ctrl.performances.passing.arc(slice)}}"
-                    />
-                  </g>
-
-                  <g class="ticks ticks-secondary">
-                    <g class="tick" ng-repeat="v in [10,20,30,40,60,70,80,90]"
-                      ng-attr-transform="rotate({{(v-50)*180/100}})"
-                    >
-                      <line
-                        ng-attr-y1="-{{ctrl.performances.passing.innerRadius}}"
-                        ng-attr-y2="-{{ctrl.performances.passing.outerRadius - 3}}"
-                      />
-                    </g>
-                  </g>
-
-                  <g class="ticks ticks-main">
-                    <path
-                      ng-attr-d="M-{{ctrl.performances.passing.innerRadius}},0 A{{ctrl.performances.passing.innerRadius}},{{ctrl.performances.passing.innerRadius}} 0 0,1 {{ctrl.performances.passing.innerRadius}},0"
-                    />
-                    <g class="tick" ng-repeat="v in [0,50,100]"
-                      ng-attr-transform="rotate({{(v-50)*180/100}})"
-                    >
-                      <text
-                        ng-attr-y="-{{ctrl.performances.passing.outerRadius}}"
-                        dy="-.35em"
-                      >
-                        {{v}}
-                      </text>
-                      <line
-                        ng-attr-y1="-{{ctrl.performances.passing.innerRadius}}"
-                        ng-attr-y2="-{{ctrl.performances.passing.outerRadius - 3}}"
-                      />
-                    </g>
-                  </g>
-
-                  <g class="pointer" ng-style="(ctrl.performances.data.passingProbability*180/100)|rotate">
-                    <line x1="5" ng-attr-x2="-{{ctrl.performances.passing.innerRadius + 5}}"/>
-                    <circle r="2"/>
-                  </g>
-
-                </g>
-
-
-                <g class="reading"
-                  ng-attr-transform="translate({{ctrl.performances.passing.layout.innerWidth/2}},{{ctrl.performances.passing.layout.innerHeight + ctrl.performances.abem.layout.margin.bottom/2}})"
-                >
-                  <text dy="-9" class="value" style="font-size:18px">
-                    <tspan>{{ctrl.performances.data.passingProbability}}</tspan><tspan>%</tspan>
-                  </text>
-                  <text dy="9" style="font-size:8px; font-weight:200">Probability of Passing</text>
-                </g>
-
-              </g>
-            </svg>
-          </scce-svg-container>
-        </div>
       </div>
-    </div>
 
+    </div>
   </div>
 </div>
+
+
+<!-- Students ranks -->
 
 <div ng-if="ctrl.showGlobals" ng-controller="scdGlobalReviewCtrl" class="global-performance">
   <div class="well graph-view">
