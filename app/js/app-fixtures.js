@@ -44,9 +44,9 @@
         },
         data: {
           user: {
-            isAdmin: true,
+            isAdmin: false,
             isLoggedIn: true,
-            staffId: null,
+            staffId: 's1234',
             logoutUrl: '/logout',
             studentId: null,
             name: 'test@example.com'
