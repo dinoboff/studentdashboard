@@ -5,7 +5,7 @@
    * Portfolio controller
    *
    */
-  function PortfolioCtrl(selectedStudent, pfApi) {
+  function PortfolioCtrl(currentUser, selectedStudent, pfApi) {
     var self = this;
 
     this.pfApi = pfApi;
@@ -37,7 +37,7 @@
    * Exam controller
    *
    */
-  function PfExamCtrl($routeParams, currentUserApi, $q, pfApi, window, layout) {
+  function PfExamCtrl(currentUser, $routeParams, currentUserApi, $q, pfApi, window, layout) {
     var self = this,
       studentId = $routeParams.studentId,
       examId = $routeParams.examId,
@@ -85,7 +85,7 @@
    * Evaluation controller
    *
    */
-  function PfEvaluationCtrl(params, currentUserApi, $q, pfApi) {
+  function PfEvaluationCtrl(currentUser, params, currentUserApi, $q, pfApi) {
     var self = this,
       studentId = params.studentId,
       evaluationId = params.evaluationId;
@@ -108,8 +108,9 @@
 
   angular.module('scdPortfolio.controllers', ['scceUser.services', 'scdSelector.services', 'scdPortFolio.services']).
 
-  controller('scdPortfolioCtrl', ['scdSelectedStudent', 'scdPorfolioApi', PortfolioCtrl]).
+  controller('scdPortfolioCtrl', ['currentUser', 'scdSelectedStudent', 'scdPorfolioApi', PortfolioCtrl]).
   controller('scdPfExamCtrl', [
+    'currentUser',
     '$routeParams',
     'scceCurrentUserApi',
     '$q',
@@ -119,6 +120,7 @@
     PfExamCtrl
   ]).
   controller('scdPfEvaluationCtrl', [
+    'currentUser',
     '$routeParams',
     'scceCurrentUserApi',
     '$q',

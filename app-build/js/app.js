@@ -1,6 +1,24 @@
 (function() {
   'use strict';
 
+  /**
+   * Return a promise resolving to the current user or redirect the user
+   * if she/he is not logged in.
+   *
+   * Can be used as in route resolve map.
+   *
+   */
+  function currentUser(scceCurrentUserApi, $window) {
+    return scceCurrentUserApi.auth().then(function(user) {
+      if (!user.isLoggedIn && user.loginUrl) {
+        $window.location.replace(user.loginUrl);
+      }
+      return user;
+    });
+  }
+  currentUser.$inject = ['scceCurrentUserApi', '$window'];
+
+
   angular.module('scDashboard', [
     'ngRoute',
     'scDashboard.controllers',
@@ -9,50 +27,70 @@
     'scdPortfolio.controllers',
     'scdReview.controllers',
     'scdPortFolio.directives',
-    'scdMisc.filters'
+    'scdMisc.filters',
+    'scceStudents.services'
   ]).
 
   config(['$routeProvider',
     function($routeProvider) {
       $routeProvider.
 
-        when('/', {
-          templateUrl: 'views/scdashboard/repository.html',
-          controller: 'scdRepositoryListCtrl'
-        }).
+      when('/', {
+        templateUrl: 'views/scdashboard/repository.html',
+        controller: 'scdRepositoryListCtrl',
+        resolve: {
+          'currentUser': currentUser
+        }
+      }).
 
-        when('/review', {
-          templateUrl: 'views/scdashboard/review.html',
-          controller: 'scdReviewCtrl',
-          controllerAs: 'ctrl'
-        }).
+      when('/review', {
+        templateUrl: 'views/scdashboard/review.html',
+        controller: 'scdReviewCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUser
+        }
 
-        when('/first-aid', {
-          templateUrl: 'views/scdashboard/first-aid.html',
-          controller: 'scdFirstAidCtrl'
-        }).
+      }).
 
-        when('/assessments', {
-          templateUrl: 'views/scdashboard/portfolio.html',
-          controller: 'scdPortfolioCtrl',
-          controllerAs: 'ctrl'
-        }).
+      when('/first-aid', {
+        templateUrl: 'views/scdashboard/first-aid.html',
+        controller: 'scdFirstAidCtrl',
+        resolve: {
+          'currentUser': currentUser
+        }
+      }).
 
-        when('/portfolio/:studentId/exam/:examId', {
-          templateUrl: 'views/scdashboard/exam.html',
-          controller: 'scdPfExamCtrl',
-          controllerAs: 'ctrl'
-        }).
+      when('/assessments', {
+        templateUrl: 'views/scdashboard/portfolio.html',
+        controller: 'scdPortfolioCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUser
+        }
+      }).
 
-        when('/portfolio/:studentId/evaluation/:evaluationId', {
-          templateUrl: 'views/scdashboard/evaluation.html',
-          controller: 'scdPfEvaluationCtrl',
-          controllerAs: 'ctrl'
-        }).
+      when('/portfolio/:studentId/exam/:examId', {
+        templateUrl: 'views/scdashboard/exam.html',
+        controller: 'scdPfExamCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUser
+        }
+      }).
 
-        otherwise({
-          redirectTo: '/'
-        });
+      when('/portfolio/:studentId/evaluation/:evaluationId', {
+        templateUrl: 'views/scdashboard/evaluation.html',
+        controller: 'scdPfEvaluationCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUser
+        }
+      }).
+
+      otherwise({
+        redirectTo: '/'
+      });
 
     }
   ])
@@ -147,7 +185,7 @@
 
   }
 
-  function FirstAidCtrl($scope, window, firstAidApi) {
+  function FirstAidCtrl($scope, currentUser, window, firstAidApi) {
     this._ = window._;
     this.d3 = window.d3;
     this.firstAidApi = firstAidApi;
@@ -317,7 +355,7 @@
 
   angular.module('scdFirstAid.controllers', ['scceSvg.directives', 'scdFirstAid.services']).
 
-  controller('scdFirstAidCtrl', ['$scope', '$window', 'scdFirstAidApi', FirstAidCtrl])
+  controller('scdFirstAidCtrl', ['$scope', 'currentUser', '$window', 'scdFirstAidApi', FirstAidCtrl])
 
   ;
 
@@ -596,7 +634,7 @@
    * Portfolio controller
    *
    */
-  function PortfolioCtrl(selectedStudent, pfApi) {
+  function PortfolioCtrl(currentUser, selectedStudent, pfApi) {
     var self = this;
 
     this.pfApi = pfApi;
@@ -628,7 +666,7 @@
    * Exam controller
    *
    */
-  function PfExamCtrl($routeParams, currentUserApi, $q, pfApi, window, layout) {
+  function PfExamCtrl(currentUser, $routeParams, currentUserApi, $q, pfApi, window, layout) {
     var self = this,
       studentId = $routeParams.studentId,
       examId = $routeParams.examId,
@@ -676,7 +714,7 @@
    * Evaluation controller
    *
    */
-  function PfEvaluationCtrl(params, currentUserApi, $q, pfApi) {
+  function PfEvaluationCtrl(currentUser, params, currentUserApi, $q, pfApi) {
     var self = this,
       studentId = params.studentId,
       evaluationId = params.evaluationId;
@@ -699,8 +737,9 @@
 
   angular.module('scdPortfolio.controllers', ['scceUser.services', 'scdSelector.services', 'scdPortFolio.services']).
 
-  controller('scdPortfolioCtrl', ['scdSelectedStudent', 'scdPorfolioApi', PortfolioCtrl]).
+  controller('scdPortfolioCtrl', ['currentUser', 'scdSelectedStudent', 'scdPorfolioApi', PortfolioCtrl]).
   controller('scdPfExamCtrl', [
+    'currentUser',
     '$routeParams',
     'scceCurrentUserApi',
     '$q',
@@ -710,6 +749,7 @@
     PfExamCtrl
   ]).
   controller('scdPfEvaluationCtrl', [
+    'currentUser',
     '$routeParams',
     'scceCurrentUserApi',
     '$q',
@@ -789,8 +829,8 @@
     ]
   ).
 
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', '$q', 'scdSelectedStudent',
-    function($scope, scdRepositoryApi, $q, selectedStudent) {
+  controller('scdRepositoryListCtrl', ['$scope', 'currentUser', 'scdRepositoryApi', '$q', 'scdSelectedStudent',
+    function($scope, currentUser, scdRepositoryApi, $q, selectedStudent) {
       $scope.files = null;
       $scope.selector = null;
 
@@ -1168,12 +1208,11 @@
     '$scope',
     '$window',
     'scdReviewApi',
-    'scdSelectedStudent',
     GlobalReviewCtrl
   ]).
 
-  controller('scdReviewCtrl', ['scdSelectedStudent', 'scdReviewApi', '$window',
-    function(scdSelectedStudent, scdReviewApi, $window) {
+  controller('scdReviewCtrl', ['currentUser', 'scdSelectedStudent', 'scdReviewApi', '$window',
+    function(currentUser, scdSelectedStudent, scdReviewApi, $window) {
       var self = this,
         d3 = $window.d3,
         _ = $window._;
@@ -1879,7 +1918,7 @@
 
         selectorPromise = scceCurrentUserApi.auth().then(function(user) {
 
-          if (user.error) {
+          if (!user.isLoggedIn) {
             return $q.reject('You need to be login.');
           }
 

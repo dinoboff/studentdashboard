@@ -213,12 +213,11 @@
     '$scope',
     '$window',
     'scdReviewApi',
-    'scdSelectedStudent',
     GlobalReviewCtrl
   ]).
 
-  controller('scdReviewCtrl', ['scdSelectedStudent', 'scdReviewApi', '$window',
-    function(scdSelectedStudent, scdReviewApi, $window) {
+  controller('scdReviewCtrl', ['currentUser', 'scdSelectedStudent', 'scdReviewApi', '$window',
+    function(currentUser, scdSelectedStudent, scdReviewApi, $window) {
       var self = this,
         d3 = $window.d3,
         _ = $window._;
