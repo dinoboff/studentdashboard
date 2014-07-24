@@ -11,8 +11,12 @@
     function($scope, $location, currentUserApi) {
       $scope.currentUser = null;
 
-      $scope.isActive = function(route) {
-        return route === $location.path();
+      $scope.isActive = function(route, exactMatch) {
+        if (exactMatch) {
+          return $location.path() === route;
+        } else {
+          return ($location.path() + '').indexOf(route) === 0;
+        }
       };
 
       currentUserApi.auth().then(function(user) {
