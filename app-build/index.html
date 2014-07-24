@@ -35,10 +35,10 @@
                         <li ng-class="{active: isActive('/portfolio')}">
                             <a ng-href="#/assessments">Assessments</a>
                         </li>
-                        <li ng-class="{active: isActive('/review')}" ng-if="currentUser.isAdmin">
+                        <li ng-class="{active: isActive('/review')}">
                             <a ng-href="#/review">Rosh Review</a>
                         </li>
-                        <li ng-class="{active: isActive('/first-aid')}" ng-if="currentUser.isAdmin">
+                        <li ng-class="{active: isActive('/first-aid')}" ng-if="currentUser.isAdmin || currentUser.staffId">
                             <a ng-href="#/first-aid">First Aid</a>
                         </li>
                     </ul>
