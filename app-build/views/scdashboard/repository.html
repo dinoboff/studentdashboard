@@ -15,7 +15,7 @@
 </form>
 
 <div class="row">
-  <div class="col-md-8">
+  <div ng-class="'col-md-8': selector.available, 'col-md-12': !selector.available">
 
     <table class="table table-striped">
       <thead>
@@ -38,17 +38,17 @@
           <td><a ng-href="{{file.url}}">download</a></td>
         </tr>
         <tr ng-if="!files">
-          <td colspan="5">Loading file list...</td>
+          <td colspan="6">Loading file list...</td>
         </tr>
         <tr ng-if="files.length == 0">
-          <td colspan="5">No files</td>
+          <td colspan="6">No files</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <div class="col-md-4">
-    <div ng-if="selector.selectedId">
+  <div class="col-md-4" ng-if="selector.available">
+    <div>
       <form role="form" ng-controller="scdRepositoryUploadFileCtrl" id="upload-form">
         <fielset>
           <legend>Upload File</legend>
