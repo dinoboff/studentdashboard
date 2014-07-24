@@ -29,7 +29,7 @@
           <h3 ng-bind="series.name">Exam type</h3>
           <ul>
             <li ng-repeat="(_, exam) in series.exams">
-              <a ng-href="#/portfolio/{{ctrl.portfolio.student.id}}/exam/{{exam.id}}" ng-bind="exam.name">No exam</a>
+              <a ng-href="#/assessments/{{ctrl.portfolio.student.id}}/exam/{{exam.id}}" ng-bind="exam.name">No exam</a>
             </li>
           </ul>
         </div>
@@ -44,7 +44,7 @@
           <h3 ng-bind="series.name">Evaluation type</h3>
           <ul>
             <li ng-repeat="(_, evaluation) in series.evaluations">
-              <a ng-href="#/portfolio/{{ctrl.portfolio.student.id}}/evaluation/{{evaluation.id}}" ng-bind="evaluation.name">No evaluation</a>
+              <a ng-href="#/assessments/{{ctrl.portfolio.student.id}}/evaluation/{{evaluation.id}}" ng-bind="evaluation.name">No evaluation</a>
             </li>
           </ul>
         </div>

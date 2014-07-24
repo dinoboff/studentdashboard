@@ -70,7 +70,7 @@
         }
       }).
 
-      when('/portfolio/:studentId/exam/:examId', {
+      when('/assessments/:studentId/exam/:examId', {
         templateUrl: 'views/scdashboard/exam.html',
         controller: 'scdPfExamCtrl',
         controllerAs: 'ctrl',
@@ -79,7 +79,7 @@
         }
       }).
 
-      when('/portfolio/:studentId/evaluation/:evaluationId', {
+      when('/assessments/:studentId/evaluation/:evaluationId', {
         templateUrl: 'views/scdashboard/evaluation.html',
         controller: 'scdPfEvaluationCtrl',
         controllerAs: 'ctrl',
@@ -150,8 +150,12 @@
     function($scope, $location, currentUserApi) {
       $scope.currentUser = null;
 
-      $scope.isActive = function(route) {
-        return route === $location.path();
+      $scope.isActive = function(route, exactMatch) {
+        if (exactMatch) {
+          return $location.path() === route;
+        } else {
+          return ($location.path() + '').indexOf(route) === 0;
+        }
       };
 
       currentUserApi.auth().then(function(user) {

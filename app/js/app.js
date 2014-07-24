@@ -70,7 +70,7 @@
         }
       }).
 
-      when('/portfolio/:studentId/exam/:examId', {
+      when('/assessments/:studentId/exam/:examId', {
         templateUrl: 'views/scdashboard/exam.html',
         controller: 'scdPfExamCtrl',
         controllerAs: 'ctrl',
@@ -79,7 +79,7 @@
         }
       }).
 
-      when('/portfolio/:studentId/evaluation/:evaluationId', {
+      when('/assessments/:studentId/evaluation/:evaluationId', {
         templateUrl: 'views/scdashboard/evaluation.html',
         controller: 'scdPfEvaluationCtrl',
         controllerAs: 'ctrl',
