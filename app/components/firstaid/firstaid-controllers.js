@@ -20,7 +20,7 @@
 
   }
 
-  function FirstAidCtrl($scope, window, firstAidApi) {
+  function FirstAidCtrl($scope, currentUser, window, firstAidApi) {
     this._ = window._;
     this.d3 = window.d3;
     this.firstAidApi = firstAidApi;
@@ -190,7 +190,7 @@
 
   angular.module('scdFirstAid.controllers', ['scceSvg.directives', 'scdFirstAid.services']).
 
-  controller('scdFirstAidCtrl', ['$scope', '$window', 'scdFirstAidApi', FirstAidCtrl])
+  controller('scdFirstAidCtrl', ['$scope', 'currentUser', '$window', 'scdFirstAidApi', FirstAidCtrl])
 
   ;
 

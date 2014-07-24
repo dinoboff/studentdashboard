@@ -13,8 +13,8 @@
     ]
   ).
 
-  controller('scdRepositoryListCtrl', ['$scope', 'scdRepositoryApi', '$q', 'scdSelectedStudent',
-    function($scope, scdRepositoryApi, $q, selectedStudent) {
+  controller('scdRepositoryListCtrl', ['$scope', 'currentUser', 'scdRepositoryApi', '$q', 'scdSelectedStudent',
+    function($scope, currentUser, scdRepositoryApi, $q, selectedStudent) {
       $scope.files = null;
       $scope.selector = null;
 

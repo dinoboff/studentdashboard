@@ -53,7 +53,7 @@
 
         selectorPromise = scceCurrentUserApi.auth().then(function(user) {
 
-          if (user.error) {
+          if (!user.isLoggedIn) {
             return $q.reject('You need to be login.');
           }
 
