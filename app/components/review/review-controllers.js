@@ -65,7 +65,7 @@
     $scope.review = {
       chart: {},
       table: {
-        sortedBy: 'firstName',
+        sortedBy: 'displayName',
         searchFor: '',
         reversed: null,
         source: {},

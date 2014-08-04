@@ -48,10 +48,15 @@
     }];
 
   function newUser(index, _) {
+    var name = {
+      givenName: _.sample(firstNames),
+      familyName: _.sample(lastNames)
+    };
+
     return {
-      'id': 'x' + index,
-      'firstName': _.sample(firstNames),
-      'lastName': _.sample(lastNames),
+      'id': '' + index,
+      'displayName': name.givenName + ' ' + name.familyName,
+      'name': name,
       'PGY': _.sample(residents).id,
       'data': newResults(_)
       // 'completed': _.random(0, 100),

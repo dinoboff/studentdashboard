@@ -63,7 +63,7 @@
     this.yScale = d3.scale.ordinal();
 
     currentUserApi.auth().then(function(user) {
-      if (!user.staffId && !user.isAdmin && user.studenId !== studentId) {
+      if (!user.isStaff && !user.isAdmin && user.id !== studentId) {
         return $q.reject('You do not have permission to see those results');
       }
       return pfApi.getExamById(studentId, examId);
@@ -93,7 +93,7 @@
     this.evaluation = null;
 
     currentUserApi.auth().then(function(user) {
-      if (!user.staffId && !user.isAdmin && user.studenId !== studentId) {
+      if (!user.isStaff && !user.isAdmin && user.id !== studentId) {
         return $q.reject('You do not have permission to see those results');
       }
       return pfApi.getEvaluationById(studentId, evaluationId);

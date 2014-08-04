@@ -25,17 +25,17 @@
       it('should query the documents list available for a student', function() {
         var list;
 
-        api.getRepositoryById('x1').then(function(_list) {
+        api.getRepositoryById('12345').then(function(_list) {
           list = _list;
         });
 
         $httpBackend.expectGET(
-          '/api/v1/dashboard/repository/x1/files'
+          '/api/v1/dashboard/repository/12345/files'
         ).respond({
           files: [{
             name: 'foo.pdf',
             url: '/api/v1/dashboard/repository/files/1234.pdf',
-            sender: 'alice smith'
+            sender: 'Chris Boesch'
           }]
         });
         $httpBackend.flush();
@@ -47,12 +47,12 @@
       it('should request a new upload file url', function() {
         var resp;
 
-        api.newUploadUrl('x1').then(function(_resp) {
+        api.newUploadUrl('12345').then(function(_resp) {
           resp = _resp;
         });
 
         $httpBackend.expectPOST(
-          '/api/v1/dashboard/repository/x1/uploadurl'
+          '/api/v1/dashboard/repository/12345/uploadurl'
         ).respond({url: '/foo'});
         $httpBackend.flush();
 

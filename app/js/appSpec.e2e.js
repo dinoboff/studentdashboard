@@ -25,7 +25,7 @@
             });
 
             $httpBackend.whenGET(fix.urls.studentFiles).respond({
-              'files': fix.data.files(students.X2010200001, 2),
+              'files': fix.data.files(students['12346'], 2),
               'cursor': 'E-ABAOsB8gELdXBsb2FkZWRfYXT6AQkI98SWrqPCvQLsAYICOmoUZGV2fnN0dWRlbnRkYXNoYm9hcmRyIgsSBEZpbGUiGDRSYlBuS0xBUFgtb1JfR0xQQUZ3N1E9PQwU'
             });
 
@@ -34,7 +34,7 @@
             );
 
             $httpBackend.whenPOST(fix.urls.upload).respond(
-              fix.data.newFile('new file', 'X2010200001', 'Alice Smith')
+              fix.data.newFile('new file', '12346', fix.data.user.displayName)
             );
 
             $httpBackend.whenGET(/.*/).passThrough();

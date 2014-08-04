@@ -38,7 +38,7 @@
                         <li ng-class="{active: isActive('/review')}">
                             <a ng-href="#/review">Rosh Review</a>
                         </li>
-                        <li ng-class="{active: isActive('/first-aid')}" ng-if="currentUser.isAdmin || currentUser.staffId">
+                        <li ng-class="{active: isActive('/first-aid')}" ng-if="currentUser.isAdmin || currentUser.isStaff">
                             <a ng-href="#/first-aid">First Aid</a>
                         </li>
                     </ul>
