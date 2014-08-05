@@ -57,7 +57,7 @@
           fixtures.data.newFile(
             'new file ' + newFileCount++,
             dest.id,
-            dest.firstName + ' ' + dest.lastName
+            dest.displayName
           )
         ];
       });

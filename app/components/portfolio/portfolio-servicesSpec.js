@@ -24,8 +24,8 @@
       }));
 
       it('should query a portfolio', function() {
-        $httpBackend.expectGET('/api/v1/dashboard/portfolio/x1').respond({});
-        api.getById('x1');
+        $httpBackend.expectGET('/api/v1/dashboard/portfolio/12345').respond({});
+        api.getById('12345');
         $httpBackend.flush();
       });
     });

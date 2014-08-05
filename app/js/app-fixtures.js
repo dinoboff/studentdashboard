@@ -44,34 +44,90 @@
         },
         data: {
           user: {
-            isAdmin: false,
-            isLoggedIn: true,
-            staffId: 's1234',
-            logoutUrl: '/logout',
-            studentId: null,
-            name: 'test@example.com'
+            'image': {
+              'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
+              'isDefault': true
+            },
+            'emails': [{
+              'type': 'account',
+              'value': 'chris@example.com'
+            }],
+            'hasCredentials': true,
+            'isStudent': true,
+            'verified': false,
+            'isLoggedIn': true,
+            'domain': 'example.com',
+            'isAdmin': false,
+            'id': '12345',
+            'loginUrl': '/api/login',
+            'logoutUrl': '/_ah/login?continue=http%3A//localhost%3A8080/dashboard/&action=logout',
+            'displayName': 'Chris Boesch',
+            'isDomainAdmin': false,
+            'name': {
+              'givenName': 'Chris',
+              'familyName': 'Boesch'
+            },
+            'isStaff': true
           },
           studentUser: {
-            isAdmin: false,
-            isLoggedIn: true,
-            staffId: null,
-            logoutUrl: '/logout',
-            studentId: 'X2010200001',
-            name: 'test@example.com'
+            'image': {
+              'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
+              'isDefault': true
+            },
+            'emails': [{
+              'type': 'account',
+              'value': 'damien@example.com'
+            }],
+            'hasCredentials': true,
+            'isStudent': true,
+            'verified': false,
+            'isLoggedIn': true,
+            'domain': 'example.com',
+            'isAdmin': false,
+            'id': '12345',
+            'loginUrl': '/api/login',
+            'logoutUrl': '/_ah/login?continue=http%3A//localhost%3A8080/dashboard/&action=logout',
+            'displayName': 'Damien Lebrun',
+            'isDomainAdmin': false,
+            'name': {
+              'givenName': 'Damien',
+              'familyName': 'Lebrun'
+            },
+            'isStaff': false
           },
           students: {
-            'X2010200001': {
-              firstName: 'Alice',
-              lastName: 'Smith',
-              id: 'X2010200001',
-              photo: 'http://placehold.it/300x400&text=portrait'
+            '12345': {
+              'image': {
+                'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
+                'isDefault': true
+              },
+              'verified': false,
+              'isStudent': true,
+              'isStaff': true,
+              'domain': 'chrisboesch.com',
+              'displayName': 'Chris Boesch',
+              'id': '12345',
+              'name': {
+                'givenName': 'Chris',
+                'familyName': 'Boesch'
+              }
             },
-            'X2010200002': {
-              firstName: 'Bob',
-              lastName: 'Taylor',
-              id: 'X2010200002',
-              photo: 'http://placehold.it/300x400&text=portrait'
-            },
+            '12346': {
+              'image': {
+                'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
+                'isDefault': true
+              },
+              'verified': false,
+              'isStudent': true,
+              'isStaff': false,
+              'domain': 'chrisboesch.com',
+              'displayName': 'Damien Lebrun',
+              'id': '12346',
+              'name': {
+                'givenName': 'Damien',
+                'familyName': 'Lebrun'
+              }
+            }
           },
           exams: {
             '1': {
@@ -209,7 +265,7 @@
           ],
           files: function(dest, count, senderName) {
             var results = [],
-              destName = dest.firstName + ' ' + dest.lastName;
+              destName = dest.displayName;
 
             while (count > 0) {
               results.push(
@@ -229,7 +285,7 @@
 
       // Build random result for each exam.
       _.forEach(fix.data.exams, function(series) {
-        _.forEach(series.exams, function(exam){
+        _.forEach(series.exams, function(exam) {
           var fieldId = 1;
 
           fix.data.examResults[exam.id] = {
@@ -242,11 +298,14 @@
             results: {}
           };
 
-          _.forEach(fix.data.examFields, function (name) {
+          _.forEach(fix.data.examFields, function(name) {
             var min = getRandomArbitary(-1.8, -0.3),
               max = getRandomArbitary(0.3, 1.9),
               mean = getRandomArbitary(min, max),
-              field = {name: name, id: fieldId++};
+              field = {
+                name: name,
+                id: fieldId++
+              };
 
             fix.data.examResults[exam.id].results[field.id] = {
               topic: field,
@@ -265,12 +324,18 @@
         series.evaluations.forEach(function(ev) {
           var evaluation = fix.data.evaluationResults[ev.id] = _.clone(ev);
 
-          evaluation.series = {id: series.id, name: series.name};
+          evaluation.series = {
+            id: series.id,
+            name: series.name
+          };
           evaluation.results = {};
 
           _.forEach(fix.data.evaluationFields, function(topicName, topicId) {
             var topic = evaluation.results[topicId] = {
-              topic: {id: topicId, name: topicName}
+              topic: {
+                id: topicId,
+                name: topicName
+              }
             };
 
             topic.data = fix.data.evaluationTypeResult.map(function(name) {

@@ -5,7 +5,7 @@
     <div class="form-group">
       <label for="selected-student">Show performance details of </label>
       <select id="selected-student" class="form-control " ng-model="ctrl.selector.selectedId"
-        ng-options="s.id as s.firstName + ' ' + s.lastName for s in ctrl.selector.students"
+        ng-options="s.id as s.displayName for s in ctrl.selector.students"
         ng-change="ctrl.showStudentPerformance(ctrl.selector.selectedId)"
       >
         <option value="">Select a student</option>
@@ -585,8 +585,8 @@
       <thead>
         <tr>
           <th>
-            <a ng-click="tableSortBy('firstName')">
-              Name <span ng-if="review.table.sortedBy == 'firstName'" class="glyphicon glyphicon-sort"></span>
+            <a ng-click="tableSortBy('displayName')">
+              Name <span ng-if="review.table.sortedBy == 'displayName'" class="glyphicon glyphicon-sort"></span>
             </a>
           </th>
           <th>
@@ -622,7 +622,7 @@
       </thead>
       <tbody>
         <tr ng-repeat="student in review.table.students | filter:{$: review.table.searchFor} track by student.id">
-          <td>{{student|fullName}}</td>
+          <td>{{student.displayName}}</td>
           <td>{{student.PGY}}</td>
           <td>{{student.data[filters.table.show.category].result| number:1}}%</td>
           <td>{{review.table.source.overallAverage['PGY ' + student.PGY][filters.table.show.category][filters.table.show.property.id] | number:1}}%</td>

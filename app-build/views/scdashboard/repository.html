@@ -5,7 +5,7 @@
   <div class="form-group">
     <label for="selected-student">Show repository of </label>
     <select id="selected-student" class="form-control " ng-model="selector.selectedId"
-      ng-options="s.id as s.firstName + ' ' + s.lastName for s in selector.students"
+      ng-options="s.id as s.displayName for s in selector.students"
       ng-change="listFile(selector.selectedId)"
     >
       <option value="">Select a student</option>

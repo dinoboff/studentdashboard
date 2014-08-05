@@ -6,19 +6,19 @@
   factory('scdPorfolioApi', ['scdDashboardApi',
     function(dashboardApi) {
       return {
-        getById: function(studentId) {
-          return dashboardApi.all('portfolio').get(studentId);
+        getById: function(userId) {
+          return dashboardApi.all('portfolio').get(userId);
         },
 
-        getExamById: function(studentId, examId) {
+        getExamById: function(userId, examId) {
           return dashboardApi.one(
-            'portfolio', studentId
+            'portfolio', userId
           ).all('exam').get(examId);
         },
 
-        getEvaluationById: function(studentId, evaluationId) {
+        getEvaluationById: function(userId, evaluationId) {
           return dashboardApi.one(
-            'portfolio', studentId
+            'portfolio', userId
           ).all('evaluation').get(evaluationId);
         }
       };
@@ -26,6 +26,7 @@
   ]).
 
   factory('scdPfSvgLayout', [
+
     function() {
       return function(margin, width, height) {
         margin = margin || {

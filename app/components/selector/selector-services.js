@@ -63,11 +63,11 @@
             available: false
           };
 
-          if (user.studentId) {
-            selector.selectedId = user.studentId;
+          if (user.isStudent) {
+            selector.selectedId = user.id;
           }
 
-          if (user.staffId || user.isAdmin) {
+          if (user.isStaff || user.isAdmin) {
             selector.available = true;
             listStudents(selector);
           }

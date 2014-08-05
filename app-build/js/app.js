@@ -588,8 +588,8 @@
   angular.module('scdMisc.filters', []).
 
   filter('fullName', function() {
-    return function(obj) {
-      return obj.firstName + ' ' + obj.lastName;
+    return function(name) {
+      return name.givenName + ' ' + name.familyName;
     };
   }).
 
@@ -696,7 +696,7 @@
     this.yScale = d3.scale.ordinal();
 
     currentUserApi.auth().then(function(user) {
-      if (!user.staffId && !user.isAdmin && user.studenId !== studentId) {
+      if (!user.isStaff && !user.isAdmin && user.id !== studentId) {
         return $q.reject('You do not have permission to see those results');
       }
       return pfApi.getExamById(studentId, examId);
@@ -726,7 +726,7 @@
     this.evaluation = null;
 
     currentUserApi.auth().then(function(user) {
-      if (!user.staffId && !user.isAdmin && user.studenId !== studentId) {
+      if (!user.isStaff && !user.isAdmin && user.id !== studentId) {
         return $q.reject('You do not have permission to see those results');
       }
       return pfApi.getEvaluationById(studentId, evaluationId);
@@ -772,19 +772,19 @@
   factory('scdPorfolioApi', ['scdDashboardApi',
     function(dashboardApi) {
       return {
-        getById: function(studentId) {
-          return dashboardApi.all('portfolio').get(studentId);
+        getById: function(userId) {
+          return dashboardApi.all('portfolio').get(userId);
         },
 
-        getExamById: function(studentId, examId) {
+        getExamById: function(userId, examId) {
           return dashboardApi.one(
-            'portfolio', studentId
+            'portfolio', userId
           ).all('exam').get(examId);
         },
 
-        getEvaluationById: function(studentId, evaluationId) {
+        getEvaluationById: function(userId, evaluationId) {
           return dashboardApi.one(
-            'portfolio', studentId
+            'portfolio', userId
           ).all('evaluation').get(evaluationId);
         }
       };
@@ -792,6 +792,7 @@
   ]).
 
   factory('scdPfSvgLayout', [
+
     function() {
       return function(margin, width, height) {
         margin = margin || {
@@ -1064,7 +1065,7 @@
     $scope.review = {
       chart: {},
       table: {
-        sortedBy: 'firstName',
+        sortedBy: 'displayName',
         searchFor: '',
         reversed: null,
         source: {},
@@ -1600,10 +1601,15 @@
     }];
 
   function newUser(index, _) {
+    var name = {
+      givenName: _.sample(firstNames),
+      familyName: _.sample(lastNames)
+    };
+
     return {
-      'id': 'x' + index,
-      'firstName': _.sample(firstNames),
-      'lastName': _.sample(lastNames),
+      'id': '' + index,
+      'displayName': name.givenName + ' ' + name.familyName,
+      'name': name,
       'PGY': _.sample(residents).id,
       'data': newResults(_)
       // 'completed': _.random(0, 100),
@@ -1932,11 +1938,11 @@
             available: false
           };
 
-          if (user.studentId) {
-            selector.selectedId = user.studentId;
+          if (user.isStudent) {
+            selector.selectedId = user.id;
           }
 
-          if (user.staffId || user.isAdmin) {
+          if (user.isStaff || user.isAdmin) {
             selector.available = true;
             listStudents(selector);
           }

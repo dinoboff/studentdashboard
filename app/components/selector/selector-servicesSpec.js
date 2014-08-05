@@ -60,7 +60,7 @@
           selector = _selector_;
         });
         $httpBackend.flush();
-        expect(selector.selectedId).toBe(fix.data.studentUser.studentId);
+        expect(selector.selectedId).toBe(fix.data.studentUser.id);
       });
 
       it('should query the student list when the user is an admin', function() {
@@ -86,7 +86,7 @@
         });
         $httpBackend.flush();
         expect(selector.students.length).toBe(2);
-        expect(selector.students[0].id).toBe('X2010200001');
+        expect(selector.students[0].id).toBe('12345');
       });
 
       it('should merge selector request', function() {
