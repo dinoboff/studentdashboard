@@ -57,12 +57,11 @@
             'verified': false,
             'isLoggedIn': true,
             'domain': 'example.com',
-            'isAdmin': false,
+            'isAdmin': true,
             'id': '12345',
             'loginUrl': '/api/login',
             'logoutUrl': '/_ah/login?continue=http%3A//localhost%3A8080/dashboard/&action=logout',
             'displayName': 'Chris Boesch',
-            'isDomainAdmin': false,
             'name': {
               'givenName': 'Chris',
               'familyName': 'Boesch'

@@ -28,11 +28,15 @@
     'scdReview.controllers',
     'scdPortFolio.directives',
     'scdMisc.filters',
-    'scceStudents.services'
+    'scCoreEducation',
+    'scceUser.services'
   ]).
 
-  config(['$routeProvider',
-    function($routeProvider) {
+  config(['$routeProvider', 'scceUserOptionsProvider',
+    function($routeProvider, scceUserOptionsProvider) {
+
+      scceUserOptionsProvider.setAppName('dashboard');
+
       $routeProvider.
 
       when('/', {
@@ -130,6 +134,7 @@
       return Restangular.withConfig(function(RestangularConfigurer) {
         RestangularConfigurer.setBaseUrl(SCD_API_BASE);
         RestangularConfigurer.addResponseInterceptor(interceptor);
+        RestangularConfigurer.setDefaultHeaders({'X-App-Name': 'dashboard'});
       });
     }
   ])
@@ -1877,7 +1882,6 @@
   'use strict';
 
   angular.module('scdSelector.services', [
-    'scceStudents.services',
     'scceUser.services',
   ]).
 
@@ -1899,8 +1903,8 @@
    *   him / herself)
    *
    */
-  factory('scdSelectedStudent', ['scceCurrentUserApi', 'scceStudentsApi', '$q',
-    function(scceCurrentUserApi, scceStudentsApi, $q) {
+  factory('scdSelectedStudent', ['scceCurrentUserApi', 'scceUsersApi', '$q',
+    function(scceCurrentUserApi, scceUsersApi, $q) {
       var selector = null,
         selectorPromise = null,
         studentsPromise = null;
@@ -1910,7 +1914,7 @@
           return;
         }
 
-        studentsPromise = scceStudentsApi.all().then(function(studentList) {
+        studentsPromise = scceUsersApi.students().then(function(studentList) {
           selector.students = studentList;
         })['finally'](function() {
           studentsPromise = null;

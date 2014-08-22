@@ -28,11 +28,15 @@
     'scdReview.controllers',
     'scdPortFolio.directives',
     'scdMisc.filters',
-    'scceStudents.services'
+    'scCoreEducation',
+    'scceUser.services'
   ]).
 
-  config(['$routeProvider',
-    function($routeProvider) {
+  config(['$routeProvider', 'scceUserOptionsProvider',
+    function($routeProvider, scceUserOptionsProvider) {
+
+      scceUserOptionsProvider.setAppName('dashboard');
+
       $routeProvider.
 
       when('/', {
