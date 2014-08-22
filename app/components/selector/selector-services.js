@@ -2,7 +2,6 @@
   'use strict';
 
   angular.module('scdSelector.services', [
-    'scceStudents.services',
     'scceUser.services',
   ]).
 
@@ -24,8 +23,8 @@
    *   him / herself)
    *
    */
-  factory('scdSelectedStudent', ['scceCurrentUserApi', 'scceStudentsApi', '$q',
-    function(scceCurrentUserApi, scceStudentsApi, $q) {
+  factory('scdSelectedStudent', ['scceCurrentUserApi', 'scceUsersApi', '$q',
+    function(scceCurrentUserApi, scceUsersApi, $q) {
       var selector = null,
         selectorPromise = null,
         studentsPromise = null;
@@ -35,7 +34,7 @@
           return;
         }
 
-        studentsPromise = scceStudentsApi.all().then(function(studentList) {
+        studentsPromise = scceUsersApi.students().then(function(studentList) {
           selector.students = studentList;
         })['finally'](function() {
           studentsPromise = null;

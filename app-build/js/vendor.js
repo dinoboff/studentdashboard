@@ -50829,31 +50829,68 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
   'use strict';
 
   angular.module(
-    'scCoreEducation',
-    [
+    'scCoreEducation', [
       'ngRoute',
-      'scCoreEducation.controllers',
-      'scceStudents.controllers',
-      'scceStaff.controllers',
+      'scceUser.controllers',
       'scceUser.directives',
+      'scCoreEducation.controllers',
       'scCoreEducation.templates'
     ]
   ).
 
   config(['$routeProvider',
     function($routeProvider) {
+
+      function resolver(meth, userType) {
+        return {
+          'getList': ['scceUsersApi',
+            function(scceUsersApi) {
+              return scceUsersApi[meth];
+            }
+          ],
+          'initialList': ['$location', 'scceUsersApi',
+            function($location, scceUsersApi) {
+              return scceUsersApi[meth]().catch(function() {
+                $location.path('/error');
+              });
+            }
+          ],
+          'userType': function() {
+            return userType;
+          }
+        };
+      }
+
       $routeProvider
-        .when('/students', {
-          templateUrl: 'views/sccoreeducation/studentlist.html',
-          controller: 'scceStudentListCtrl'
-        })
-        .when('/staff', {
-          templateUrl: 'views/sccoreeducation/stafflist.html',
-          controller: 'scceStaffListCtrl'
-        })
-        .otherwise({
-          redirectTo: '/students'
-        });
+
+      .when('/error', {
+        template: '<h1>Error</h1><p>You may need to be part of the staff</p>'
+      })
+
+      .when('/users', {
+        templateUrl: 'views/sccoreeducation/user-list.html',
+        controller: 'ScceUserListCtrl',
+        controllerAs: 'ctrl',
+        resolve: resolver('all', 'Users')
+      })
+
+      .when('/students', {
+        templateUrl: 'views/sccoreeducation/user-list.html',
+        controller: 'ScceUserListCtrl',
+        controllerAs: 'ctrl',
+        resolve: resolver('students', 'Students')
+      })
+
+      .when('/staff', {
+        templateUrl: 'views/sccoreeducation/user-list.html',
+        controller: 'ScceUserListCtrl',
+        controllerAs: 'ctrl',
+        resolve: resolver('staff', 'Staff')
+      })
+
+      .otherwise({
+        redirectTo: '/users'
+      });
     }
   ])
 
@@ -50899,12 +50936,17 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 
   angular.module('scCoreEducation.services', ['restangular', 'scCoreEducation.config']).
 
-  service('scceApi', ['Restangular', 'SCCE_API_BASE',
+  factory('scceApi', ['Restangular', 'SCCE_API_BASE',
     function(Restangular, SCCE_API_BASE) {
-      return Restangular.withConfig(function(RestangularConfigurer) {
-        RestangularConfigurer.setBaseUrl(SCCE_API_BASE);
-        RestangularConfigurer.addResponseInterceptor(interceptor);
-      });
+      return {
+        client: function(appName) {
+          return Restangular.withConfig(function(RestangularConfigurer) {
+            RestangularConfigurer.setBaseUrl(SCCE_API_BASE);
+            RestangularConfigurer.addResponseInterceptor(interceptor);
+            RestangularConfigurer.setDefaultHeaders({'X-App-Name': appName});
+          });
+        }
+      };
     }
   ])
 
@@ -50936,21 +50978,38 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
 (function() {
   'use strict';
 
-  angular.module('scceUser.config', []).
-
-
-  constant('scceUserConfig', {
-    defaultReturnUrl: null, // Should retunr to the current url.
-  })
-
-  ;
-
-})();
-(function() {
-  'use strict';
+  // Keep a reference to scceCurrentUserApi to avoid for the interceptor
+  // to avoid a circular dependency.
+  //
+  // TODO: Create a session service which both scceCurrentUserApi
+  // and the the http inceptor can depend on.
   var api;
 
-  angular.module('scceUser.services', ['scCoreEducation.services', 'scceUser.config']).
+
+  angular.module('scceUser.services', ['scCoreEducation.services']).
+
+
+  provider('scceUserOptions', function scceUserOptionsProvider() {
+    this.appName = 'core';
+    this.apiClient = null;
+    this.defaultReturnUrl = null; // Should return to the current URL.
+
+    this.setAppName = function(name) {
+      this.appName = name;
+    };
+
+    this.setDefaultUrl = function(url) {
+      this.defaultReturnUrl = url;
+    };
+
+    this.$get = ['scceApi', function(scceApi) {
+      return {
+        appName: this.appName,
+        apiClient: scceApi.client(this.appName),
+        defaultReturnUrl: this.defaultReturnUrl
+      };
+    }];
+  }).
 
   /**
    * scceCurrentUserApi - api to access user info.
@@ -50966,8 +51025,10 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
    * TODO: handle lose of authentication.
    *
    */
-  factory('scceCurrentUserApi', ['$location', '$q', 'scceApi', 'scceUserConfig',
-    function($location, $q, scceApi, scceUserConfig) {
+  factory('scceCurrentUserApi', ['$location', '$q', 'scceUserOptions',
+    function($location, $q, scceUserOptions) {
+      var client = scceUserOptions.apiClient;
+
       api = {
         info: null,
         loading: null,
@@ -50976,12 +51037,12 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
           var params = {
             returnUrl: (
               returnUrl ||
-              scceUserConfig.defaultReturnUrl ||
+              scceUserOptions.defaultReturnUrl ||
               $location.absUrl()
             )
           };
 
-          return scceApi.one('user').get(params).then(function(data) {
+          return client.one('user').get(params).then(function(data) {
             return data;
           });
         },
@@ -51024,6 +51085,56 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
   ]).
 
   /**
+   * Api to query users.
+   *
+   * scceUsersApi.users, scceUsersApi.students and scceUsersApi.staff
+   * return promises that resolve to list of user.
+   *
+   * makeStaff sends a request make a user a member of staff.
+   *
+   * TODO: add support to revoke staff.
+   */
+  factory('scceUsersApi', ['scceUserOptions',
+    function(scceUserOptions) {
+      var client = scceUserOptions.apiClient;
+
+      return {
+
+        all: function(cursor) {
+          var params = {};
+
+          if (cursor) {
+            params.cursor = cursor;
+          }
+          return client.all('users').getList(params);
+        },
+
+        students: function(cursor) {
+          var params = {};
+
+          if (cursor) {
+            params.cursor = cursor;
+          }
+          return client.all('students').getList(params);
+        },
+
+        staff: function(cursor) {
+          var params = {};
+
+          if (cursor) {
+            params.cursor = cursor;
+          }
+          return client.all('staff').getList(params);
+        },
+
+        makeStaff: function(user) {
+          return client.one('staff', user.id).put();
+        }
+      };
+    }
+  ]).
+
+  /**
    * Intercept http response error to reset scceCurrentUserApi on http
    * 401 response.
    *
@@ -51042,6 +51153,7 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
       return {
         responseError: function(resp) {
           if (
+            api &&
             resp.status === 401 &&
             isSameDomain(resp.config.url)
           ) {
@@ -51086,140 +51198,65 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
         }
       ]
     };
-  }).
-
-  /**
-   * Directive displaying a list of user (student or staff)
-   *
-   * usage:
-   *
-   *  <scce-user-grid scce-users="studentList" scce-user-type="students">
-   *  </scce-user-grid>
-   *
-   * Where students `scce-users` should reference a list of students
-   * and `scce-user-type` is type of user ('students' or 'staff').
-   *
-   * Note that `scce-user-type` doesn't reference a scope attribute and
-   * we be evaulated either.
-   *
-   */
-  directive('scceUserGrid', function() {
-    return {
-      restrict: 'E',
-      templateUrl: 'views/sccoreeducation/user/grid.html',
-      scope: {
-        users: '=scceUsers',
-        userType: '@scceUserType'
-      }
-    };
   });
 
 })();
 (function() {
   'use strict';
 
+  angular.module('scceUser.controllers', []).
 
-  angular.module('scceStudents.services', ['scCoreEducation.services']).
+  controller('ScceUserListCtrl', ['$q', 'scceUsersApi', 'getList', 'initialList', 'userType',
+    function($q, scceUsersApi, getList, initialList, userType) {
+      var self = this;
 
-  factory('scceStudentsApi', ['scceApi',
-    function(scceApi) {
-      return {
-        all: function() {
-          return scceApi.all('students').getList();
-        }
+      this.users = initialList;
+      this.userType = userType;
+      this.loading = null;
+
+      this.updateUserList = function() {
+        this.loading = $q.when(this.loading).then(function(){
+          return getList();
+        }).then(function(users){
+          self.users = users;
+          self.loading = null;
+          return users;
+        });
+
+        return this.loading;
       };
-    }
-  ])
 
-  ;
+      this.getMore = function() {
+        if (!this.users || !this.users.cursor) {
+          return $q.when([]);
+        }
 
-})();
-(function() {
-  'use strict';
+        this.loading = $q.when(this.loading).then(function(){
+          return getList(this.users.cursor);
+        }).then(function(users){
+          self.users = self.users.concat(users);
+          self.users.cursor = users.cursor;
+          self.loading = null;
+          return users;
+        });
 
-  angular.module('scceStudents.controllers', [
-    'scceStudents.services', 'scceUser.directives', 'scCoreEducation.templates'
-  ]).
+        return this.loading;
+      };
 
-  controller('scceStudentListCtrl', ['$scope', 'scceStudentsApi',
-    function($scope, scceStudentsApi) {
-      $scope.students = null;
-
-      $scope.listStudent = function() {
-        return scceStudentsApi.all().then(function(list) {
-          $scope.students = list;
-          return list;
-        }).
-        catch (function(data) {
-          if (data.status === 401) {
-            $scope.error = 'You need to be logged in to view the list.';
-          } else if (data.status === 403) {
-            $scope.error = 'Only admins or staff can list students.';
-          } else {
-            $scope.error = 'Unexpected error.';
-          }
+      this.makeStaff = function(user) {
+        user.isStaff = true;
+        scceUsersApi.makeStaff(user).catch(function() {
+          user.isStaff = false;
         });
       };
 
-      $scope.listStudent();
-    }
-  ])
-
-  ;
-
-})();
-(function() {
-  'use strict';
-
-
-  angular.module('scceStaff.services', ['scCoreEducation.services']).
-
-  factory('scceStaffApi', ['scceApi',
-    function(scceApi) {
-      return {
-        all: function() {
-          return scceApi.all('staff').getList();
-        },
-        add: function(userId) {
-          return scceApi.one('staff', userId).put();
-        }
+      this.revokeStaff = function(user) {
+        // TODO
+        console.dir(user);
       };
     }
   ])
 
-  ;
-
-})();
-(function() {
-  'use strict';
-
-  angular.module('scceStaff.controllers', [
-    'scceStaff.services', 'scceUser.directives', 'scCoreEducation.templates'
-  ]).
-
-  controller('scceStaffListCtrl', ['$scope', 'scceStaffApi',
-    function($scope, scceStaffApi) {
-      $scope.staff = null;
-
-      $scope.listStaff = function() {
-        return scceStaffApi.all().then(function(list) {
-          $scope.staff = list;
-          return list;
-        }).
-        catch (function(data) {
-          if (data.status === 401) {
-            $scope.error = 'You need to be logged in to view the list.';
-          } else if (data.status === 403) {
-            $scope.error = 'Only admins can list staff.';
-          } else {
-            $scope.error = 'Unexpected error.';
-          }
-        });
-      };
-
-      $scope.listStaff();
-    }
-  ])
 
   ;
 
@@ -51308,54 +51345,93 @@ angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($pars
   ;
 
 })();
-angular.module('scCoreEducation.templates', ['views/sccoreeducation/home.html', 'views/sccoreeducation/stafflist.html', 'views/sccoreeducation/studentlist.html', 'views/sccoreeducation/user/grid.html', 'views/sccoreeducation/user/login.html']);
+(function() {
+  'use strict';
+
+
+  angular.module('scceStaff.services', ['scCoreEducation.services']).
+
+  factory('scceStaffApi', ['scceUsersApi',
+    function(scceUsersApi) {
+      return {
+        all: function() {
+          console.log('Deprecated... Use scceUsersApi.students() instead');
+          return scceUsersApi.students();
+        },
+        add: function(userId) {
+          console.log(
+            'Deprecated... Use scceUsersApi.makeStaff({id:userID}) instead'
+          );
+          return scceUsersApi.makeStaff({
+            id: userId
+          });
+        }
+      };
+    }
+  ])
+
+  ;
+
+})();
+(function() {
+  'use strict';
+
+
+  angular.module('scceStudents.services', ['scCoreEducation.services']).
+
+  factory('scceStudentsApi', ['scceUsersApi',
+    function(scceUsersApi) {
+      return {
+        all: function() {
+          console.log('Deprecated... Use scceUsersApi.students() instead');
+          return scceUsersApi.students();
+        }
+      };
+    }
+  ])
+
+  ;
+
+})();
+angular.module('scCoreEducation.templates', ['views/sccoreeducation/home.html', 'views/sccoreeducation/user-list.html', 'views/sccoreeducation/user/login.html']);
 
 angular.module("views/sccoreeducation/home.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("views/sccoreeducation/home.html",
     "<h1>Hello world</h1>");
 }]);
 
-angular.module("views/sccoreeducation/stafflist.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("views/sccoreeducation/stafflist.html",
-    "<h1>Staff list</h1>\n" +
+angular.module("views/sccoreeducation/user-list.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("views/sccoreeducation/user-list.html",
+    "<h1>{{ctrl.userType}}</h1>\n" +
     "\n" +
-    "<scce-user-grid scce-users=\"staff\" scce-user-type=\"staff\"></scce-user-grid>\n" +
-    "\n" +
-    "");
-}]);
-
-angular.module("views/sccoreeducation/studentlist.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("views/sccoreeducation/studentlist.html",
-    "<h1>Student list</h1>\n" +
-    "\n" +
-    "<scce-user-grid scce-users=\"students\" scce-user-type=\"students\"></scce-user-grid>\n" +
-    "");
-}]);
-
-angular.module("views/sccoreeducation/user/grid.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("views/sccoreeducation/user/grid.html",
     "<table class=\"table table-striped\">\n" +
     "  <thead>\n" +
     "    <tr>\n" +
+    "      <th>Photo</th>\n" +
     "      <th>First name</th>\n" +
     "      <th>Last name</th>\n" +
-    "      <th>Photo</th>\n" +
+    "      <th>Is student</th>\n" +
+    "      <th>Is Staff</th>\n" +
     "    </tr>\n" +
     "  </thead>\n" +
     "  <tbody>\n" +
-    "    <tr ng-repeat=\"user in users track by user.id\">\n" +
+    "    <tr ng-repeat=\"user in ctrl.users track by user.id\">\n" +
+    "      <td><img ng-src=\"{{user.image.url}}\"/></td>\n" +
     "      <td>{{user.name.givenName}}</td>\n" +
     "      <td>{{user.name.familyName}}</td>\n" +
-    "      <td><img ng-src=\"{{user.image.url}}\"/></td>\n" +
+    "      <td><input type=\"checkbox\" ng-checked=\"user.isStudent\" disabled=\"disabled\"></td>\n" +
+    "      <td><input type=\"checkbox\" ng-checked=\"user.isStaff\" ng-disabled=\"user.isStaff\" ng-click=\"ctrl.makeStaff(user)\"></td>\n" +
     "    </tr>\n" +
-    "    <tr ng-if=\"users.length == 0\">\n" +
-    "      <td colspan=\"3\">No {{userType}}</td>\n" +
+    "    <tr ng-if=\"ctrl.users.length == 0\">\n" +
+    "      <td colspan=\"5\">No {{ctrl.userType}}</td>\n" +
     "    </tr>\n" +
-    "    <tr ng-if=\"users == null\">\n" +
-    "      <td colspan=\"3\">Loading {{userType}}</td>\n" +
+    "    <tr ng-if=\"ctrl.users == null\">\n" +
+    "      <td colspan=\"5\">Loading {{ctrl.userType}}</td>\n" +
     "    </tr>\n" +
+    "\n" +
     "  </tbody>\n" +
-    "</table>");
+    "</table>\n" +
+    "");
 }]);
 
 angular.module("views/sccoreeducation/user/login.html", []).run(["$templateCache", function($templateCache) {

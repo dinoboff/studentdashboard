@@ -20,6 +20,7 @@
       return Restangular.withConfig(function(RestangularConfigurer) {
         RestangularConfigurer.setBaseUrl(SCD_API_BASE);
         RestangularConfigurer.addResponseInterceptor(interceptor);
+        RestangularConfigurer.setDefaultHeaders({'X-App-Name': 'dashboard'});
       });
     }
   ])
