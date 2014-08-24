@@ -18,41 +18,17 @@
 
 <div class="row" ng-if="ctrl.portfolio">
   <div class="col-md-8">
+      <p ng-if="ctrl.portfolio.examSeries|isEmpty">You have not taken part to any exam.</p>
 
-    <div class="row">
+      <div ng-repeat="(_, series) in ctrl.portfolio.examSeries">
 
-      <div class="col-md-6">
-        <p ng-if="ctrl.portfolio.examSeries|isEmpty">You have not taken part to any exam.</p>
-
-        <div ng-repeat="(_, series) in ctrl.portfolio.examSeries">
-
-          <h3 ng-bind="series.name">Exam type</h3>
-          <ul>
-            <li ng-repeat="(_, exam) in series.exams">
-              <a ng-href="#/assessments/{{ctrl.portfolio.student.id}}/exam/{{exam.id}}" ng-bind="exam.name">No exam</a>
-            </li>
-          </ul>
-        </div>
-
+        <h3 ng-bind="series.name">Exam type</h3>
+        <ul>
+          <li ng-repeat="(_, exam) in series.exams">
+            <a ng-href="#/assessments/{{ctrl.portfolio.student.id}}/exam/{{exam.id}}" ng-bind="exam.name">No exam</a>
+          </li>
+        </ul>
       </div>
-
-      <div class="col-md-6">
-        <p ng-if="ctrl.portfolio.evaluationSeries|isEmpty">You have not taken part to any evaluation.</p>
-
-        <div ng-repeat="(_, series) in ctrl.portfolio.evaluationSeries">
-
-          <h3 ng-bind="series.name">Evaluation type</h3>
-          <ul>
-            <li ng-repeat="(_, evaluation) in series.evaluations">
-              <a ng-href="#/assessments/{{ctrl.portfolio.student.id}}/evaluation/{{evaluation.id}}" ng-bind="evaluation.name">No evaluation</a>
-            </li>
-          </ul>
-        </div>
-
-      </div>
-
-    </div>
-
   </div>
 
   <div class="col-md-4">

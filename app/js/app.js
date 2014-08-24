@@ -70,28 +70,25 @@
 
       when('/assessments', {
         templateUrl: 'views/scdashboard/portfolio.html',
-        controller: 'scdPortfolioCtrl',
+        controller: 'ScdPortfolioCtrl',
         controllerAs: 'ctrl',
         resolve: {
-          'currentUser': currentUser
+          'currentUser': currentUser,
+          'initialData': ['scdPortfolioCtrlInitialData', function(scdPortfolioCtrlInitialData) {
+            return scdPortfolioCtrlInitialData();
+          }]
         }
       }).
 
       when('/assessments/:studentId/exam/:examId', {
         templateUrl: 'views/scdashboard/exam.html',
-        controller: 'scdPfExamCtrl',
+        controller: 'ScdPortfolioStudentExamCtrl',
         controllerAs: 'ctrl',
         resolve: {
-          'currentUser': currentUser
-        }
-      }).
-
-      when('/assessments/:studentId/evaluation/:evaluationId', {
-        templateUrl: 'views/scdashboard/evaluation.html',
-        controller: 'scdPfEvaluationCtrl',
-        controllerAs: 'ctrl',
-        resolve: {
-          'currentUser': currentUser
+          'currentUser': currentUser,
+          'initialData': ['scdPortfolioStudentExamCtrlInitialData', function(scdPortfolioStudentExamCtrlInitialData) {
+            return scdPortfolioStudentExamCtrlInitialData();
+          }]
         }
       }).
 

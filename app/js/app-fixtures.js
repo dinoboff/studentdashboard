@@ -24,7 +24,6 @@
     function(window) {
       var _ = window._,
         examId = 1,
-        evaluationId = 1,
         fix;
 
       function getRandomArbitary(min, max) {
@@ -199,31 +198,6 @@
             }
           },
           examResults: {},
-          evaluations: {
-            'evs1': {
-              id: 'evs1',
-              name: 'TBD Evaluations',
-              evaluations: [ // Should be an object (id -> evaluation)
-                {
-                  name: 'Evaluation 1',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 2',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 3',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 4',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 5',
-                  id: evaluationId++
-                }
-              ]
-            }
-          },
-          evaluationResults: {},
           examFields: [
             'Bahvioral Sciences',
             'Biochemitry',
@@ -246,21 +220,6 @@
             'Reproductive & Endocrine Systems',
             'Respiratory System',
             'Surgery'
-          ],
-          evaluationFields: {
-            't1': 'History Taking Skills',
-            't2': 'Physical Examination Skills',
-            't3': 'Analytical Skills',
-            't4': 'Communication Skills',
-            't5': 'Medical Knowledge',
-            't6': 'Management Skills',
-          },
-          evaluationTypeResult: [
-            'Do Not Meet',
-            'Occasionally Meet',
-            'Consistently Meet',
-            'Occasionally Exceeds',
-            'Consistently Exceeds'
           ],
           files: function(dest, count, senderName) {
             var results = [],
@@ -315,38 +274,6 @@
               }
             };
           });
-        });
-      });
-
-      // Build random result for each evaluation.
-      _.forEach(fix.data.evaluations, function(series) {
-        series.evaluations.forEach(function(ev) {
-          var evaluation = fix.data.evaluationResults[ev.id] = _.clone(ev);
-
-          evaluation.series = {
-            id: series.id,
-            name: series.name
-          };
-          evaluation.results = {};
-
-          _.forEach(fix.data.evaluationFields, function(topicName, topicId) {
-            var topic = evaluation.results[topicId] = {
-              topic: {
-                id: topicId,
-                name: topicName
-              }
-            };
-
-            topic.data = fix.data.evaluationTypeResult.map(function(name) {
-              return {
-                name: name,
-                value: getRandomArbitary(0, 1),
-                mean: getRandomArbitary(0, 1)
-              };
-            });
-
-          });
-
         });
       });
 
