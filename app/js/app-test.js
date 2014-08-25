@@ -5,9 +5,10 @@
 
   angular.module('scDashboardMocked', ['scDashboard', 'ngMockE2E', 'scDashboardMocked.fixtures']).
 
-  run(['$httpBackend', 'SC_DASHBOARD_FIXTURES',
-    function($httpBackend, fixtures) {
-      var files = {},
+  run(['$httpBackend', '$window', 'SC_DASHBOARD_FIXTURES',
+    function($httpBackend, $window, fixtures) {
+      var _ = $window._,
+        files = {},
         students = fixtures.data.students;
 
       // Login
@@ -51,7 +52,7 @@
 
       // upload file
       $httpBackend.whenPOST(fixtures.urls.upload).respond(function() {
-        var dest = students[lastStudentId] ;
+        var dest = students[lastStudentId];
         return [
           200,
           fixtures.data.newFile(
@@ -62,7 +63,54 @@
         ];
       });
 
+      // Assessments
+
+      // Exam list
+      $httpBackend.whenGET(fixtures.urls.exams).respond(function(m, url) {
+        var userId = fixtures.urls.exams.exec(url)[1];
+
+        if (!userId) {
+          return [200, {
+            exams: fixtures.data.getExamList(),
+            cursor: ''
+          }];
+        }
+
+        if (!students[userId]) {
+          return [404, {error: 'not found'}];
+        }
+
+        return [200, {
+          user: students[userId],
+          exams: fixtures.data.getExamListByStudentId(userId),
+          cursor: ''
+        }];
+      });
+
+      // Exam details
+      $httpBackend.whenGET(fixtures.urls.exam).respond(function(m, url) {
+        var examId = fixtures.urls.exam.exec(url)[1];
+
+        if (!examId || !fixtures.data.exams[examId]) {
+          return [404, {error: 'not found'}];
+        }
+
+        return [200, fixtures.data.exams[examId]];
+      });
+
+      // Exam Upload
+      $httpBackend.whenPOST(fixtures.urls.examUploadUrl).respond({
+        url: fixtures.urls.examUpload
+      });
+
+      $httpBackend.whenPOST(fixtures.urls.examUpload).respond(function() {
+        var exam = fixtures.data.newExam(_.size(fixtures.data.exams + 1));
+        return [200, exam];
+      });
+
       // Portfolio
+      //
+      // TODO: deprecate it.
 
       // Student portfolio
       $httpBackend.whenGET(fixtures.urls.portfolio).respond(function(m, url) {

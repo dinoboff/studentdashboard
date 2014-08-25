@@ -18,6 +18,22 @@
   }
   currentUser.$inject = ['scceCurrentUserApi', '$window'];
 
+  /**
+   * Return a promise resolving to the current user if he's part of staff.
+   *
+   * Can be used as in route resolve map.
+   *
+   */
+  function currentUserIsStaff(scceCurrentUserApi, $window, $q) {
+    return scceCurrentUserApi.auth().then(function(user) {
+      if (!user.isLoggedIn || (!user.isStaff && !user.isAdmin)) {
+        return $q.reject('Only staff or admins can access this page.');
+      }
+      return user;
+    });
+  }
+  currentUser.$inject = ['scceCurrentUserApi', '$window', '$q'];
+
 
   angular.module('scDashboard', [
     'ngRoute',
@@ -80,7 +96,19 @@
         }
       }).
 
-      when('/assessments/:studentId/exam/:examId', {
+      when('/assessments/exam/:examId', {
+        templateUrl: 'views/scdashboard/exam-stats.html',
+        controller: 'ScdPortfolioExamStatsCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUserIsStaff,
+          'initialData': ['scdPortfolioExamStatsCtrlInitialData', function(scdPortfolioExamStatsCtrlInitialData) {
+            return scdPortfolioExamStatsCtrlInitialData();
+          }]
+        }
+      }).
+
+      when('/assessments/exam/:examId/user/:userId', {
         templateUrl: 'views/scdashboard/exam.html',
         controller: 'ScdPortfolioStudentExamCtrl',
         controllerAs: 'ctrl',

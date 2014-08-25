@@ -12,14 +12,15 @@
    *
    */
   module.controller('ScdPortfolioCtrl', [
-    'currentUser',
-    'scdPorfolioApi',
+    'scdDashboardApi',
     'initialData',
-    function ScdPortfolioCtrl(currentUser, scdPorfolioApi, initialData) {
+    function ScdPortfolioCtrl(scdDashboardApi, initialData) {
       var self = this;
 
       this.portfolio = initialData.portfolio;
       this.selector = initialData.selector;
+      this.globalsResults = initialData.globalsResults;
+      this.showGlobals = false;
 
       this.loadPortfolio = function(studentId) {
         if (!studentId) {
@@ -27,9 +28,30 @@
           return;
         }
 
-        scdPorfolioApi.getById(studentId).then(function(pf) {
+        this.showGlobals = false;
+        scdDashboardApi.assessments.listExams(studentId).then(function(pf) {
           self.portfolio = pf;
         });
+      };
+
+      this.showGlobalResults = function(doShow) {
+        this.showGlobals = doShow;
+        if (!doShow) {
+          return;
+        }
+
+        if (!self.selector.available) {
+          self.showGlobals = false;
+          // TODO: redirect.
+        } else {
+          self.selector.selectedId = null;
+        }
+      };
+
+      this.addGlobalResult = function(result) {
+        if (self.globalsResults && self.globalsResults.unshift) {
+          self.globalsResults.unshift(result);
+        }
       };
     }
   ]);
@@ -47,8 +69,8 @@
   module.factory('scdPortfolioCtrlInitialData', [
     '$q',
     'scdSelectedStudent',
-    'scdPorfolioApi',
-    function scdPortfolioCtrlInitialDataFactory($q, scdSelectedStudent, scdPorfolioApi) {
+    'scdDashboardApi',
+    function scdPortfolioCtrlInitialDataFactory($q, scdSelectedStudent, scdDashboardApi) {
       return function() {
         var selectorPromise = scdSelectedStudent();
 
@@ -56,11 +78,106 @@
           selector: selectorPromise,
           portfolio: selectorPromise.then(function(selector) {
             if (selector.selectedId) {
-              return scdPorfolioApi.getById(selector.selectedId);
+              return scdDashboardApi.assessments.listExams(selector.selectedId);
+            }
+          }),
+          globalsResults: selectorPromise.then(function(selector) {
+            if (selector.available) {
+              return scdDashboardApi.assessments.listExams();
             }
           })
         });
       };
+    }
+  ]);
+
+  /**
+   * Exam stats controller.
+   *
+   */
+  module.controller('ScdPortfolioExamStatsCtrl', [
+    'initialData',
+    function ScdPortfolioExamStatsCtrl(initialData) {
+      this.exam = initialData.exam;
+    }
+  ]);
+
+  module.factory('scdPortfolioExamStatsCtrlInitialData', [
+    '$q',
+    '$route',
+    'scdDashboardApi',
+    function scdPortfolioExamStatsCtrlInitialDataFactory($q, $route, scdDashboardApi) {
+      return function() {
+        var examId = $route.current.params.examId;
+
+        return $q.all({
+          examId: examId,
+          exam: scdDashboardApi.assessments.getExamById(examId)
+        });
+      };
+    }
+  ]);
+
+  /**
+   * Exam result upload controller
+   *
+   */
+  module.controller('ScdAssessmentUploadFileCtrl', [
+    '$upload',
+    'scdDashboardApi',
+    function($upload, scdDashboardApi) {
+      var self = this;
+
+      this.selected = {};
+
+      this.reset = function() {
+        this.fileMeta = {};
+        this.selected.file = null;
+        this.showProgress = false;
+        this.progress = 0;
+      };
+
+      function onProgress(evt) {
+        self.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
+      }
+
+      function uploadFile(file, cb) {
+
+        scdDashboardApi.assessments.newUploadUrl().then(function(uploadInfo) {
+          self.upload = $upload.upload({
+            url: uploadInfo.url,
+            method: 'POST',
+            withCredentials: true,
+            data: {
+              name: self.fileMeta.name || file.name
+            },
+            file: file
+          }).progress(
+            onProgress
+          ).success(
+            function onSucess(data) {
+              if (cb) {
+                cb(data);
+              }
+
+              self.success = 'Results uploaded.';
+              self.selected.file = null;
+              self.reset();
+            }
+          );
+        });
+      }
+
+      this.onFileSelect = function(file) {
+        this.fileMeta.name = file.name;
+      };
+
+      this.uploadButtonClicked = function(file, cb) {
+        uploadFile(file, cb);
+        this.showProgress = true;
+      };
+
+      this.reset();
     }
   ]);
 

@@ -18,6 +18,22 @@
   }
   currentUser.$inject = ['scceCurrentUserApi', '$window'];
 
+  /**
+   * Return a promise resolving to the current user if he's part of staff.
+   *
+   * Can be used as in route resolve map.
+   *
+   */
+  function currentUserIsStaff(scceCurrentUserApi, $window, $q) {
+    return scceCurrentUserApi.auth().then(function(user) {
+      if (!user.isLoggedIn || (!user.isStaff && !user.isAdmin)) {
+        return $q.reject('Only staff or admins can access this page.');
+      }
+      return user;
+    });
+  }
+  currentUser.$inject = ['scceCurrentUserApi', '$window', '$q'];
+
 
   angular.module('scDashboard', [
     'ngRoute',
@@ -80,7 +96,19 @@
         }
       }).
 
-      when('/assessments/:studentId/exam/:examId', {
+      when('/assessments/exam/:examId', {
+        templateUrl: 'views/scdashboard/exam-stats.html',
+        controller: 'ScdPortfolioExamStatsCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUserIsStaff,
+          'initialData': ['scdPortfolioExamStatsCtrlInitialData', function(scdPortfolioExamStatsCtrlInitialData) {
+            return scdPortfolioExamStatsCtrlInitialData();
+          }]
+        }
+      }).
+
+      when('/assessments/exam/:examId/user/:userId', {
         templateUrl: 'views/scdashboard/exam.html',
         controller: 'ScdPortfolioStudentExamCtrl',
         controllerAs: 'ctrl',
@@ -116,27 +144,98 @@
 (function() {
   'use strict';
 
-  var interceptor = function(data, operation, what) {
-    var resp;
-
-    if (operation === 'getList') {
-      resp = data[what] ? data[what] : [];
-      resp.cursor = data.cursor ? data.cursor : null;
-    } else {
-      resp = data;
-    }
-    return resp;
-  };
 
   angular.module('scDashboard.services', ['restangular', 'scDashboard.config', 'scceUser.services']).
 
-  service('scdDashboardApi', ['Restangular', 'SCD_API_BASE',
-    function(Restangular, SCD_API_BASE) {
+  factory('scdDashboardBaseApi', ['$window', 'Restangular', 'SCD_API_BASE',
+    function scdDashboardBaseApiFactory($window, Restangular, SCD_API_BASE) {
+      var _ = $window._,
+        interceptor = function(data, operation, what) {
+          var resp;
+
+          if (operation !== 'getList') {
+            return data;
+          }
+
+          if (angular.isArray(resp)) {
+            data.cursor = null;
+            return data;
+          }
+
+          if (data[what]) {
+            resp = data[what];
+            _.assign(resp, _.omit(data, [what]));
+          } else if (data.type && data[data.type]) {
+            resp = data[data.type];
+            _.assign(resp, _.omit(data, [data.type]));
+          } else {
+            resp = [];
+          }
+
+          resp.cursor = data.cursor ? data.cursor : null;
+          return resp;
+        };
+
       return Restangular.withConfig(function(RestangularConfigurer) {
         RestangularConfigurer.setBaseUrl(SCD_API_BASE);
         RestangularConfigurer.addResponseInterceptor(interceptor);
-        RestangularConfigurer.setDefaultHeaders({'X-App-Name': 'dashboard'});
+        RestangularConfigurer.setDefaultHeaders({
+          'X-App-Name': 'dashboard'
+        });
       });
+    }
+  ]).
+
+  factory('scdDashboardApi', [
+    'scdDashboardBaseApi',
+    function scdDashboardApiFactory(scdDashboardBaseApi) {
+      var api = scdDashboardBaseApi;
+
+      return {
+        /**
+         * Repository resources
+         *
+         * TODO: move api client here.
+         *
+         */
+        repository: {},
+
+        /**
+         * Assessment endpoint
+         *
+         */
+        assessments: {
+
+          /**
+           * List all exams with their stats. Can get filtered to show
+           * the exams a user took part of.
+           *
+           */
+          listExams: function(userId) {
+            var params = {};
+
+            if (userId) {
+              params.userId = userId;
+            }
+            return api.all('assessments').all('exams').getList(params);
+          },
+
+          /**
+           * Return detailed results of an exam
+           *
+           */
+          getExamById: function(examId) {
+            return api.all('assessments').one('exams', examId).get();
+          },
+
+          /**
+           * Get an upload url for a new result to upload.
+           */
+          newUploadUrl: function() {
+            return api.all('assessments').all('uploadurl').post();
+          }
+        }
+      };
     }
   ])
 
@@ -651,14 +750,15 @@
    *
    */
   module.controller('ScdPortfolioCtrl', [
-    'currentUser',
-    'scdPorfolioApi',
+    'scdDashboardApi',
     'initialData',
-    function ScdPortfolioCtrl(currentUser, scdPorfolioApi, initialData) {
+    function ScdPortfolioCtrl(scdDashboardApi, initialData) {
       var self = this;
 
       this.portfolio = initialData.portfolio;
       this.selector = initialData.selector;
+      this.globalsResults = initialData.globalsResults;
+      this.showGlobals = false;
 
       this.loadPortfolio = function(studentId) {
         if (!studentId) {
@@ -666,9 +766,30 @@
           return;
         }
 
-        scdPorfolioApi.getById(studentId).then(function(pf) {
+        this.showGlobals = false;
+        scdDashboardApi.assessments.listExams(studentId).then(function(pf) {
           self.portfolio = pf;
         });
+      };
+
+      this.showGlobalResults = function(doShow) {
+        this.showGlobals = doShow;
+        if (!doShow) {
+          return;
+        }
+
+        if (!self.selector.available) {
+          self.showGlobals = false;
+          // TODO: redirect.
+        } else {
+          self.selector.selectedId = null;
+        }
+      };
+
+      this.addGlobalResult = function(result) {
+        if (self.globalsResults && self.globalsResults.unshift) {
+          self.globalsResults.unshift(result);
+        }
       };
     }
   ]);
@@ -686,8 +807,8 @@
   module.factory('scdPortfolioCtrlInitialData', [
     '$q',
     'scdSelectedStudent',
-    'scdPorfolioApi',
-    function scdPortfolioCtrlInitialDataFactory($q, scdSelectedStudent, scdPorfolioApi) {
+    'scdDashboardApi',
+    function scdPortfolioCtrlInitialDataFactory($q, scdSelectedStudent, scdDashboardApi) {
       return function() {
         var selectorPromise = scdSelectedStudent();
 
@@ -695,11 +816,106 @@
           selector: selectorPromise,
           portfolio: selectorPromise.then(function(selector) {
             if (selector.selectedId) {
-              return scdPorfolioApi.getById(selector.selectedId);
+              return scdDashboardApi.assessments.listExams(selector.selectedId);
+            }
+          }),
+          globalsResults: selectorPromise.then(function(selector) {
+            if (selector.available) {
+              return scdDashboardApi.assessments.listExams();
             }
           })
         });
       };
+    }
+  ]);
+
+  /**
+   * Exam stats controller.
+   *
+   */
+  module.controller('ScdPortfolioExamStatsCtrl', [
+    'initialData',
+    function ScdPortfolioExamStatsCtrl(initialData) {
+      this.exam = initialData.exam;
+    }
+  ]);
+
+  module.factory('scdPortfolioExamStatsCtrlInitialData', [
+    '$q',
+    '$route',
+    'scdDashboardApi',
+    function scdPortfolioExamStatsCtrlInitialDataFactory($q, $route, scdDashboardApi) {
+      return function() {
+        var examId = $route.current.params.examId;
+
+        return $q.all({
+          examId: examId,
+          exam: scdDashboardApi.assessments.getExamById(examId)
+        });
+      };
+    }
+  ]);
+
+  /**
+   * Exam result upload controller
+   *
+   */
+  module.controller('ScdAssessmentUploadFileCtrl', [
+    '$upload',
+    'scdDashboardApi',
+    function($upload, scdDashboardApi) {
+      var self = this;
+
+      this.selected = {};
+
+      this.reset = function() {
+        this.fileMeta = {};
+        this.selected.file = null;
+        this.showProgress = false;
+        this.progress = 0;
+      };
+
+      function onProgress(evt) {
+        self.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
+      }
+
+      function uploadFile(file, cb) {
+
+        scdDashboardApi.assessments.newUploadUrl().then(function(uploadInfo) {
+          self.upload = $upload.upload({
+            url: uploadInfo.url,
+            method: 'POST',
+            withCredentials: true,
+            data: {
+              name: self.fileMeta.name || file.name
+            },
+            file: file
+          }).progress(
+            onProgress
+          ).success(
+            function onSucess(data) {
+              if (cb) {
+                cb(data);
+              }
+
+              self.success = 'Results uploaded.';
+              self.selected.file = null;
+              self.reset();
+            }
+          );
+        });
+      }
+
+      this.onFileSelect = function(file) {
+        this.fileMeta.name = file.name;
+      };
+
+      this.uploadButtonClicked = function(file, cb) {
+        uploadFile(file, cb);
+        this.showProgress = true;
+      };
+
+      this.reset();
     }
   ]);
 
@@ -786,21 +1002,25 @@
 
   angular.module('scdPortFolio.services', ['scDashboard.services']).
 
-  factory('scdPorfolioApi', ['scdDashboardApi',
-    function(dashboardApi) {
+  /**
+   * Deprecated.
+   *
+   */
+  factory('scdPorfolioApi', ['scdDashboardBaseApi',
+    function(dashboardBaseApi) {
       return {
         getById: function(userId) {
-          return dashboardApi.all('portfolio').get(userId);
+          return dashboardBaseApi.all('portfolio').get(userId);
         },
 
         getExamById: function(userId, examId) {
-          return dashboardApi.one(
+          return dashboardBaseApi.one(
             'portfolio', userId
           ).all('exam').get(examId);
         },
 
         getEvaluationById: function(userId, evaluationId) {
-          return dashboardApi.one(
+          return dashboardBaseApi.one(
             'portfolio', userId
           ).all('evaluation').get(evaluationId);
         }
@@ -999,14 +1219,14 @@
 
   angular.module('scdRepository.services', ['scDashboard.services']).
 
-  factory('scdRepositoryApi', ['scdDashboardApi',
-    function(scdDashboardApi) {
+  factory('scdRepositoryApi', ['scdDashboardBaseApi',
+    function(scdDashboardBaseApi) {
       return {
         getRepositoryById: function(studentId) {
-          return scdDashboardApi.one('repository', studentId).all('files').getList();
+          return scdDashboardBaseApi.one('repository', studentId).all('files').getList();
         },
         newUploadUrl: function(studentId) {
-          return scdDashboardApi.one('repository', studentId).one('uploadurl').post();
+          return scdDashboardBaseApi.one('repository', studentId).one('uploadurl').post();
         }
       };
     }

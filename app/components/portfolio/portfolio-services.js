@@ -3,21 +3,25 @@
 
   angular.module('scdPortFolio.services', ['scDashboard.services']).
 
-  factory('scdPorfolioApi', ['scdDashboardApi',
-    function(dashboardApi) {
+  /**
+   * Deprecated.
+   *
+   */
+  factory('scdPorfolioApi', ['scdDashboardBaseApi',
+    function(dashboardBaseApi) {
       return {
         getById: function(userId) {
-          return dashboardApi.all('portfolio').get(userId);
+          return dashboardBaseApi.all('portfolio').get(userId);
         },
 
         getExamById: function(userId, examId) {
-          return dashboardApi.one(
+          return dashboardBaseApi.one(
             'portfolio', userId
           ).all('exam').get(examId);
         },
 
         getEvaluationById: function(userId, evaluationId) {
-          return dashboardApi.one(
+          return dashboardBaseApi.one(
             'portfolio', userId
           ).all('evaluation').get(evaluationId);
         }

@@ -3,14 +3,14 @@
 
   angular.module('scdRepository.services', ['scDashboard.services']).
 
-  factory('scdRepositoryApi', ['scdDashboardApi',
-    function(scdDashboardApi) {
+  factory('scdRepositoryApi', ['scdDashboardBaseApi',
+    function(scdDashboardBaseApi) {
       return {
         getRepositoryById: function(studentId) {
-          return scdDashboardApi.one('repository', studentId).all('files').getList();
+          return scdDashboardBaseApi.one('repository', studentId).all('files').getList();
         },
         newUploadUrl: function(studentId) {
-          return scdDashboardApi.one('repository', studentId).one('uploadurl').post();
+          return scdDashboardBaseApi.one('repository', studentId).one('uploadurl').post();
         }
       };
     }
