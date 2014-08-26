@@ -52,10 +52,11 @@
     'scceUser.services'
   ]).
 
-  config(['$routeProvider', 'scceUserOptionsProvider',
-    function($routeProvider, scceUserOptionsProvider) {
+  config(['$routeProvider', 'cfpLoadingBarProvider', 'scceUserOptionsProvider',
+    function($routeProvider, cfpLoadingBarProvider, scceUserOptionsProvider) {
 
       scceUserOptionsProvider.setAppName('dashboard');
+      cfpLoadingBarProvider.includeSpinner = false;
 
       $routeProvider.
 
