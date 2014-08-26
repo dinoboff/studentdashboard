@@ -37,6 +37,7 @@
 
   angular.module('scDashboard', [
     'ngRoute',
+    'angular-loading-bar',
     'scDashboard.controllers',
     'scdRepository.controllers',
     'scdFirstAid.controllers',

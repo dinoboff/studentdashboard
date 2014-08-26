@@ -25211,7 +25211,7 @@ return jQuery;
 /**!
  * AngularJS file upload shim for HTML5 FormData
  * @author  Danial  <danial.farid@gmail.com>
- * @version 1.2.11
+ * @version 1.6.5
  */
 (function() {
 
@@ -25224,159 +25224,187 @@ var hasFlash = function() {
 	}
 	return false;
 }
-	
+
+var patchXHR = function(fnName, newFn) {
+	window.XMLHttpRequest.prototype[fnName] = newFn(window.XMLHttpRequest.prototype[fnName]);
+};
+
 if (window.XMLHttpRequest) {
-	if (window.FormData) {
+	if (window.FormData && (!window.FileAPI || !FileAPI.forceLoad)) {
 		// allow access to Angular XHR private field: https://github.com/angular/angular.js/issues/1934
-		window.XMLHttpRequest = (function(origXHR) {
-			return function() {
-				var xhr = new origXHR();
-				xhr.setRequestHeader = (function(orig) {
-					return function(header, value) {
-						if (header === '__setXHR_') {
-							var val = value(xhr);
-							// fix for angular < 1.2.0
-							if (val instanceof Function) {
-								val(xhr);
-							}
-						} else {
-							orig.apply(xhr, arguments);
-						}
+		patchXHR("setRequestHeader", function(orig) {
+			return function(header, value) {
+				if (header === '__setXHR_') {
+					var val = value(this);
+					// fix for angular < 1.2.0
+					if (val instanceof Function) {
+						val(this);
 					}
-				})(xhr.setRequestHeader);
-				return xhr;
+				} else {
+					orig.apply(this, arguments);
+				}
 			}
-		})(window.XMLHttpRequest);
+		});
 	} else {
-		window.XMLHttpRequest = (function(origXHR) {
-			return function() {
-				var xhr = new origXHR();
-				var origSend = xhr.send;
-				xhr.__requestHeaders = [];
-				xhr.open = (function(orig) {
-					if (!xhr.upload) xhr.upload = {};
-					xhr.__listeners = [];
-					xhr.upload.addEventListener = function(t, fn, b) {
-						xhr.__listeners[t] = fn;
-					};
-					return function(m, url, b) {
-						orig.apply(xhr, [m, url, b]);
-						xhr.__url = url;
-					}
-				})(xhr.open);
-				xhr.getResponseHeader = (function(orig) {
-					return function(h) {
-						return xhr.__fileApiXHR ? xhr.__fileApiXHR.getResponseHeader(h) : orig.apply(xhr, [h]);
-					}
-				})(xhr.getResponseHeader);
-				xhr.getAllResponseHeaders = (function(orig) {
-					return function() {
-						return xhr.__fileApiXHR ? xhr.__fileApiXHR.getAllResponseHeaders() : orig.apply(xhr);
-					}
-				})(xhr.getAllResponseHeaders);
-				xhr.abort = (function(orig) {
-					return function() {
-						return xhr.__fileApiXHR ? xhr.__fileApiXHR.abort() : (orig == null ? null : orig.apply(xhr));
-					}
-				})(xhr.abort);
-				xhr.setRequestHeader = (function(orig) {
-					return function(header, value) {
-						if (header === '__setXHR_') {
-							var val = value(xhr);
-							// fix for angular < 1.2.0
-							if (val instanceof Function) {
-								val(xhr);
-							}
-						} else {
-							orig.apply(xhr, arguments);
-						}
-					}
-				})(xhr.setRequestHeader);
-
-				xhr.send = function() {
-					if (arguments[0] && arguments[0].__isShim) {
-						var formData = arguments[0];
-						var config = {
-							url: xhr.__url,
-							complete: function(err, fileApiXHR) {
-								if (!err && xhr.__listeners['load']) 
-									xhr.__listeners['load']({type: 'load', loaded: xhr.__loaded, total: xhr.__total, target: xhr, lengthComputable: true});
-								if (!err && xhr.__listeners['loadend']) 
-									xhr.__listeners['loadend']({type: 'loadend', loaded: xhr.__loaded, total: xhr.__total, target: xhr, lengthComputable: true});
-								if (err === 'abort' && xhr.__listeners['abort']) 
-									xhr.__listeners['abort']({type: 'abort', loaded: xhr.__loaded, total: xhr.__total, target: xhr, lengthComputable: true});
-								if (fileApiXHR.status !== undefined) Object.defineProperty(xhr, 'status', {get: function() {return fileApiXHR.status}});
-								if (fileApiXHR.statusText !== undefined) Object.defineProperty(xhr, 'statusText', {get: function() {return fileApiXHR.statusText}});
-								Object.defineProperty(xhr, 'readyState', {get: function() {return 4}});
-								if (fileApiXHR.response !== undefined) Object.defineProperty(xhr, 'response', {get: function() {return fileApiXHR.response}});
-								Object.defineProperty(xhr, 'responseText', {get: function() {return fileApiXHR.responseText}});
-								xhr.__fileApiXHR = fileApiXHR;
-								xhr.onreadystatechange();
-							},
-							progress: function(e) {
-								e.target = xhr;
-								xhr.__listeners['progress'] && xhr.__listeners['progress'](e);
-								xhr.__total = e.total;
-								xhr.__loaded = e.loaded;
-							},
-							headers: xhr.__requestHeaders
-						}
-						config.data = {};
-						config.files = {}
-						for (var i = 0; i < formData.data.length; i++) {
-							var item = formData.data[i];
-							if (item.val != null && item.val.name != null && item.val.size != null && item.val.type != null) {
-								config.files[item.key] = item.val;
-							} else {
-								config.data[item.key] = item.val;
-							}
-						}
-
-						setTimeout(function() {
-							if (!hasFlash()) {
-								throw 'Adode Flash Player need to be installed. To check ahead use "FileAPI.hasFlash"';
-							}
-							xhr.__fileApiXHR = FileAPI.upload(config);
-						}, 1);
-					} else {
-						origSend.apply(xhr, arguments);
+		function initializeUploadListener(xhr) {
+			if (!xhr.__listeners) {
+				if (!xhr.upload) xhr.upload = {};
+				xhr.__listeners = [];
+				var origAddEventListener = xhr.upload.addEventListener;
+				xhr.upload.addEventListener = function(t, fn, b) {
+					xhr.__listeners[t] = fn;
+					origAddEventListener && origAddEventListener.apply(this, arguments);
+				};
+			}
+		}
+		
+		patchXHR("open", function(orig) {
+			return function(m, url, b) {
+				initializeUploadListener(this);
+				this.__url = url;
+				try {
+					orig.apply(this, [m, url, b]);
+				} catch (e) {
+					if (e.message.indexOf('Access is denied') > -1) {
+						orig.apply(this, [m, '_fix_for_ie_crossdomain__', b]);
 					}
 				}
-				return xhr;
 			}
-		})(window.XMLHttpRequest);
-		window.XMLHttpRequest.__hasFlash = hasFlash();
+		});
+
+		patchXHR("getResponseHeader", function(orig) {
+			return function(h) {
+				return this.__fileApiXHR ? this.__fileApiXHR.getResponseHeader(h) : orig.apply(this, [h]);
+			};
+		});
+
+		patchXHR("getAllResponseHeaders", function(orig) {
+			return function() {
+				return this.__fileApiXHR ? this.__fileApiXHR.abort() : (orig == null ? null : orig.apply(this));
+			}
+		});
+
+		patchXHR("abort", function(orig) {
+			return function() {
+				return this.__fileApiXHR ? this.__fileApiXHR.abort() : (orig == null ? null : orig.apply(this));
+			}
+		});
+
+		patchXHR("setRequestHeader", function(orig) {
+			return function(header, value) {
+				if (header === '__setXHR_') {
+					initializeUploadListener(this);
+					var val = value(this);
+					// fix for angular < 1.2.0
+					if (val instanceof Function) {
+						val(this);
+					}
+				} else {
+					this.__requestHeaders = this.__requestHeaders || {};
+					this.__requestHeaders[header] = value;
+					orig.apply(this, arguments);
+				}
+			}
+		});
+
+		patchXHR("send", function(orig) {
+			return function() {
+				var xhr = this;
+				if (arguments[0] && arguments[0].__isShim) {
+					var formData = arguments[0];
+					var config = {
+						url: xhr.__url,
+						complete: function(err, fileApiXHR) {
+							if (!err && xhr.__listeners['load']) 
+								xhr.__listeners['load']({type: 'load', loaded: xhr.__loaded, total: xhr.__total, target: xhr, lengthComputable: true});
+							if (!err && xhr.__listeners['loadend']) 
+								xhr.__listeners['loadend']({type: 'loadend', loaded: xhr.__loaded, total: xhr.__total, target: xhr, lengthComputable: true});
+							if (err === 'abort' && xhr.__listeners['abort']) 
+								xhr.__listeners['abort']({type: 'abort', loaded: xhr.__loaded, total: xhr.__total, target: xhr, lengthComputable: true});
+							if (fileApiXHR.status !== undefined) Object.defineProperty(xhr, 'status', {get: function() {return fileApiXHR.status}});
+							if (fileApiXHR.statusText !== undefined) Object.defineProperty(xhr, 'statusText', {get: function() {return fileApiXHR.statusText}});
+							Object.defineProperty(xhr, 'readyState', {get: function() {return 4}});
+							if (fileApiXHR.response !== undefined) Object.defineProperty(xhr, 'response', {get: function() {return fileApiXHR.response}});
+							Object.defineProperty(xhr, 'responseText', {get: function() {return fileApiXHR.responseText}});
+							Object.defineProperty(xhr, 'response', {get: function() {return fileApiXHR.responseText}});
+							xhr.__fileApiXHR = fileApiXHR;
+							if (xhr.onreadystatechange) xhr.onreadystatechange();
+						},
+						fileprogress: function(e) {
+							e.target = xhr;
+							xhr.__listeners['progress'] && xhr.__listeners['progress'](e);
+							xhr.__total = e.total;
+							xhr.__loaded = e.loaded;
+						},
+						headers: xhr.__requestHeaders
+					}
+					config.data = {};
+					config.files = {}
+					for (var i = 0; i < formData.data.length; i++) {
+						var item = formData.data[i];
+						if (item.val != null && item.val.name != null && item.val.size != null && item.val.type != null) {
+							config.files[item.key] = item.val;
+						} else {
+							config.data[item.key] = item.val;
+						}
+					}
+
+					setTimeout(function() {
+						if (!hasFlash()) {
+							throw 'Adode Flash Player need to be installed. To check ahead use "FileAPI.hasFlash"';
+						}
+						xhr.__fileApiXHR = FileAPI.upload(config);
+					}, 1);
+				} else {
+					orig.apply(xhr, arguments);
+				}
+			}
+		});
 	}
 	window.XMLHttpRequest.__isShim = true;
 }
 
-if (!window.FormData) {
-	var wrapFileApi = function(elem) {
+if (!window.FormData || (window.FileAPI && FileAPI.forceLoad)) {
+	var addFlash = function(elem) {
 		if (!hasFlash()) {
 			throw 'Adode Flash Player need to be installed. To check ahead use "FileAPI.hasFlash"';
 		}
-		if (!elem.__isWrapped && (elem.getAttribute('ng-file-select') != null || elem.getAttribute('data-ng-file-select') != null)) {
-			var wrap = document.createElement('div');
-			wrap.innerHTML = '<div class="js-fileapi-wrapper" style="position:relative; overflow:hidden"></div>';
-			wrap = wrap.firstChild;
-			var parent = elem.parentNode;
-			parent.insertBefore(wrap, elem);
-			parent.removeChild(elem);
-			wrap.appendChild(elem);
-			elem.__isWrapped = true;
+		var el = angular.element(elem);
+		if (!el.hasClass('js-fileapi-wrapper') && (elem.getAttribute('ng-file-select') != null || elem.getAttribute('data-ng-file-select') != null)) {
+			if (FileAPI.wrapInsideDiv) {
+				var wrap = document.createElement('div');
+				wrap.innerHTML = '<div class="js-fileapi-wrapper" style="position:relative; overflow:hidden"></div>';
+				wrap = wrap.firstChild;
+				var parent = elem.parentNode;
+				parent.insertBefore(wrap, elem);
+				parent.removeChild(elem);
+				wrap.appendChild(elem);
+			} else {
+				el.addClass('js-fileapi-wrapper');
+			}
 		}
 	};
 	var changeFnWrapper = function(fn) {
 		return function(evt) {
 			var files = FileAPI.getFiles(evt);
+			//just a double check for #233
+			for (var i = 0; i < files.length; i++) {
+				if (files[i].size === undefined) files[i].size = 0;
+				if (files[i].name === undefined) files[i].name = 'file';
+				if (files[i].type === undefined) files[i].type = 'undefined';
+			}
 			if (!evt.target) {
 				evt.target = {};
 			}
 			evt.target.files = files;
-			evt.target.files.item = function(i) {
-				return evt.target.files[i] || null;
+			// if evt.target.files is not writable use helper field
+			if (evt.target.files != files) {
+				evt.__files_ = files;
 			}
-			fn(evt);
+			(evt.__files_ || evt.target.files).item = function(i) {
+				return (evt.__files_ || evt.target.files)[i] || null;
+			}
+			if (fn) fn.apply(this, [evt]);
 		};
 	};
 	var isFileChange = function(elem, e) {
@@ -25386,7 +25414,7 @@ if (!window.FormData) {
 		HTMLInputElement.prototype.addEventListener = (function(origAddEventListener) {
 			return function(e, fn, b, d) {
 				if (isFileChange(this, e)) {
-					wrapFileApi(this);
+					addFlash(this);
 					origAddEventListener.apply(this, [e, changeFnWrapper(fn), b, d]);
 				} else {
 					origAddEventListener.apply(this, [e, fn, b, d]);
@@ -25398,8 +25426,13 @@ if (!window.FormData) {
 		HTMLInputElement.prototype.attachEvent = (function(origAttachEvent) {
 			return function(e, fn) {
 				if (isFileChange(this, e)) {
-					wrapFileApi(this);
-					origAttachEvent.apply(this, [e, changeFnWrapper(fn)]);
+					addFlash(this);
+					if (window.jQuery) {
+						// fix for #281 jQuery on IE8
+						angular.element(this).bind("change", changeFnWrapper(null));
+					} else {
+						origAttachEvent.apply(this, [e, changeFnWrapper(fn)]);
+					}
 				} else {
 					origAttachEvent.apply(this, [e, fn]);
 				}
@@ -25426,6 +25459,10 @@ if (!window.FormData) {
 		if (!window.FileAPI) {
 			window.FileAPI = {};
 		}
+		if (FileAPI.forceLoad) {
+			FileAPI.html5 = false;
+		}
+		
 		if (!FileAPI.upload) {
 			var jsUrl, basePath, script = document.createElement('script'), allScripts = document.getElementsByTagName('script'), i, index, src;
 			if (window.FileAPI.jsUrl) {
@@ -50450,13 +50487,13 @@ module.provider('Restangular', function() {
 /**!
  * AngularJS file upload/drop directive with http post and progress
  * @author  Danial  <danial.farid@gmail.com>
- * @version 1.2.11
+ * @version 1.6.5
  */
 (function() {
-	
+
 var angularFileUpload = angular.module('angularFileUpload', []);
 
-angularFileUpload.service('$upload', ['$http', '$timeout', function($http, $timeout) {
+angularFileUpload.service('$upload', ['$http', '$q', '$timeout', function($http, $q, $timeout) {
 	function sendHttp(config) {
 		config.method = config.method || 'POST';
 		config.headers = config.headers || {};
@@ -50466,35 +50503,48 @@ angularFileUpload.service('$upload', ['$http', '$timeout', function($http, $time
 			}
 			return $http.defaults.transformRequest[0](data, headersGetter);
 		};
+		var deferred = $q.defer();
 
 		if (window.XMLHttpRequest.__isShim) {
 			config.headers['__setXHR_'] = function() {
 				return function(xhr) {
+					if (!xhr) return;
 					config.__XHR = xhr;
 					config.xhrFn && config.xhrFn(xhr);
 					xhr.upload.addEventListener('progress', function(e) {
-						if (config.progress) {
-							$timeout(function() {
-								if(config.progress) config.progress(e);
-							});
-						}
+						deferred.notify(e);
 					}, false);
 					//fix for firefox not firing upload progress end, also IE8-9
 					xhr.upload.addEventListener('load', function(e) {
 						if (e.lengthComputable) {
-							$timeout(function() {
-								if(config.progress) config.progress(e);
-							});
+							deferred.notify(e);
 						}
 					}, false);
-				}	
+				};
 			};
 		}
 
-		var promise = $http(config);
+		$http(config).then(function(r){deferred.resolve(r)}, function(e){deferred.reject(e)}, function(n){deferred.notify(n)});
+		
+		var promise = deferred.promise;
+		promise.success = function(fn) {
+			promise.then(function(response) {
+				fn(response.data, response.status, response.headers, config);
+			});
+			return promise;
+		};
+
+		promise.error = function(fn) {
+			promise.then(null, function(response) {
+				fn(response.data, response.status, response.headers, config);
+			});
+			return promise;
+		};
 
 		promise.progress = function(fn) {
-			config.progress = fn;
+			promise.then(null, null, function(update) {
+				fn(update);
+			});
 			return promise;
 		};
 		promise.abort = function() {
@@ -50506,19 +50556,14 @@ angularFileUpload.service('$upload', ['$http', '$timeout', function($http, $time
 			return promise;
 		};
 		promise.xhr = function(fn) {
-			config.xhrFn = fn;
+			config.xhrFn = (function(origXhrFn) {
+				return function() {
+					origXhrFn && origXhrFn.apply(promise, arguments);
+					fn.apply(promise, arguments);
+				}
+			})(config.xhrFn);
 			return promise;
 		};
-		promise.then = (function(promise, origThen) {
-			return function(s, e, p) {
-				config.progress = p || config.progress;
-				var result = origThen.apply(promise, [s, e, p]);
-				result.abort = promise.abort;
-				result.progress = promise.progress;
-				result.xhr = promise.xhr;
-				return result;
-			};
-		})(promise, promise.then);
 		
 		return promise;
 	}
@@ -50559,12 +50604,13 @@ angularFileUpload.service('$upload', ['$http', '$timeout', function($http, $time
 				var fileFormName = config.fileFormDataName || 'file';
 
 				if (Object.prototype.toString.call(config.file) === '[object Array]') {
-					var isFileFormNameString = Object.prototype.toString.call(fileFormName) === '[object String]'; 
+					var isFileFormNameString = Object.prototype.toString.call(fileFormName) === '[object String]';
 					for (var i = 0; i < config.file.length; i++) {
-						formData.append(isFileFormNameString ? fileFormName + i : fileFormName[i], config.file[i], config.file[i].name);
+						formData.append(isFileFormNameString ? fileFormName : fileFormName[i], config.file[i], 
+								(config.fileName && config.fileName[i]) || config.file[i].name);
 					}
 				} else {
-					formData.append(fileFormName, config.file, config.file.name);
+					formData.append(fileFormName, config.file, config.fileName || config.file.name);
 				}
 			}
 			return formData;
@@ -50583,9 +50629,23 @@ angularFileUpload.service('$upload', ['$http', '$timeout', function($http, $time
 angularFileUpload.directive('ngFileSelect', [ '$parse', '$timeout', function($parse, $timeout) {
 	return function(scope, elem, attr) {
 		var fn = $parse(attr['ngFileSelect']);
+		if (elem[0].tagName.toLowerCase() !== 'input' || (elem.attr('type') && elem.attr('type').toLowerCase()) !== 'file') {
+			var fileElem = angular.element('<input type="file">')
+			for (var i = 0; i < elem[0].attributes.length; i++) {
+				fileElem.attr(elem[0].attributes[i].name, elem[0].attributes[i].value);
+			}
+			if (elem.attr("data-multiple")) fileElem.attr("multiple", "true");
+			fileElem.css("top", 0).css("bottom", 0).css("left", 0).css("right", 0).css("width", "100%").
+					css("opacity", 0).css("position", "absolute").css('filter', 'alpha(opacity=0)');
+			elem.append(fileElem);
+			if (elem.css("position") === '' || elem.css("position") === 'static') {
+				elem.css("position", "relative");
+			}
+			elem = fileElem;
+		}
 		elem.bind('change', function(evt) {
 			var files = [], fileList, i;
-			fileList = evt.target.files;
+			fileList = evt.__files_ || evt.target.files;
 			if (fileList != null) {
 				for (i = 0; i < fileList.length; i++) {
 					files.push(fileList.item(i));
@@ -50598,9 +50658,20 @@ angularFileUpload.directive('ngFileSelect', [ '$parse', '$timeout', function($pa
 				});
 			});
 		});
-		elem.bind('click', function(){
-			this.value = null;
-		});
+		// removed this since it was confusing if the user click on browse and then cancel #181
+//		elem.bind('click', function(){
+//			this.value = null;
+//		});
+
+		// removed because of #253 bug
+		// touch screens
+//		if (('ontouchstart' in window) ||
+//				(navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)) {
+//			elem.bind('touchend', function(e) {
+//				e.preventDefault();
+//				e.target.click();
+//			});
+//		}
 	};
 } ]);
 
@@ -50615,39 +50686,110 @@ angularFileUpload.directive('ngFileDropAvailable', [ '$parse', '$timeout', funct
 	};
 } ]);
 
-angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', function($parse, $timeout) {
+angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', '$location', function($parse, $timeout, $location) {
 	return function(scope, elem, attr) {
 		if ('draggable' in document.createElement('span')) {
-			var cancel = null;
-			var fn = $parse(attr['ngFileDrop']);
+			var leaveTimeout = null;
 			elem[0].addEventListener("dragover", function(evt) {
-				$timeout.cancel(cancel);
 				evt.stopPropagation();
 				evt.preventDefault();
-				elem.addClass(attr['ngFileDragOverClass'] || "dragover");
+				$timeout.cancel(leaveTimeout);
+				if (!elem[0].__drag_over_class_) {
+					if (attr['ngFileDragOverClass'].search(/\) *$/) > -1) {
+						dragOverClassFn = $parse(attr['ngFileDragOverClass']);
+						var dragOverClass = dragOverClassFn(scope, {
+							$event : evt
+						});					
+						elem[0].__drag_over_class_ = dragOverClass; 
+					} else {
+						elem[0].__drag_over_class_ = attr['ngFileDragOverClass'] || "dragover";
+					}
+				}
+				elem.addClass(elem[0].__drag_over_class_);
+			}, false);
+			elem[0].addEventListener("dragenter", function(evt) {
+				evt.stopPropagation();
+				evt.preventDefault();
 			}, false);
 			elem[0].addEventListener("dragleave", function(evt) {
-				cancel = $timeout(function() {
-					elem.removeClass(attr['ngFileDragOverClass'] || "dragover");
-				});
+				leaveTimeout = $timeout(function() {
+					elem.removeClass(elem[0].__drag_over_class_);
+					elem[0].__drag_over_class_ = null;
+				}, attr['ngFileDragOverDelay'] || 1);
 			}, false);
+			var fn = $parse(attr['ngFileDrop']);
 			elem[0].addEventListener("drop", function(evt) {
 				evt.stopPropagation();
 				evt.preventDefault();
-				elem.removeClass(attr['ngFileDragOverClass'] || "dragover");
-				var files = [], fileList = evt.dataTransfer.files, i;
-				if (fileList != null) {
-					for (i = 0; i < fileList.length; i++) {
-						files.push(fileList.item(i));
-					}
-				}
-				$timeout(function() {
+				elem.removeClass(elem[0].__drag_over_class_);
+				elem[0].__drag_over_class_ = null;
+				extractFiles(evt, function(files) {
 					fn(scope, {
 						$files : files,
 						$event : evt
-					});
+					});					
 				});
 			}, false);
+						
+			function isASCII(str) {
+				return /^[\000-\177]*$/.test(str);
+			}
+
+			function extractFiles(evt, callback) {
+				var files = [], items = evt.dataTransfer.items;
+				if (items && items.length > 0 && items[0].webkitGetAsEntry && $location.protocol() != 'file') {
+					for (var i = 0; i < items.length; i++) {
+						var entry = items[i].webkitGetAsEntry();
+						if (entry != null) {
+							//fix for chrome bug https://code.google.com/p/chromium/issues/detail?id=149735
+							if (isASCII(entry.name)) {
+								traverseFileTree(files, entry);
+							} else if (!items[i].webkitGetAsEntry().isDirectory) {
+								files.push(items[i].getAsFile());
+							}
+						}
+					}
+				} else {
+					var fileList = evt.dataTransfer.files;
+					if (fileList != null) {
+						for (var i = 0; i < fileList.length; i++) {
+							files.push(fileList.item(i));
+						}
+					}
+				}
+				(function waitForProcess(delay) {
+					$timeout(function() {
+						if (!processing) {
+							callback(files);
+						} else {
+							waitForProcess(10);
+						}
+					}, delay || 0)
+				})();
+			}
+			
+			var processing = 0;
+			function traverseFileTree(files, entry, path) {
+				if (entry != null) {
+					if (entry.isDirectory) {
+						var dirReader = entry.createReader();
+						processing++;
+						dirReader.readEntries(function(entries) {
+							for (var i = 0; i < entries.length; i++) {
+								traverseFileTree(files, entries[i], (path ? path : "") + entry.name + "/");
+							}
+							processing--;
+						});
+					} else {
+						processing++;
+						entry.file(function(file) {
+							processing--;
+							file._relativePath = (path ? path : "") + file.name;
+							files.push(file);
+						});
+					}
+				}
+			}
 		}
 	};
 } ]);
@@ -51451,3 +51593,308 @@ angular.module("views/sccoreeducation/user/login.html", []).run(["$templateCache
     "  </li>\n" +
     "</ul>");
 }]);
+
+/*! 
+ * angular-loading-bar v0.5.0
+ * https://chieffancypants.github.io/angular-loading-bar
+ * Copyright (c) 2014 Wes Cruver
+ * License: MIT
+ */
+/*
+ * angular-loading-bar
+ *
+ * intercepts XHR requests and creates a loading bar.
+ * Based on the excellent nprogress work by rstacruz (more info in readme)
+ *
+ * (c) 2013 Wes Cruver
+ * License: MIT
+ */
+
+
+(function() {
+
+'use strict';
+
+// Alias the loading bar for various backwards compatibilities since the project has matured:
+angular.module('angular-loading-bar', ['cfp.loadingBarInterceptor']);
+angular.module('chieffancypants.loadingBar', ['cfp.loadingBarInterceptor']);
+
+
+/**
+ * loadingBarInterceptor service
+ *
+ * Registers itself as an Angular interceptor and listens for XHR requests.
+ */
+angular.module('cfp.loadingBarInterceptor', ['cfp.loadingBar'])
+  .config(['$httpProvider', function ($httpProvider) {
+
+    var interceptor = ['$q', '$cacheFactory', '$timeout', '$rootScope', 'cfpLoadingBar', function ($q, $cacheFactory, $timeout, $rootScope, cfpLoadingBar) {
+
+      /**
+       * The total number of requests made
+       */
+      var reqsTotal = 0;
+
+      /**
+       * The number of requests completed (either successfully or not)
+       */
+      var reqsCompleted = 0;
+
+      /**
+       * The amount of time spent fetching before showing the loading bar
+       */
+      var latencyThreshold = cfpLoadingBar.latencyThreshold;
+
+      /**
+       * $timeout handle for latencyThreshold
+       */
+      var startTimeout;
+
+
+      /**
+       * calls cfpLoadingBar.complete() which removes the
+       * loading bar from the DOM.
+       */
+      function setComplete() {
+        $timeout.cancel(startTimeout);
+        cfpLoadingBar.complete();
+        reqsCompleted = 0;
+        reqsTotal = 0;
+      }
+
+      /**
+       * Determine if the response has already been cached
+       * @param  {Object}  config the config option from the request
+       * @return {Boolean} retrns true if cached, otherwise false
+       */
+      function isCached(config) {
+        var cache;
+        var defaults = $httpProvider.defaults;
+
+        if (config.method !== 'GET' || config.cache === false) {
+          config.cached = false;
+          return false;
+        }
+
+        if (config.cache === true && defaults.cache === undefined) {
+          cache = $cacheFactory.get('$http');
+        } else if (defaults.cache !== undefined) {
+          cache = defaults.cache;
+        } else {
+          cache = config.cache;
+        }
+
+        var cached = cache !== undefined ?
+          cache.get(config.url) !== undefined : false;
+
+        if (config.cached !== undefined && cached !== config.cached) {
+          return config.cached;
+        }
+        config.cached = cached;
+        return cached;
+      }
+
+
+      return {
+        'request': function(config) {
+          // Check to make sure this request hasn't already been cached and that
+          // the requester didn't explicitly ask us to ignore this request:
+          if (!config.ignoreLoadingBar && !isCached(config)) {
+            $rootScope.$broadcast('cfpLoadingBar:loading', {url: config.url});
+            if (reqsTotal === 0) {
+              startTimeout = $timeout(function() {
+                cfpLoadingBar.start();
+              }, latencyThreshold);
+            }
+            reqsTotal++;
+            cfpLoadingBar.set(reqsCompleted / reqsTotal);
+          }
+          return config;
+        },
+
+        'response': function(response) {
+          if (!response.config.ignoreLoadingBar && !isCached(response.config)) {
+            reqsCompleted++;
+            $rootScope.$broadcast('cfpLoadingBar:loaded', {url: response.config.url});
+            if (reqsCompleted >= reqsTotal) {
+              setComplete();
+            } else {
+              cfpLoadingBar.set(reqsCompleted / reqsTotal);
+            }
+          }
+          return response;
+        },
+
+        'responseError': function(rejection) {
+          if (!rejection.config.ignoreLoadingBar && !isCached(rejection.config)) {
+            reqsCompleted++;
+            $rootScope.$broadcast('cfpLoadingBar:loaded', {url: rejection.config.url});
+            if (reqsCompleted >= reqsTotal) {
+              setComplete();
+            } else {
+              cfpLoadingBar.set(reqsCompleted / reqsTotal);
+            }
+          }
+          return $q.reject(rejection);
+        }
+      };
+    }];
+
+    $httpProvider.interceptors.push(interceptor);
+  }]);
+
+
+/**
+ * Loading Bar
+ *
+ * This service handles adding and removing the actual element in the DOM.
+ * Generally, best practices for DOM manipulation is to take place in a
+ * directive, but because the element itself is injected in the DOM only upon
+ * XHR requests, and it's likely needed on every view, the best option is to
+ * use a service.
+ */
+angular.module('cfp.loadingBar', [])
+  .provider('cfpLoadingBar', function() {
+
+    this.includeSpinner = true;
+    this.includeBar = true;
+    this.latencyThreshold = 100;
+    this.startSize = 0.02;
+    this.parentSelector = 'body';
+    this.spinnerTemplate = '<div id="loading-bar-spinner"><div class="spinner-icon"></div></div>';
+
+    this.$get = ['$document', '$timeout', '$animate', '$rootScope', function ($document, $timeout, $animate, $rootScope) {
+
+      var $parentSelector = this.parentSelector,
+        loadingBarContainer = angular.element('<div id="loading-bar"><div class="bar"><div class="peg"></div></div></div>'),
+        loadingBar = loadingBarContainer.find('div').eq(0),
+        spinner = angular.element(this.spinnerTemplate);
+
+      var incTimeout,
+        completeTimeout,
+        started = false,
+        status = 0;
+
+      var includeSpinner = this.includeSpinner;
+      var includeBar = this.includeBar;
+      var startSize = this.startSize;
+
+      /**
+       * Inserts the loading bar element into the dom, and sets it to 2%
+       */
+      function _start() {
+        var $parent = $document.find($parentSelector);
+        $timeout.cancel(completeTimeout);
+
+        // do not continually broadcast the started event:
+        if (started) {
+          return;
+        }
+
+        $rootScope.$broadcast('cfpLoadingBar:started');
+        started = true;
+
+        if (includeBar) {
+          $animate.enter(loadingBarContainer, $parent);
+        }
+
+        if (includeSpinner) {
+          $animate.enter(spinner, $parent);
+        }
+
+        _set(startSize);
+      }
+
+      /**
+       * Set the loading bar's width to a certain percent.
+       *
+       * @param n any value between 0 and 1
+       */
+      function _set(n) {
+        if (!started) {
+          return;
+        }
+        var pct = (n * 100) + '%';
+        loadingBar.css('width', pct);
+        status = n;
+
+        // increment loadingbar to give the illusion that there is always
+        // progress but make sure to cancel the previous timeouts so we don't
+        // have multiple incs running at the same time.
+        $timeout.cancel(incTimeout);
+        incTimeout = $timeout(function() {
+          _inc();
+        }, 250);
+      }
+
+      /**
+       * Increments the loading bar by a random amount
+       * but slows down as it progresses
+       */
+      function _inc() {
+        if (_status() >= 1) {
+          return;
+        }
+
+        var rnd = 0;
+
+        // TODO: do this mathmatically instead of through conditions
+
+        var stat = _status();
+        if (stat >= 0 && stat < 0.25) {
+          // Start out between 3 - 6% increments
+          rnd = (Math.random() * (5 - 3 + 1) + 3) / 100;
+        } else if (stat >= 0.25 && stat < 0.65) {
+          // increment between 0 - 3%
+          rnd = (Math.random() * 3) / 100;
+        } else if (stat >= 0.65 && stat < 0.9) {
+          // increment between 0 - 2%
+          rnd = (Math.random() * 2) / 100;
+        } else if (stat >= 0.9 && stat < 0.99) {
+          // finally, increment it .5 %
+          rnd = 0.005;
+        } else {
+          // after 99%, don't increment:
+          rnd = 0;
+        }
+
+        var pct = _status() + rnd;
+        _set(pct);
+      }
+
+      function _status() {
+        return status;
+      }
+
+      function _complete() {
+        $rootScope.$broadcast('cfpLoadingBar:completed');
+        _set(1);
+
+        $timeout.cancel(completeTimeout);
+
+        // Attempt to aggregate any start/complete calls within 500ms:
+        completeTimeout = $timeout(function() {
+          $animate.leave(loadingBarContainer, function() {
+            status = 0;
+            started = false;
+          });
+          $animate.leave(spinner);
+        }, 500);
+      }
+
+      return {
+        start            : _start,
+        set              : _set,
+        status           : _status,
+        inc              : _inc,
+        complete         : _complete,
+        includeSpinner   : this.includeSpinner,
+        latencyThreshold : this.latencyThreshold,
+        parentSelector   : this.parentSelector,
+        startSize        : this.startSize
+      };
+
+
+    }];     //
+  });       // wtf javascript. srsly
+})();       //
