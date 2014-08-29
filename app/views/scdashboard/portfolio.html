@@ -31,7 +31,9 @@
             <tr>
               <th>Name</th>
               <th>Result</th>
+              <th>min</th>
               <th>Average</th>
+              <th>max</th>
             </tr>
           </thead>
           <tbody>
@@ -41,7 +43,9 @@
             <tr ng-repeat="exam in ctrl.portfolio">
               <td>{{exam.name}}</td>
               <td>{{exam.stats.all.user*100|number:0}}%</td>
+              <td>{{exam.stats.all.min*100|number:0}}%</td>
               <td>{{exam.stats.all.mean*100|number:0}}%</td>
+              <td>{{exam.stats.all.max*100|number:0}}%</td>
             </tr>
           </tbody>
         </table>

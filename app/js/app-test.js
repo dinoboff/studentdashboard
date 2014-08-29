@@ -67,24 +67,26 @@
 
       // Exam list
       $httpBackend.whenGET(fixtures.urls.exams).respond(function(m, url) {
-        var userId = fixtures.urls.exams.exec(url)[1];
+        var resp, userId = fixtures.urls.exams.exec(url)[1];
 
         if (!userId) {
-          return [200, {
+          resp = [200, {
             exams: fixtures.data.getExamList(),
             cursor: ''
           }];
+          return resp;
         }
 
         if (!students[userId]) {
           return [404, {error: 'not found'}];
         }
 
-        return [200, {
+        resp = [200, {
           user: students[userId],
-          exams: fixtures.data.getExamListByStudentId(userId),
+          exams: fixtures.data.getExamListByUserId(userId),
           cursor: ''
         }];
+        return resp;
       });
 
       // Exam details
@@ -95,7 +97,8 @@
           return [404, {error: 'not found'}];
         }
 
-        return [200, fixtures.data.exams[examId]];
+        var resp = fixtures.data.exams[examId];
+        return [200, resp];
       });
 
       // Exam Upload

@@ -103,6 +103,7 @@
                 'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
                 'isDefault': true
               },
+              'studentId': 'A00001',
               'isStudent': true,
               'isStaff': true,
               'isAdmin': true,
@@ -119,6 +120,7 @@
                 'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
                 'isDefault': true
               },
+              'studentId': 'A00002',
               'isStudent': true,
               'isStaff': false,
               'isAdmin': false,
@@ -163,6 +165,7 @@
               createdAt: (new Date()).toISOString(),
               processed: false,
               studentResults: [],
+              questions: [],
               stats: {}
             };
             return this.exams[id];
@@ -174,14 +177,18 @@
               return -(new Date(exam.createdAt)).getTime();
             });
           },
-          getExamListByStudentId: function(studentId) {
+          getExamListByUserId: function(userId) {
+            var student = this.students[userId],
+              studentId = student.studentId;
+
             return _.sortBy(_.map(this.exams, function(exam) {
               var result = _.find(exam.studentResults, {
-                  id: studentId
+                  studentId: studentId
                 }),
-                resultStats = result.stats.all.value;
+                resultStats = result.stats.all.user;
 
               exam = _.omit(exam, ['studentResults']);
+              exam.questions = result.results;
               exam.stats.all.user = resultStats;
 
               return exam;
@@ -234,14 +241,14 @@
           });
 
           return {
-            id: student.id,
-            displayName: student.displayName,
+            id: exam.id,
+            studentId: student.studentId,
             results: results,
             stats: {
               all: {
                 id: 'all',
                 name: 'Overall',
-                value: results.reduce(function(sum, q) {
+                user: results.reduce(function(sum, q) {
                   return sum + q.value;
                 }, 0) / results.length
               }
@@ -250,7 +257,7 @@
         });
 
         overallResults = exam.studentResults.map(function(results) {
-          return results.stats.all.value;
+          return results.stats.all.user;
         });
 
         exam.stats.all = {

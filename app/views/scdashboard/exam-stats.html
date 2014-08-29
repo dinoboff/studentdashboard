@@ -7,7 +7,7 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Student</th>
+                        <th>Student ID</th>
                         <th>Overall</th>
                         <th>Min</th>
                         <th>Average</th>
@@ -17,8 +17,8 @@
 
                 <tbody>
                     <tr ng-repeat="result in ctrl.exam.studentResults">
-                        <td>{{result.displayName}}</td>
-                        <td>{{result.stats.all.value*100|number:0}}</td>
+                        <td>{{result.studentId}}</td>
+                        <td>{{result.stats.all.user*100|number:0}}</td>
                         <td>{{ctrl.exam.stats.all.min*100|number:0}}</td>
                         <td>{{ctrl.exam.stats.all.mean*100|number:0}}</td>
                         <td>{{ctrl.exam.stats.all.max*100|number:0}}</td>
