@@ -28,6 +28,11 @@ footer > .container {
   padding-left: 15px;
   padding-right: 15px;
 }
+
+
+.table-scroll {
+  overflow-x: scroll;
+}
 .graph-view h2 {
   text-align: center;
 }

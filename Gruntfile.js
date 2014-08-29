@@ -114,7 +114,7 @@ module.exports = function(grunt) {
           ]
         }, {
           expand: true,
-          cwd: 'app/lib/angular-file-upload/dist',
+          cwd: 'app/lib/ng-file-upload',
           dest: 'app-build/js',
           src: [
             'FileAPI.*'

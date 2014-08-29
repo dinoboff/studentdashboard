@@ -23,24 +23,27 @@
   factory('SC_DASHBOARD_FIXTURES', ['$window',
     function(window) {
       var _ = window._,
-        examId = 1,
-        evaluationId = 1,
         fix;
 
-      function getRandomArbitary(min, max) {
-        return window.Math.random() * (max - min) + min;
-      }
+      // function getRandomArbitary(min, max) {
+      //   return window.Math.random() * (max - min) + min;
+      // }
 
       fix = {
         urls: {
           login: /\/api\/v1\/user/,
-          portfolio: /\/api\/v1\/dashboard\/portfolio\/([^\/]+)$/,
-          portfolioExam: /\/api\/v1\/dashboard\/portfolio\/([^\/]+)\/exam\/([^\/]+)$/,
-          portfolioEvaluation: /\/api\/v1\/dashboard\/portfolio\/([^\/]+)\/evaluation\/([^\/]+)$/,
+          exams: /\/api\/v1\/dashboard\/assessments\/exams(?:\?userId=(.+))?$/,
+          exam: /\/api\/v1\/dashboard\/assessments\/exams\/(\d+)$/,
+          examUploadUrl: /\/api\/v1\/dashboard\/assessments\/uploadurl$/,
+          examUpload: '/_exam/upload',
           students: '/api/v1/students',
           studentFiles: /\/api\/v1\/dashboard\/repository\/([^\/]+)\/files/,
           uploadUrl: /api\/v1\/dashboard\/repository\/([^\/]+)\/uploadurl/,
-          upload: /_ah\/upload\/(.*)/
+          upload: /_ah\/upload\/(.*)/,
+          // Deprecated, should use the assessments and users endpoint instead
+          portfolio: /\/api\/v1\/dashboard\/portfolio\/([^\/]+)$/,
+          portfolioExam: /\/api\/v1\/dashboard\/portfolio\/([^\/]+)\/exam\/([^\/]+)$/,
+          portfolioEvaluation: /\/api\/v1\/dashboard\/portfolio\/([^\/]+)\/evaluation\/([^\/]+)$/,
         },
         data: {
           user: {
@@ -100,9 +103,10 @@
                 'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
                 'isDefault': true
               },
-              'verified': false,
+              'studentId': 'A00001',
               'isStudent': true,
               'isStaff': true,
+              'isAdmin': true,
               'domain': 'chrisboesch.com',
               'displayName': 'Chris Boesch',
               'id': '12345',
@@ -116,9 +120,10 @@
                 'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
                 'isDefault': true
               },
-              'verified': false,
+              'studentId': 'A00002',
               'isStudent': true,
               'isStaff': false,
+              'isAdmin': false,
               'domain': 'chrisboesch.com',
               'displayName': 'Damien Lebrun',
               'id': '12346',
@@ -128,102 +133,7 @@
               }
             }
           },
-          exams: {
-            '1': {
-              id: '1',
-              name: 'Some Exam Preparation',
-              exams: [{
-                name: 'External Exam 1',
-                id: examId++
-              }, {
-                name: 'External Exam 2',
-                id: examId++
-              }, {
-                name: 'External Exam 3',
-                id: examId++
-              }, {
-                name: 'External Exam 4',
-                id: examId++
-              }]
-            },
-            '2': {
-              id: '2',
-              name: 'Another Exam Preparation',
-              exams: [{
-                name: 'Another Data Results 1',
-                id: examId++
-              }, {
-                name: 'Another Data Results 2',
-                id: examId++
-              }, {
-                name: 'Another Data Results 3',
-                id: examId++
-              }, {
-                name: 'Another Data Results 4',
-                id: examId++
-              }]
-            },
-            '3': {
-              id: '3',
-              name: 'Performance Exams',
-              exams: [{
-                name: 'CP 1',
-                id: examId++
-              }, {
-                name: 'CP 2',
-                id: examId++
-              }]
-            },
-            '4': {
-              id: '4',
-              name: 'AAA Exams',
-              exams: [{
-                name: 'Area 1',
-                id: examId++
-              }, {
-                name: 'Area 2',
-                id: examId++
-              }, {
-                name: 'Area 3',
-                id: examId++
-              }, {
-                name: 'Area 4',
-                id: examId++
-              }, {
-                name: 'Area 5',
-                id: examId++
-              }, {
-                name: 'Area 6',
-                id: examId++
-              }]
-            }
-          },
-          examResults: {},
-          evaluations: {
-            'evs1': {
-              id: 'evs1',
-              name: 'TBD Evaluations',
-              evaluations: [ // Should be an object (id -> evaluation)
-                {
-                  name: 'Evaluation 1',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 2',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 3',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 4',
-                  id: evaluationId++
-                }, {
-                  name: 'Evaluation 5',
-                  id: evaluationId++
-                }
-              ]
-            }
-          },
-          evaluationResults: {},
+          exams: {},
           examFields: [
             'Bahvioral Sciences',
             'Biochemitry',
@@ -247,21 +157,45 @@
             'Respiratory System',
             'Surgery'
           ],
-          evaluationFields: {
-            't1': 'History Taking Skills',
-            't2': 'Physical Examination Skills',
-            't3': 'Analytical Skills',
-            't4': 'Communication Skills',
-            't5': 'Medical Knowledge',
-            't6': 'Management Skills',
+          newExam: function(id, name) {
+            name = name || 'Exam ' + id;
+            this.exams[id] = {
+              id: id + '',
+              name: name,
+              createdAt: (new Date()).toISOString(),
+              processed: false,
+              studentResults: [],
+              questions: [],
+              stats: {}
+            };
+            return this.exams[id];
           },
-          evaluationTypeResult: [
-            'Do Not Meet',
-            'Occasionally Meet',
-            'Consistently Meet',
-            'Occasionally Exceeds',
-            'Consistently Exceeds'
-          ],
+          getExamList: function() {
+            return _.sortBy(_.map(this.exams, function(exam) {
+              return _.omit(exam, ['studentResults']);
+            }), function(exam) {
+              return -(new Date(exam.createdAt)).getTime();
+            });
+          },
+          getExamListByUserId: function(userId) {
+            var student = this.students[userId],
+              studentId = student.studentId;
+
+            return _.sortBy(_.map(this.exams, function(exam) {
+              var result = _.find(exam.studentResults, {
+                  studentId: studentId
+                }),
+                resultStats = result.stats.all.user;
+
+              exam = _.omit(exam, ['studentResults']);
+              exam.questions = result.results;
+              exam.stats.all.user = resultStats;
+
+              return exam;
+            }), function(exam) {
+              return -(new Date(exam.createdAt)).getTime();
+            });
+          },
           files: function(dest, count, senderName) {
             var results = [],
               destName = dest.displayName;
@@ -282,72 +216,62 @@
         }
       };
 
-      // Build random result for each exam.
-      _.forEach(fix.data.exams, function(series) {
-        _.forEach(series.exams, function(exam) {
-          var fieldId = 1;
-
-          fix.data.examResults[exam.id] = {
-            id: exam.id,
-            name: exam.name,
-            series: {
-              id: series.id,
-              name: series.name
-            },
-            results: {}
-          };
-
-          _.forEach(fix.data.examFields, function(name) {
-            var min = getRandomArbitary(-1.8, -0.3),
-              max = getRandomArbitary(0.3, 1.9),
-              mean = getRandomArbitary(min, max),
-              field = {
-                name: name,
-                id: fieldId++
-              };
-
-            fix.data.examResults[exam.id].results[field.id] = {
-              topic: field,
-              data: {
-                max: max,
-                min: min,
-                mean: mean
-              }
-            };
-          });
-        });
+      // Generate exams
+      _.range(1, 9).forEach(function(i) {
+        fix.data.newExam(i + '');
       });
 
-      // Build random result for each evaluation.
-      _.forEach(fix.data.evaluations, function(series) {
-        series.evaluations.forEach(function(ev) {
-          var evaluation = fix.data.evaluationResults[ev.id] = _.clone(ev);
+      // Generate exam results
+      _.forEach(fix.data.exams, function(exam) {
+        var overallResults;
 
-          evaluation.series = {
-            id: series.id,
-            name: series.name
+        exam.questions = _.range(1, 51).map(function(i) {
+          return {
+            id: i,
+            topic: null,
           };
-          evaluation.results = {};
+        });
 
-          _.forEach(fix.data.evaluationFields, function(topicName, topicId) {
-            var topic = evaluation.results[topicId] = {
-              topic: {
-                id: topicId,
-                name: topicName
-              }
+        exam.studentResults = _.map(fix.data.students, function(student) {
+          var results = exam.questions.map(function(q) {
+            return {
+              id: q.id,
+              value: _.sample([1, 1, 1, 0]) // 75% average success rate.
             };
-
-            topic.data = fix.data.evaluationTypeResult.map(function(name) {
-              return {
-                name: name,
-                value: getRandomArbitary(0, 1),
-                mean: getRandomArbitary(0, 1)
-              };
-            });
-
           });
 
+          return {
+            id: exam.id,
+            studentId: student.studentId,
+            results: results,
+            stats: {
+              all: {
+                id: 'all',
+                name: 'Overall',
+                user: results.reduce(function(sum, q) {
+                  return sum + q.value;
+                }, 0) / results.length
+              }
+            }
+          };
         });
+
+        overallResults = exam.studentResults.map(function(results) {
+          return results.stats.all.user;
+        });
+
+        exam.stats.all = {
+          id: 'all',
+          name: 'Overall',
+          mean: overallResults.reduce(function(sum, v) {
+            return sum + v;
+          }, 0) / overallResults.length,
+          min: _.min(overallResults),
+          max: _.max(overallResults),
+        };
+
+        exam.processed = true;
+
       });
 
       return fix;
