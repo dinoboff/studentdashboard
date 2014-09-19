@@ -6,14 +6,12 @@ lib-cov
 *.out
 *.pid
 *.gz
-*.pyc
 
 pids
 logs
 results
-
+lib
+node_modules
+components
+bower_components
 npm-debug.log
-node_modules/
-app-build/
-app-dist/
-app-e2e/
