@@ -10,7 +10,8 @@
     beforeEach(module(
       'scdChart.directives',
       'scceSvg.services',
-      'views/scdashboard/charts/meter.html'
+      'views/scdashboard/charts/meter.html',
+      'views/scdashboard/charts/components.html'
     ));
 
     beforeEach(inject(function(_$compile_, _$rootScope_, ScceLayout, $window) {
@@ -75,6 +76,60 @@
         expect(isolatedScope.levelSlices.map(function(slice) {
           return slice.value;
         })).toEqual([50, 10, 40]);
+      });
+
+    });
+
+    describe('scdChartComponents', function() {
+
+      beforeEach(function() {
+        elem = compile([
+          '<scd-chart-components',
+          '  scd-layout="layout"',
+          '  scd-main-data="main"',
+          '  scd-components="components"',
+          '>',
+          '</scd-chart-components>'
+        ].join(''))(scope);
+      });
+
+      it('should set the layout and slices properties', function() {
+        var isolatedScope;
+
+        scope.layout = Layout.contentSizing({
+          innerWidth: 100,
+          innerHeight: 100
+        });
+
+        scope.main = {
+          title: 'Progress',
+          subTitle: 'Percentage completed',
+          value: '75',
+          unit: '%'
+        };
+
+        scope.components = [{
+          label: 'Correct',
+          value: 50,
+          id: 'correct'
+        }, {
+          label: 'Incorrect',
+          value: 25,
+          id: 'incorrect'
+        }, {
+          label: 'Unattempted',
+          value: 25,
+          id: 'unattempted'
+        }];
+
+        scope.$apply();
+        isolatedScope = elem.isolateScope();
+
+        expect(isolatedScope.slices).toBeDefined();
+        expect(isolatedScope.shiftLabel).toBeDefined();
+        expect(isolatedScope.arc).toBeDefined();
+        expect(isolatedScope.onLeftCenter).toBeDefined();
+        expect(isolatedScope.shiftSlice).toBeDefined();
       });
 
     });

@@ -1,0 +1,32 @@
+<scce-svg-container scce-viewbox="layout" ng-if="layout">
+    <svg>
+        <g class="pie" ng-attr-transform="translate({{layout.innerWidth / 2}},{{layout.innerHeight / 2}})">
+            <g class="slice" ng-repeat="slice in slices track by slice.data.id" ng-class="'pie-slice-' + slice.data.id">
+                <g ng-if="$index == 0">
+                    <path ng-attr-d="{{arc(slice)}}" ng-attr-transform="{{shiftSlice(slice, 10)}}" />
+                    <text class="pie-label" ng-attr-transform="{{shiftLabel(slice, 10)}}" dy=".35em" ng-class="{'past-center': onLeftCenter(slice)}" ng-if="slice.data.value > 0">
+                        {{slice.data.label}}
+                    </text>
+                </g>
+                <g ng-if="$index > 0">
+                    <path ng-attr-d="{{arc(slice)}}" />
+                    <text ng-attr-transform="{{shiftLabel(slice)}}" dy=".35em" ng-class="{'pie-label': true, 'past-center': onLeftCenter(slice)}" ng-if="slice.data.value > 0">
+                        {{slice.data.label}}
+                    </text>
+                </g>
+            </g>
+        </g>
+
+
+
+        <g class="progress" ng-attr-transform="translate({{layout.width/6 - layout.margin.left}},{{layout.innerHeight + layout.margin.top/2}})">
+            <text style="font-size:24px; font-weight:200">{{mainData.title}}</text>
+            <text y="24" style="font-size:48px">
+                <tspan>{{mainData.value}}</tspan>
+                <tspan>{{mainData.unit}}</tspan>
+            </text>
+            <text dy="72" style="font-size:12px; font-weight:200">{{mainData.subTitle}}</text>
+        </g>
+
+    </svg>
+</scce-svg-container>

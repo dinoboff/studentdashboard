@@ -164,15 +164,15 @@ rect.border {
   stroke-width: 1px;
 }
 
-.pie-progress-correct path {
+.pie-slice-correct path {
   fill: #32CD32;
 }
 
-.pie-progress-incorrect path {
+.pie-slice-incorrect path {
   fill: #B22222;
 }
 
-.pie-progress-unattempted path {
+.pie-slice-unattempted path {
   fill: #FFF8DC;
 }
 

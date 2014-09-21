@@ -102,59 +102,25 @@
         <!-- Progress and probably of passing -->
         <div class="col-sm-5">
             <div class="well">
-                <scce-svg-container scce-viewbox="ctrl.performances.progress.layout" ng-if="ctrl.performances.progress.layout">
-                    <svg>
-                        <g class="user-progress">
-                            <g class="pie" ng-attr-transform="translate({{ctrl.performances.progress.layout.innerWidth / 2}},{{ctrl.performances.progress.layout.innerHeight / 2}})">
-                                <g class="slice" ng-repeat="slice in ctrl.performances.progress.slices track by slice.data.id" ng-class="'pie-progress-' + slice.data.id">
-                                    <g ng-if="$index == 0">
-                                        <path ng-attr-d="{{ctrl.performances.progress.arc(slice)}}" ng-attr-transform="{{ctrl.performances.progress.shiftSlice(slice, 10)}}" />
-                                        <text class="pie-label" ng-attr-transform="{{ctrl.performances.progress.label(slice, 10)}}" dy=".35em" ng-class="{'past-center': ctrl.performances.progress.pastCenter(slice)}" ng-if="slice.data.value > 0">
-                                            {{slice.data.label}}
-                                        </text>
-                                    </g>
-                                    <g ng-if="$index > 0">
-                                        <path ng-attr-d="{{ctrl.performances.progress.arc(slice)}}" />
-                                        <text ng-attr-transform="{{ctrl.performances.progress.label(slice)}}" dy=".35em" ng-class="{'pie-label': true, 'past-center': ctrl.performances.progress.pastCenter(slice)}" ng-if="slice.data.value > 0">
-                                            {{slice.data.label}}
-                                        </text>
-                                    </g>
-                                </g>
-                            </g>
 
+                <scd-chart-components
+                    scd-layout="ctrl.performances.progress.layout"
+                    scd-main-data="ctrl.performances.progress.mainData"
+                    scd-components="ctrl.performances.progress.components"
+                >
+                </scd-chart-components>
 
-
-                            <g class="progress" ng-attr-transform="translate({{ctrl.performances.progress.layout.width/6 - ctrl.performances.progress.layout.margin.left}},{{ctrl.performances.progress.layout.innerHeight + ctrl.performances.progress.layout.margin.top/2}})">
-                                <text style="font-size:24px; font-weight:200">Progress</text>
-                                <text y="24" style="font-size:48px">
-                                    <tspan>{{ctrl.performances.data.percentageComplete}}</tspan>
-                                    <tspan>%</tspan>
-                                </text>
-                                <text dy="72" style="font-size:12px; font-weight:200">Percentage completed</text>
-                            </g>
-
-                        </g>
-                    </svg>
-                </scce-svg-container>
             </div>
 
             <div class="well">
                 <div class="row">
                     <div class="col-md-6">
-                        <scd-chart-meter
-                            scd-layout="ctrl.performances.abem.layout"
-                            scd-levels="ctrl.performances.abem.steps"
-                            scd-reading="ctrl.performances.abem.reading"
-                            >
+                        <scd-chart-meter scd-layout="ctrl.performances.abem.layout" scd-levels="ctrl.performances.abem.steps" scd-reading="ctrl.performances.abem.reading">
                         </scd-chart-meter>
                     </div>
 
                     <div class="col-md-6">
-                        <scd-chart-meter
-                            scd-layout="ctrl.performances.passing.layout"
-                            scd-levels="ctrl.performances.passing.steps"
-                            scd-reading="ctrl.performances.passing.reading"
-                            >
+                        <scd-chart-meter scd-layout="ctrl.performances.passing.layout" scd-levels="ctrl.performances.passing.steps" scd-reading="ctrl.performances.passing.reading">
                         </scd-chart-meter>
                     </div>
                 </div>

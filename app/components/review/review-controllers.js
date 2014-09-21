@@ -291,7 +291,13 @@
         },
 
         progress: {
-          pieData: null,
+          mainData: {
+            title: 'Progress',
+            subTitle: 'Percentage completed',
+            value: null,
+            unit: '%'
+          },
+          components: null,
           layout: layout({
             innerWidth: 300,
             innerHeight: 149,
@@ -375,7 +381,6 @@
       };
 
       this.updateMeters = function(data) {
-        console.dir(data);
         this.performances.abem.reading.value = data.abem;
         this.performances.passing.reading.value = data.passingProbability;
       };
@@ -434,100 +439,42 @@
         self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
       };
 
-      function layout2Radius(layout) {
-        // Make sure the pie fits into the inner svg document
-        if (layout.innerHeight > layout.innerWidth) {
-          return layout.innerWidth / 2;
-        } else {
-          return layout.innerHeight / 2;
-        }
-      }
-
-      function arc(radius, innerRadius) {
-        return d3.svg.arc()
-          .startAngle(function(d) {
-            return d.startAngle;
-          })
-          .endAngle(function(d) {
-            return d.endAngle;
-          })
-          .innerRadius(innerRadius || 0)
-          .outerRadius(radius);
-      }
-
-      function shifter(arc) {
-        return function(slice, margin) {
-          var c = arc.centroid(slice),
-            x = c[0],
-            y = c[1],
-            h = Math.sqrt(x * x + y * y);
-
-          return 'translate(' +
-            (x / h * margin) + ',' +
-            (y / h * margin) +
-            ')';
-        };
-      }
-
       this.setProgressScales = function(data) {
         var correct = data.cumulativePerformance * data.percentageComplete / 100,
-          left = 100 - data.percentageComplete,
-          pieData = [{
-            label: 'Correct',
-            value: correct,
-            id: 'correct'
-          }, {
-            label: 'Incorrect',
-            value: 100 - correct - left,
-            id: 'incorrect'
-          }, {
-            label: 'Unattempted',
-            value: left,
-            id: 'unattempted'
-          }],
-          pieRadius = layout2Radius(self.performances.progress.layout),
-          labelMargin = pieRadius + this.performances.progress.layout.margin.top / 2;
+          left = 100 - data.percentageComplete;
 
-        // Calculate start and end angles of each slice of the pie.
-        this.performances.progress.slices = d3.layout.pie().sort(null).value(function(d) {
-          return d.value;
-        })(pieData);
-
-        // Setup the arc path generator.
-        this.performances.progress.arc = arc(pieRadius);
-
-        //Helper to shift a slice away from the center of of the pie
-        this.performances.progress.shiftSlice = shifter(this.performances.progress.arc);
-
-        //Helper method to position label
-        this.performances.progress.label = function(slice, margin) {
-          margin = (margin || 0) + labelMargin;
-
-          return self.performances.progress.shiftSlice(slice, margin);
-        };
-
-        this.performances.progress.pastCenter = function(slice) {
-          return (slice.endAngle + slice.startAngle) / 2 > Math.PI;
-        };
+        this.performances.progress.mainData.value = data.percentageComplete;
+        this.performances.progress.components = [{
+          label: 'Correct',
+          value: correct,
+          id: 'correct'
+        }, {
+          label: 'Incorrect',
+          value: 100 - correct - left,
+          id: 'incorrect'
+        }, {
+          label: 'Unattempted',
+          value: left,
+          id: 'unattempted'
+        }];
 
       };
 
       this.setPerformanceByCategory = function(data) {
         var config = this.performances.byCategory;
 
-        config.layout = layout(
-          _.extend(
-            {innerHeight: config.baseLayout.rowHeight * data.categoryPerformances.length},
-            config.baseLayout
-          )
-        );
+        config.layout = layout(_.extend({
+            innerHeight: config.baseLayout.rowHeight * data.categoryPerformances.length
+          },
+          config.baseLayout
+        ));
 
         // init scales
         config.xScale = d3.scale.linear();
         config.yScale = d3.scale.ordinal();
 
         // set domain
-        config.xScale.domain([0,100]);
+        config.xScale.domain([0, 100]);
         config.yScale.domain(
           _(data.categoryPerformances).map('id').sort().value()
         );

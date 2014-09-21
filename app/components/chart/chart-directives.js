@@ -7,6 +7,24 @@
     'scdMisc.filters'
   ]).
 
+  service('scdArc', ['$window',
+    function scdArcFactory($window) {
+      var d3 = $window.d3;
+
+      return function scdArc(radius) {
+        return d3.svg.arc()
+          .startAngle(function(d) {
+            return d.startAngle;
+          })
+          .endAngle(function(d) {
+            return d.endAngle;
+          })
+          .innerRadius(radius.inner || 0)
+          .outerRadius(radius.outer);
+      };
+    }
+  ]).
+
   /**
    * Meter directive
    *
@@ -29,21 +47,10 @@
    */
   directive('scdChartMeter', [
     '$window',
-    function scdChartMeterFactory($window) {
+    'scdArc',
+    function scdChartMeterFactory($window, scdArc) {
       var d3 = $window.d3,
         _ = $window._;
-
-      function arc(radius) {
-        return d3.svg.arc()
-          .startAngle(function(d) {
-            return d.startAngle;
-          })
-          .endAngle(function(d) {
-            return d.endAngle;
-          })
-          .innerRadius(radius.inner || 0)
-          .outerRadius(radius.outer);
-      }
 
       return {
         templateUrl: 'views/scdashboard/charts/meter.html',
@@ -92,7 +99,7 @@
             }
 
             scope.radius.inner = scope.radius.outer - donutWidth;
-            scope.levelArc = arc(scope.radius);
+            scope.levelArc = scdArc(scope.radius);
           }
 
           scope.levelSlices = [];
@@ -129,6 +136,106 @@
           scope.$watch('layout', setScales);
           scope.$watch('levels', setScales);
           scope.$watch('levels', setLevelSlices);
+        }
+      };
+    }
+  ]).
+
+  /**
+   * scdChartComponents
+   *
+   * Usage:
+   *
+   *    <scd-chart-components
+   *      scd-layout="layout"
+   *      scd-main-data="main"
+   *      scd-components="components"
+   *     >
+   *     </scd-chart-components>
+   *
+   * Where:
+   * - main would be the main stats to show (with label, unit and value
+   *   attribute)
+   * - components should decompose the main stats. It would be array of object
+   *   with id, label and value attribute.
+   *
+   */
+  directive('scdChartComponents', [
+    '$window',
+    'scdArc',
+    function scdChartComponentsFactory($window, scdArc) {
+      var d3 = $window.d3;
+
+      function shifterFactory(arc) {
+        return function shifter(slice, margin) {
+          var c = arc.centroid(slice),
+            x = c[0],
+            y = c[1],
+            h = Math.sqrt(x * x + y * y);
+
+          return 'translate(' +
+            (x / h * margin) + ',' +
+            (y / h * margin) +
+            ')';
+        };
+      }
+
+      return {
+        templateUrl: 'views/scdashboard/charts/components.html',
+        restrict: 'E',
+        scope: {
+          'layout': '=scdLayout',
+          'mainData': '=scdMainData',
+          'components': '=scdComponents'
+        },
+        // arguments: scope, iElement, iAttrs, controller
+        link: function scdChartComponentsPostLink(scope) {
+
+          function setHelpers() {
+            var radius = {},
+              labelMargin;
+
+            scope.arc = scope.shiftSlice = angular.noop;
+            scope.shiftLabel = scope.onLeftCenter = angular.noop;
+            if (!scope.layout) {
+              return;
+            }
+
+            if (scope.layout.innerWidth > scope.layout.innerHeight) {
+              radius.outer = scope.layout.innerHeight / 2;
+            } else {
+              radius.outer = scope.layout.innerWidth / 2;
+            }
+
+            scope.arc = scdArc(radius);
+            scope.shiftSlice = shifterFactory(scope.arc);
+
+            labelMargin = radius.outer + scope.layout.margin.top / 2;
+            scope.shiftLabel = function shiftLabel(slice, margin) {
+              margin = (margin || 0) + labelMargin;
+
+              return scope.shiftSlice(slice, margin);
+            };
+
+            scope.onLeftCenter = function onLeftCenter(slice) {
+              return (slice.endAngle + slice.startAngle) / 2 > Math.PI;
+            };
+
+          }
+
+          function setSlices() {
+            scope.slices = [];
+            if (!scope.components) {
+              return;
+            }
+
+            scope.slices = d3.layout.pie().sort(null).value(function(d) {
+              return d.value;
+            })(scope.components);
+          }
+
+          scope.$watch('layout', setHelpers);
+          scope.$watch('components', setSlices);
         }
       };
     }
