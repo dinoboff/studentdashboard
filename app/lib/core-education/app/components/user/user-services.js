@@ -132,6 +132,10 @@
           return client.all('users').getList(params);
         },
 
+        getById: function(userId) {
+          return client.one('users', userId).get();
+        },
+
         students: function(cursor) {
           var params = {};
 

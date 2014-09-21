@@ -424,6 +424,16 @@
 
       });
 
+      describe('getById', function() {
+
+        it('should get one user info', function() {
+          $httpBackend.expectGET('/api/v1/users/12345').respond({});
+          usersApi.getById('12345');
+          $httpBackend.flush();
+        });
+
+      });
+
     });
   });
 

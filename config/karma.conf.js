@@ -19,19 +19,22 @@ module.exports = function(config) {
     files: [
       'app/lib/jquery/dist/jquery.js',
       'app/lib/lodash/dist/lodash.js',
+      'app/lib/d3/d3.js',
       'app/lib/ng-file-upload/angular-file-upload-shim.js',
       'app/lib/angular/angular.js',
       'app/lib/angular-cookies/angular-cookies.js',
       'app/lib/angular-sanitize/angular-sanitize.js',
       'app/lib/angular-route/angular-route.js',
       'app/lib/restangular/dist/restangular.js',
-      'app/lib/ng-file-upload/angular-file-upload-shim.js',
+      'app/lib/ng-file-upload/angular-file-upload.js',
       'app/lib/bootstrap/js/collapse.js',
       'app/lib/core-education/app-build/js/app.js',
       'app/lib/core-education/app-build/js/app-templates.js',
+      'app/lib/angular-loading-bar/build/loading-bar.js',
       'app/lib/angular-mocks/angular-mocks.js',
       'app/js/*.js',
-      'app/components/**/*.js'
+      'app/components/**/*.js',
+      'app/views/**/*.html'
     ],
 
 
@@ -44,7 +47,11 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      '**/*.html': 'ng-html2js'
+    },
 
+    ngHtml2JsPreprocessor: {
+      stripPrefix: 'app/'
     },
 
 

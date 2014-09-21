@@ -195,11 +195,11 @@ rect.border {
   fill: #B22222;
 }
 
-.meter .slices path.pie-meter-slice-warning {
+.meter .slices path.meter-level-warning {
   fill: #FFFF00;
 }
 
-.meter .slices path.pie-meter-slice-ok {
+.meter .slices path.meter-level-ok {
   fill: #32CD32;
 }
 

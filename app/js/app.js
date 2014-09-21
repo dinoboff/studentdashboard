@@ -45,6 +45,7 @@
     'scdReview.controllers',
     'scdPortFolio.directives',
     'scdMisc.filters',
+    'scdChart.directives',
     // Load core education angular app, which configure the router
     // https://github.com/ChrisBoesch/core-education/blob/master/app/js/app.js
     // It will add routes for `/users`, `/students` and `/users`.

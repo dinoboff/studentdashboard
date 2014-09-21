@@ -316,12 +316,18 @@
             },
           }),
           steps: [{
-            value: 75,
+            min: 0,
+            max: 75,
             id: 'danger'
           }, {
-            value: 25,
+            max: 100,
             id: 'ok'
-          }]
+          }],
+          reading: {
+            value: null,
+            unit: '%',
+            label: 'Projected ABEM score'
+          }
         },
 
         passing: {
@@ -336,15 +342,21 @@
             },
           }),
           steps: [{
-            value: 75,
+            min: 0,
+            max: 75,
             id: 'danger'
           }, {
-            value: 15,
+            max: 90,
             id: 'warning'
           }, {
-            value: 10,
+            max: 100,
             id: 'ok'
-          }]
+          }],
+          reading: {
+            value: null,
+            unit: '%',
+            label: 'Probability of Passing'
+          }
         },
 
         byCategory: {
@@ -362,24 +374,11 @@
         }
       };
 
-      // Set meters data
-      function meterScales(config) {
-        var outerRadius = config.outerRadius = layout2HalfPieRadius(
-            self.performances.abem.layout, 2
-          ),
-          innerRadius = config.innerRadius = outerRadius - 12;
-
-        // setup arcs
-        config.arc = arc(outerRadius, innerRadius);
-
-        // slices
-        config.slices = d3.layout.pie().sort(null).value(function(d) {
-          return d.value;
-        }).startAngle(-Math.PI / 2).endAngle(Math.PI / 2)(config.steps);
-      }
-
-      meterScales(this.performances.abem);
-      meterScales(this.performances.passing);
+      this.updateMeters = function(data) {
+        console.dir(data);
+        this.performances.abem.reading.value = data.abem;
+        this.performances.passing.reading.value = data.passingProbability;
+      };
 
       // Other charts needs the data
       this.setPerformances = function(studentId) {
@@ -388,6 +387,7 @@
 
         scdReviewApi.performancesById(studentId).then(function(data) {
           self.performances.data = data;
+          self.updateMeters(data);
           self.setCumulativePerformanceScales(data);
           self.setProgressScales(data);
           self.setPerformanceByCategory(data);
@@ -440,15 +440,6 @@
           return layout.innerWidth / 2;
         } else {
           return layout.innerHeight / 2;
-        }
-      }
-
-      function layout2HalfPieRadius(layout) {
-        // Make sure the half pie fits into the inner svg height
-        if (layout.innerWidth / 2 < layout.innerHeight) {
-          return layout.innerWidth / 2;
-        } else {
-          return layout.innerHeight;
         }
       }
 
