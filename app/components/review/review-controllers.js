@@ -34,18 +34,16 @@
 
   }
 
-  function GlobalReviewCtrl($scope, window, reviewApi) {
-    this._ = window._;
-    this.d3 = window.d3;
-    this.reviewApi = reviewApi;
-    this.scope = $scope;
+  function GlobalReviewCtrl(window, reviewApi) {
+    var self = this,
+      _ = window._;
 
-    $scope.residents = reviewApi.residents;
-    $scope.categories = reviewApi.categories;
-    $scope.stats = reviewApi.stats;
-    $scope.cursor = {};
+    this.residents = reviewApi.residents;
+    this.categories = reviewApi.categories;
+    this.stats = reviewApi.stats;
+    this.cursor = {};
 
-    $scope.filters = {
+    this.filters = {
       chart: {
         year: reviewApi.residents[0],
         sortBy: {
@@ -62,8 +60,17 @@
       }
     };
 
-    $scope.review = {
+    this.review = {
       chart: {},
+      chartOptions: {
+        getLabel: function(row) {
+          return row.displayName;
+        },
+        getValue: function(row) {
+          return row.data[self.filters.chart.sortBy.category][self.filters.chart.sortBy.property.id];
+        }
+      },
+      chartRef: null,
       table: {
         sortedBy: 'displayName',
         searchFor: '',
@@ -73,133 +80,111 @@
       }
     };
 
-    $scope.next = this.nextChartData.bind(this);
-    $scope.prev = this.prevChartData.bind(this);
-    $scope.chartFiltersChanged = this.getChartData.bind(this);
-    $scope.tableFiltersChanged = this.filterTableData.bind(this);
-    $scope.tableSortBy = this.sortTableDataBy.bind(this);
+    this.getTableData = function() {
+      reviewApi.all().then(this.updateTableData.bind(this));
+    };
+
+    this.updateTableData = function(data) {
+      this.review.table.source = data.review;
+      this.filterTableData();
+    };
+
+    this.filterTableData = function() {
+      if (this.filters.table.year.id) {
+        this.review.table.students = _.filter(
+          this.review.table.source.students, {
+            'PGY': this.filters.table.year.id
+          }
+        );
+      } else {
+        this.review.table.students = this.review.table.source.students;
+      }
+
+      this.sortTableDataBy(this.review.table.sortedBy);
+    };
+
+    this.sortTableDataBy = function(sortBy) {
+      var getKey;
+
+      this.review.table.reversed = (
+        this.review.table.sortedBy === sortBy &&
+        this.review.table.reversed === false
+      );
+
+      this.review.table.sortedBy = sortBy;
+
+      if (this.review.table.reversed) {
+        this.review.table.students.reverse();
+        return;
+      }
+
+      switch (sortBy) {
+        case 'selected-category':
+          getKey = function(student) {
+            return student.data[self.filters.table.show.category].result;
+          };
+          break;
+        case 'PGY-average':
+          getKey = function(student) {
+            return self.review.table.source.overallAverage['PGY ' + student.PGY][self.filters.table.show.category][self.filters.table.show.property.id];
+          };
+          break;
+        case '%-completed':
+          getKey = function(student) {
+            return student.data[self.filters.table.show.category].completed;
+          };
+          break;
+        case 'probability-of-passing':
+          getKey = function(student) {
+            return student.data[self.filters.table.show.category].probabilityOfPassing;
+          };
+          break;
+        default:
+          getKey = function(student) {
+            return student[sortBy];
+          };
+          break;
+      }
+
+      this.review.table.students = _.sortBy(
+        this.review.table.students, getKey
+      );
+
+    };
+
+    function updateChartData(data) {
+      self.cursor.next = data.next;
+      self.cursor.prev = data.prev;
+      self.review.chart = data.review;
+      self.layout = layoutFromInnerHeight(
+        self.review.chart.students.length * 20 // 20px per student
+      );
+      self.review.chartRef = {
+        label: 'Average',
+        value: data.review.overallAverage[self.filters.chart.year.title][self.filters.chart.sortBy.category][self.filters.chart.sortBy.property.id],
+        unit: '%'
+      };
+    }
+
+    this.getChartData = function() {
+      reviewApi.next('', this.filters.chart).then(updateChartData);
+    };
+
+    this.nextChartData = function() {
+      reviewApi.next(this.cursor.next, this.filters.chart).then(updateChartData);
+    };
+
+    this.prevChartData = function() {
+      reviewApi.prev(this.cursor.prev, this.filters.chart).then(updateChartData);
+    };
+
+    this.chartFiltersChanged = this.getChartData;
+    this.tableFiltersChanged = this.filterTableData;
+    this.tableSortBy = this.sortTableDataBy;
 
     this.getChartData();
     this.getTableData();
   }
-
-  GlobalReviewCtrl.prototype.getTableData = function() {
-    this.reviewApi.all().then(this.updateTableData.bind(this));
-  };
-
-  GlobalReviewCtrl.prototype.updateTableData = function(data) {
-    this.scope.review.table.source = data.review;
-    this.filterTableData();
-  };
-
-  GlobalReviewCtrl.prototype.filterTableData = function() {
-    if (this.scope.filters.table.year.id) {
-      this.scope.review.table.students = this._.filter(
-        this.scope.review.table.source.students, {
-          'PGY': this.scope.filters.table.year.id
-        }
-      );
-    } else {
-      this.scope.review.table.students = this.scope.review.table.source.students;
-    }
-
-    this.sortTableDataBy(this.scope.review.table.sortedBy);
-  };
-
-  GlobalReviewCtrl.prototype.sortTableDataBy = function(sortBy) {
-    var getKey,
-      self = this;
-
-    this.scope.review.table.reversed = (
-      this.scope.review.table.sortedBy === sortBy &&
-      this.scope.review.table.reversed === false
-    );
-
-    this.scope.review.table.sortedBy = sortBy;
-
-    if (this.scope.review.table.reversed) {
-      this.scope.review.table.students.reverse();
-      return;
-    }
-
-    switch (sortBy) {
-      case 'selected-category':
-        getKey = function(student) {
-          return student.data[self.scope.filters.table.show.category].result;
-        };
-        break;
-      case 'PGY-average':
-        getKey = function(student) {
-          return self.scope.review.table.source.overallAverage['PGY ' + student.PGY][self.scope.filters.table.show.category][self.scope.filters.table.show.property.id];
-        };
-        break;
-      case '%-completed':
-        getKey = function(student) {
-          return student.data[self.scope.filters.table.show.category].completed;
-        };
-        break;
-      case 'probability-of-passing':
-        getKey = function(student) {
-          return student.data[self.scope.filters.table.show.category].probabilityOfPassing;
-        };
-        break;
-      default:
-        getKey = function(student) {
-          return student[sortBy];
-        };
-        break;
-    }
-
-    this.scope.review.table.students = this._.sortBy(
-      this.scope.review.table.students, getKey
-    );
-
-  };
-
-  GlobalReviewCtrl.prototype.getChartData = function() {
-    this.reviewApi.next('', this.scope.filters.chart).then(this.updateChartData.bind(this));
-  };
-
-  GlobalReviewCtrl.prototype.nextChartData = function() {
-    this.reviewApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateChartData.bind(this));
-  };
-
-  GlobalReviewCtrl.prototype.prevChartData = function() {
-    this.reviewApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateChartData.bind(this));
-  };
-
-  GlobalReviewCtrl.prototype.updateChartData = function(data) {
-    this.scope.cursor.next = data.next;
-    this.scope.cursor.prev = data.prev;
-    this.scope.review.chart = data.review;
-    this.setLayout();
-    this.setScales();
-  };
-
-  GlobalReviewCtrl.prototype.setScales = function() {
-    var self = this;
-
-    if (!this.scope.scales) {
-      this.scope.scales = {
-        x: this.d3.scale.linear().domain(
-          [0, 100]
-        ).range(
-          [0, this.scope.layout.innerWidth]
-        )
-      };
-    }
-
-    this.scope.scales.y = this.d3.scale.ordinal();
-    this.scope.review.chart.students.forEach(function(student) {
-      self.scope.scales.y(student.id);
-    });
-    this.scope.scales.y = this.scope.scales.y.rangePoints([this.scope.layout.innerHeight, 0], 1);
-  };
-
-
-  GlobalReviewCtrl.prototype.setLayout = function() {
-    this.scope.layout = layoutFromInnerHeight(this.scope.review.chart.students.length * 20); // 20px per student
-  };
 
 
   angular.module('scdReview.controllers', [
@@ -210,7 +195,6 @@
   ]).
 
   controller('scdGlobalReviewCtrl', [
-    '$scope',
     '$window',
     'scdReviewApi',
     GlobalReviewCtrl
@@ -470,7 +454,7 @@
       this.updatePerfByCategoryChart = function(data) {
         var config = this.performances.byCategory;
 
-        config.series = data.categoryPerformances;
+        config.series = _.sortBy(data.categoryPerformances, 'id');
         config.layout = layout(_.extend({
             innerHeight: config.baseLayout.rowHeight * data.categoryPerformances.length
           },

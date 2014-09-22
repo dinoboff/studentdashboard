@@ -391,6 +391,7 @@
         },
         // arguments: scope, iElement, iAttrs, controller
         link: function scdChartHistogramPostLink(scope) {
+
           scope.scales = {};
           scope.options = scope.options || {};
           _.defaults(scope.options, {
@@ -434,13 +435,13 @@
 
             // set domain
             scope.scales.x.domain(scope.options.domain);
-            scope.scales.y.domain(
-              _(scope.series).map('id').sort().value()
-            );
+            scope.scales.y.domain(_.map(scope.series, 'id'));
 
             // set ranges
             scope.scales.x.range([0, scope.layout.innerWidth]);
             scope.scales.y.rangeBands([0, scope.layout.innerHeight], 0, 0);
+
+            console.dir(scope.ref);
           }
 
           scope.$watch('layout', setHistogramScales);
