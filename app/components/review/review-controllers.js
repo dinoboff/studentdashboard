@@ -347,7 +347,7 @@
         passing: {
           layout: layout({
             innerWidth: 100,
-            innerHeight: 55,
+            innerHeight: 50,
             margin: {
               top: 12,
               right: 12,
