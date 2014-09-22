@@ -241,6 +241,36 @@
     }
   ]).
 
+  /**
+   * Show the progression of a stats over time.
+   *
+   * usage:
+   *
+   *    <scd-chart-history
+   *      scd-layout="layout"
+   *      scd-series="series"
+   *      scd-ref="ref"
+   *      scd-current="current"
+   *      scd-options="options"
+   *      scd-legend="legend"
+   *     >
+   *    </scd-chart-history>
+   *
+   * Where:
+   * - `series` should be an array of object with date and value properties,
+   *   sorted by chronologic order.
+   * - `ref` an object to compare to. It should have a lable and
+   *    value properties
+   * - `current` should be the current value of the stats. It should have
+   *   a label and value property
+   * - `options` can define alternive way to extract the value and date out
+   *   of the series array. It may have a getValue and getDate properties that
+   *   take as argument an item of the series array and return respectively
+   *   its value and date.
+   * - `legend` should be an object with a y property. Used for the y axis
+   *   legend.
+   *
+   */
   directive('scdChartHistory', [
     '$window',
     function scdChartHistoryFactory($window) {
