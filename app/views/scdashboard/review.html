@@ -97,46 +97,13 @@
 
                 </form>
 
-                <scce-svg-container scce-viewbox="ctrl.performances.byCategory.layout" ng-if="ctrl.performances.byCategory.layout">
-                    <svg>
-                        <g class="performance-by-category">
-
-                            <g class="axis x-axis" ng-attr-transform="translate(0,{{ctrl.performances.byCategory.layout.innerHeight}})">
-                                <g class="ticks">
-                                    <g class="tick" ng-repeat="x in ctrl.performances.byCategory.xScale.ticks(10)" ng-attr-transform="translate({{ctrl.performances.byCategory.xScale(x)}})">
-                                        <line ng-attr-y1="-{{ctrl.performances.byCategory.layout.innerHeight}}" y2="5" />
-                                        <text dy="7">{{x}}</text>
-                                    </g>
-                                    <line class="tick miner-tick" ng-repeat="x in ctrl.performances.byCategory.xScale.ticks(50)" ng-attr-transform="translate({{ctrl.performances.byCategory.xScale(x)}})" ng-attr-y1="-{{ctrl.performances.byCategory.layout.innerHeight}}" />
-                                </g>
-                                <line x1="-5" ng-attr-x2="{{ctrl.performances.byCategory.layout.innerWidth}}" />
-                                <text class="label" ng-attr-transform="translate({{ctrl.performances.byCategory.layout.innerWidth/2}},25)">
-                                    Score (%)
-                                </text>
-                            </g>
-
-                            <g class="data">
-                                <g class="chart-row" ng-class="{'failing': perf.value < ctrl.performances.statsByTopics[perf.id][ctrl.comparison.selected.id]}" ng-repeat="perf in ctrl.performances.data.categoryPerformances track by perf.id" ng-attr-transform="translate(0,{{ctrl.performances.byCategory.yScale(perf.id) + ctrl.performances.byCategory.yScale.rangeBand()/2}})">
-                                    <text class="data-label" x="-7">{{perf.name}}</text>
-                                    <rect y="-3" height="6" ng-attr-width="{{ctrl.performances.byCategory.xScale(perf.value)}}" />
-                                    <line class="average" ng-attr-transform="translate({{ctrl.performances.byCategory.xScale(ctrl.performances.statsByTopics[perf.id][ctrl.comparison.selected.id])}},0)" y1='-5' y2='5' />
-                                    <text class="data-value" dx="5" ng-attr-x="{{ctrl.performances.byCategory.xScale(perf.value)}}">
-                                        <tspan>{{perf.value}}</tspan>
-                                        <tspan>%</tspan>
-                                    </text>
-                                </g>
-                            </g>
-
-                            <g class="axis y-axis">
-                                <line ng-attr-y2="{{ctrl.performances.byCategory.layout.innerHeight}}" />
-                                <g class="ticks">
-                                    <line class="tick" ng-repeat="y in ctrl.performances.byCategory.yScale.range()" ng-attr-transform="translate(0,{{y}})" x1="-5" ng-attr-x2="{{ctrl.performances.byCategory.layout.innerWidth}}" />
-                                </g>
-                            </g>
-
-                        </g>
-                    </svg>
-                </scce-svg-container>
+                <scd-chart-histogram
+                    scd-layout="ctrl.performances.byCategory.layout"
+                    scd-series="ctrl.performances.byCategory.series"
+                    scd-options="ctrl.performances.byCategory.options"
+                    scd-legend="{x: 'Score (%)'}"
+                >
+                </scd-chart-histogram>
 
             </div>
 

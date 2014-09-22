@@ -219,7 +219,6 @@
   controller('scdReviewCtrl', ['currentUser', 'scdSelectedStudent', 'scdReviewApi', '$window',
     function(currentUser, scdSelectedStudent, scdReviewApi, $window) {
       var self = this,
-        d3 = $window.d3,
         _ = $window._;
 
       /** Student selector **/
@@ -384,6 +383,25 @@
               bottom: 50,
               left: 220
             },
+          },
+          options: {
+            getLabel: function(row) {
+              return row.name;
+            },
+            hasRef: function() {
+              return self.performances.statsByTopics && self.comparison.selected.id;
+            },
+            getRef: function(row) {
+              return {
+                value: self.performances.statsByTopics[row.id][self.comparison.selected.id]
+              };
+            },
+            getUnit: function() {
+              return '%';
+            },
+            getValue: function(row) {
+              return row.value;
+            },
           }
         }
       };
@@ -401,10 +419,10 @@
         scdReviewApi.performancesById(studentId).then(function(data) {
           self.performances.data = data;
           self.updateMeters(data);
-          self.setCumulativePerformanceScales(data);
-          self.setCumulativePerformanceRef(self.comparison.selected);
-          self.setProgressScales(data);
-          self.setPerformanceByCategory(data);
+          self.updateCumulativePerfChart(data);
+          self.updateCumulativePerfChartRef(self.comparison.selected);
+          self.updateProgressChart(data);
+          self.updatePerfByCategoryChart(data);
         });
 
         scdReviewApi.topicsStats().then(function(stats) {
@@ -412,7 +430,7 @@
         });
       };
 
-      this.setCumulativePerformanceScales = function(data) {
+      this.updateCumulativePerfChart = function(data) {
         self.performances.cumulative.series = data.progress;
         self.performances.cumulative.current = {
           label: 'Overall percent correct',
@@ -420,7 +438,7 @@
         };
       };
 
-      this.setCumulativePerformanceRef = function(selectedOption) {
+      this.updateCumulativePerfChartRef = function(selectedOption) {
         self.performances.cumulative.ref = {
           id: selectedOption.id,
           label: selectedOption.label,
@@ -428,7 +446,7 @@
         };
       };
 
-      this.setProgressScales = function(data) {
+      this.updateProgressChart = function(data) {
         var correct = data.cumulativePerformance * data.percentageComplete / 100,
           left = 100 - data.percentageComplete;
 
@@ -449,28 +467,15 @@
 
       };
 
-      this.setPerformanceByCategory = function(data) {
+      this.updatePerfByCategoryChart = function(data) {
         var config = this.performances.byCategory;
 
+        config.series = data.categoryPerformances;
         config.layout = layout(_.extend({
             innerHeight: config.baseLayout.rowHeight * data.categoryPerformances.length
           },
           config.baseLayout
         ));
-
-        // init scales
-        config.xScale = d3.scale.linear();
-        config.yScale = d3.scale.ordinal();
-
-        // set domain
-        config.xScale.domain([0, 100]);
-        config.yScale.domain(
-          _(data.categoryPerformances).map('id').sort().value()
-        );
-
-        // set ranges
-        config.xScale.range([0, config.layout.innerWidth]);
-        config.yScale.rangeBands([0, config.layout.innerHeight], 0, 0);
       };
     }
   ])

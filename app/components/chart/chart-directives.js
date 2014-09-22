@@ -7,11 +7,11 @@
     'scdMisc.filters'
   ]).
 
-  service('scdArc', ['$window',
-    function scdArcFactory($window) {
+  service('scdChartArc', ['$window',
+    function scdChartArcFactory($window) {
       var d3 = $window.d3;
 
-      return function scdArc(radius) {
+      return function scdChartArc(radius) {
         return d3.svg.arc()
           .startAngle(function(d) {
             return d.startAngle;
@@ -47,8 +47,8 @@
    */
   directive('scdChartMeter', [
     '$window',
-    'scdArc',
-    function scdChartMeterFactory($window, scdArc) {
+    'scdChartArc',
+    function scdChartMeterFactory($window, scdChartArc) {
       var d3 = $window.d3,
         _ = $window._;
 
@@ -99,7 +99,7 @@
             }
 
             scope.radius.inner = scope.radius.outer - donutWidth;
-            scope.levelArc = scdArc(scope.radius);
+            scope.levelArc = scdChartArc(scope.radius);
           }
 
           scope.levelSlices = [];
@@ -162,8 +162,8 @@
    */
   directive('scdChartComponents', [
     '$window',
-    'scdArc',
-    function scdChartComponentsFactory($window, scdArc) {
+    'scdChartArc',
+    function scdChartComponentsFactory($window, scdChartArc) {
       var d3 = $window.d3;
 
       function shifterFactory(arc) {
@@ -207,7 +207,7 @@
               radius.outer = scope.layout.innerWidth / 2;
             }
 
-            scope.arc = scdArc(radius);
+            scope.arc = scdChartArc(radius);
             scope.shiftSlice = shifterFactory(scope.arc);
 
             labelMargin = radius.outer + scope.layout.margin.top / 2;
@@ -347,6 +347,104 @@
 
           scope.$watch('layout', setScales);
           scope.$watch('series', setScales);
+        }
+      };
+    }
+  ]).
+
+  /**
+   * Histogram chart
+   *
+   * Usage:
+   *
+   *     <scd-chart-histogram
+   *       scd-layout="ctrl.performances.byCategory.layout"
+   *       scd-series="ctrl.performances.byCategory.series"
+   *       scd-options="ctrl.performances.byCategory.options"
+   *       scd-legend="{x: 'Score (%)'}"
+   *     >
+   *     </scd-chart-histogram>
+   *
+   * Where:
+   * - series is an array of object with label, value, unit and ref properties.
+   * - legend is an object with `x` property, used to label the bottom axis.
+   * - options is an object with `getLabel`, `hasRef`, `getRef`, `getUnit`,
+   *   `getValue` and `isFailing`. They are use to extract data out of each
+   *   series item.
+   *
+   */
+  directive('scdChartHistogram', [
+    '$window',
+    function scdChartHistogramFactory($window) {
+      var _ = $window._,
+        d3 = $window.d3;
+
+      return {
+        templateUrl: 'views/scdashboard/charts/histogram.html',
+        restrict: 'EA',
+        scope: {
+          layout: '=scdLayout',
+          legend: '=scdLegend',
+          options: '=scdOptions',
+          ref: '=scdRef',
+          series: '=scdSeries'
+        },
+        // arguments: scope, iElement, iAttrs, controller
+        link: function scdChartHistogramPostLink(scope) {
+          scope.scales = {};
+          scope.options = scope.options || {};
+          _.defaults(scope.options, {
+            domain: [0, 100],
+
+            // default row data extractor
+            getLabel: function(row) {
+              return row.label;
+            },
+            hasRef: function(row) {
+              return !!this.getRef(row);
+            },
+            getRef: function(row) {
+              return row.ref;
+            },
+            getUnit: function(row) {
+              return row.unit;
+            },
+            getValue: function(row) {
+              return row.value;
+            },
+            isFailing: function(row) {
+              // reference value can be global or per row
+              var ref = scope.ref || this.getRef(row),
+                value = this.getValue(row);
+
+              return ref && ref.value > value;
+            }
+          });
+
+          function setHistogramScales() {
+            scope.scales.x = null;
+            scope.scales.y = null;
+            if (!scope.layout || !scope.series) {
+              return;
+            }
+
+            // init scales
+            scope.scales.x = d3.scale.linear();
+            scope.scales.y = d3.scale.ordinal();
+
+            // set domain
+            scope.scales.x.domain(scope.options.domain);
+            scope.scales.y.domain(
+              _(scope.series).map('id').sort().value()
+            );
+
+            // set ranges
+            scope.scales.x.range([0, scope.layout.innerWidth]);
+            scope.scales.y.rangeBands([0, scope.layout.innerHeight], 0, 0);
+          }
+
+          scope.$watch('layout', setHistogramScales);
+          scope.$watch('series', setHistogramScales);
         }
       };
     }

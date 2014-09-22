@@ -12,7 +12,8 @@
       'scceSvg.services',
       'views/scdashboard/charts/meter.html',
       'views/scdashboard/charts/components.html',
-      'views/scdashboard/charts/history.html'
+      'views/scdashboard/charts/history.html',
+      'views/scdashboard/charts/histogram.html'
     ));
 
     beforeEach(inject(function(_$compile_, _$rootScope_, ScceLayout, $window) {
@@ -192,6 +193,44 @@
       });
     });
 
+
+    describe('scdChartHistogram', function() {
+
+      beforeEach(function() {
+        elem = compile([
+          '<scd-chart-histogram',
+          '  scd-layout="layout"',
+          '  scd-series="series"',
+          '  scd-options="options"',
+          '  scd-legend="legend"',
+          '>',
+          '</scd-chart-histogram>'
+        ].join(''))(scope);
+      });
+
+      it('should setup scales', function() {
+        var isolatedScope;
+
+        scope.layout = Layout.contentSizing({
+          innerWidth: 100,
+          innerHeight: 100
+        });
+
+        scope.series = _.range(10).map(function(i) {
+          return {
+            id: i,
+            value: 50 + i,
+            label: 'item ' + i
+          };
+        });
+
+        scope.$apply();
+        isolatedScope = elem.isolateScope();
+
+        expect(isolatedScope.scales).toBeDefined();
+      });
+
+    });
 
   });
 
