@@ -30,72 +30,27 @@
 
                     <div class="form-group">
                         <label for="compare-user-to">Compared to:</label>
-                        <select id="compare-user-to" class="form-control" ng-model="ctrl.comparison.selected" ng-options="opt as opt.label for opt in ctrl.comparison.available track by opt.id" required="true"></select>
+                        <select
+                            id="compare-user-to" class="form-control"
+                            ng-model="ctrl.comparison.selected"
+                            ng-options="opt as opt.label for opt in ctrl.comparison.available track by opt.id"
+                            required="true"
+                            ng-change="ctrl.setCumulativePerformanceRef(ctrl.comparison.selected)"
+                        ></select>
                     </div>
 
                 </form>
 
-                <scce-svg-container scce-viewbox="ctrl.performances.cumulative.layout" ng-if="ctrl.performances.cumulative.layout">
-                    <svg>
-                        <g class="cumulative-perfomance">
-
-                            <g class="ticks x-ticks">
-                                <g ng-repeat="tick in ctrl.performances.cumulative.xTicks" ng-attr-transform="translate({{ctrl.performances.cumulative.xScale(tick) + (ctrl.performances.cumulative.xScale.rangeBand() / 2)}},0)">
-                                    <line ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight + 5 }}" />
-                                    <text ng-attr-y="{{ctrl.performances.cumulative.layout.innerHeight + 6}}">
-                                        {{ctrl.performances.cumulative.ticksFormatter(tick)}}
-                                    </text>
-                                </g>
-                            </g>
-
-                            <g class="ticks y-ticks">
-                                <g ng-repeat="tick in ctrl.performances.cumulative.yScale.ticks(5)" ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(tick)}})">
-                                    <line x1="-5" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth }}" />
-                                    <text x="-10">
-                                        {{tick}}%
-                                    </text>
-                                </g>
-                                <line class="tick miner-tick" ng-repeat="tick in ctrl.performances.cumulative.yScale.ticks(20)" ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(tick)}})" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth }}" />
-                            </g>
-
-                            <g class="data">
-                                <rect class="day" ng-repeat="day in ctrl.performances.data.progress track by day.date" ng-attr-x="{{ctrl.performances.cumulative.xScale(day.date)}}" ng-attr-y="{{ctrl.performances.cumulative.yScaleReversed(day.performance)}}" ng-attr-width="{{ctrl.performances.cumulative.xScale.rangeBand()}}" ng-attr-height="{{ctrl.performances.cumulative.yScale(day.performance)}}" />
-                            </g>
-
-                            <g class="axis x-axis" ng-attr-transform="translate(0,{{ctrl.performances.cumulative.layout.innerHeight}})">
-                                <line class="axis-line" ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}"></line>
-                            </g>
-
-                            <g class="axis y-axis">
-                                <line class="axis-line" ng-attr-y2="{{ctrl.performances.cumulative.layout.innerHeight}}"></line>
-                                <g class="legend" ng-attr-transform="translate(-{{ctrl.performances.cumulative.layout.margin.left}},{{ctrl.performances.cumulative.layout.innerHeight/2}})">
-                                    <text transform="rotate(-90)">
-                                        Percentage Correct
-                                    </text>
-                                </g>
-                            </g>
-
-                            <g class="compareTo" ng-attr-transform="translate(0,{{ctrl.performances.cumulative.yScaleReversed(ctrl.performances.data[ctrl.comparison.selected.id])}})">
-                                <line ng-attr-x2="{{ctrl.performances.cumulative.layout.innerWidth}}" />
-                                <text dx="15" dy="-0.5em">
-                                    <tspan>{{ctrl.comparison.selected.type}}</tspan>
-                                    <tspan>(</tspan>
-                                    <tspan>{{ctrl.performances.data[ctrl.comparison.selected.id]}}</tspan>
-                                    <tspan>%)</tspan>
-                                </text>
-                            </g>
-
-                            <g class="current-performance" ng-attr-transform="translate({{ctrl.performances.cumulative.layout.innerWidth + ctrl.performances.cumulative.layout.margin.right/2}},{{ctrl.performances.cumulative.layout.innerHeight/2}})">
-                                <text y="-24" style="font-size:48px">
-                                    <tspan>{{ctrl.performances.data.cumulativePerformance}}</tspan>
-                                    <tspan>%</tspan>
-                                </text>
-                                <text dy="24" style="font-size:12px; font-weight:200">Overall percent correct</text>
-                            </g>
-
-                        </g>
-                    </svg>
-                </scce-svg-container>
+                <!-- history chart -->
+                <scd-chart-history class="cumulative-perfomance rect"
+                    scd-layout="ctrl.performances.cumulative.layout"
+                    scd-series="ctrl.performances.cumulative.series"
+                    scd-ref="ctrl.performances.cumulative.ref"
+                    scd-current="ctrl.performances.cumulative.current"
+                    scd-options="ctrl.performances.cumulative.options"
+                    scd-legend="{y: 'percentage correct'}"
+                >
+                </scd-chart-history>
             </div>
         </div>
 
@@ -103,11 +58,7 @@
         <div class="col-sm-5">
             <div class="well">
 
-                <scd-chart-components
-                    scd-layout="ctrl.performances.progress.layout"
-                    scd-main-data="ctrl.performances.progress.mainData"
-                    scd-components="ctrl.performances.progress.components"
-                >
+                <scd-chart-components scd-layout="ctrl.performances.progress.layout" scd-main-data="ctrl.performances.progress.mainData" scd-components="ctrl.performances.progress.components">
                 </scd-chart-components>
 
             </div>

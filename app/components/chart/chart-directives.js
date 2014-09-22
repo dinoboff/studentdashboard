@@ -239,6 +239,87 @@
         }
       };
     }
+  ]).
+
+  directive('scdChartHistory', [
+    '$window',
+    function scdChartHistoryFactory($window) {
+      var d3 = $window.d3,
+        _ = $window._;
+
+      return {
+        templateUrl: 'views/scdashboard/charts/history.html',
+        restrict: 'E',
+        scope: {
+          'layout': '=scdLayout',
+          'series': '=scdSeries',
+          'ref': '=scdRef',
+          'current': '=scdCurrent',
+          'legend': '=scdLegend',
+          'options': '=scdOptions'
+        },
+        // arguments: scope, iElement, iAttrs, controller
+        link: function scdChartHistoryPostLink(scope) {
+          scope.ticksFormatter = d3.time.format('%b %y');
+          scope.options = scope.options || {};
+          _.defaults(scope.options, {
+            getValue: function(day) {
+              return day.value;
+            },
+            getDate: function(day) {
+              return day.date;
+            },
+            domain: [0, 100]
+          });
+
+          function setScales() {
+            var xTicks;
+
+            scope.xTicks = [];
+            scope.scales = {
+              x: null,
+              y: null,
+              yReversed: null
+            };
+
+            if (!scope.layout && !scope.series) {
+              return;
+            }
+
+            xTicks = d3.time.scale();
+            scope.scales.x = d3.scale.ordinal();
+            scope.scales.y = d3.scale.linear();
+
+            // setup scale domains
+            scope.scales.y.domain(scope.options.domain);
+            xTicks.domain([
+              scope.options.getDate(scope.series[0]),
+              scope.options.getDate(scope.series.slice(-1).pop())
+            ]);
+            scope.series.forEach(function(day) {
+              scope.scales.x(
+                scope.options.getDate(day)
+              );
+            });
+
+            // setup scale ranges
+            scope.scales.yReversed = (
+              scope.scales.y.copy().range([scope.layout.innerHeight, 0])
+            );
+            scope.scales.y.range([0, scope.layout.innerHeight]);
+            scope.scales.x.rangeBands(
+              [0, scope.layout.innerWidth], 0, 0
+            );
+
+            // Set x ticks
+            scope.xTicks = xTicks.ticks(3);
+          }
+
+          scope.$watch('layout', setScales);
+          scope.$watch('series', setScales);
+        }
+      };
+    }
   ])
 
   ;

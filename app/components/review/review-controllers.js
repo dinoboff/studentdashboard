@@ -278,6 +278,9 @@
         statsByTopics: null,
 
         cumulative: {
+          series: [],
+          ref: null,
+          current: null,
           layout: layout({
             innerWidth: 400,
             innerHeight: 360,
@@ -287,7 +290,12 @@
               bottom: 30,
               left: 70
             },
-          })
+          }),
+          options: {
+            getValue: function(day) {
+              return day.performance;
+            }
+          }
         },
 
         progress: {
@@ -394,6 +402,7 @@
           self.performances.data = data;
           self.updateMeters(data);
           self.setCumulativePerformanceScales(data);
+          self.setCumulativePerformanceRef(self.comparison.selected);
           self.setProgressScales(data);
           self.setPerformanceByCategory(data);
         });
@@ -404,39 +413,19 @@
       };
 
       this.setCumulativePerformanceScales = function(data) {
-        var xTicks;
-        // init scales
-        self.performances.cumulative.xScale = d3.scale.ordinal();
-        self.performances.cumulative.yScale = d3.scale.linear();
-        xTicks = d3.time.scale();
-        self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
+        self.performances.cumulative.series = data.progress;
+        self.performances.cumulative.current = {
+          label: 'Overall percent correct',
+          value: data.cumulativePerformance
+        };
+      };
 
-        // setup scale domains
-        self.performances.cumulative.yScale.domain([0, 100]);
-        xTicks.domain([
-          data.progress[0].date,
-          data.progress[data.progress.length - 1].date
-        ]);
-        data.progress.forEach(function(day) {
-          self.performances.cumulative.xScale(day.date);
-        });
-
-        // setup scale ranges
-        self.performances.cumulative.yScaleReversed = (
-          self.performances.cumulative.yScale.copy().range(
-            [self.performances.cumulative.layout.innerHeight, 0]
-          )
-        );
-        self.performances.cumulative.yScale.range(
-          [0, self.performances.cumulative.layout.innerHeight]
-        );
-        self.performances.cumulative.xScale.rangeBands(
-          [0, self.performances.cumulative.layout.innerWidth], 0, 0
-        );
-
-        // Set x ticks
-        self.performances.cumulative.xTicks = xTicks.ticks(3);
-        self.performances.cumulative.ticksFormatter = d3.time.format('%b %y');
+      this.setCumulativePerformanceRef = function(selectedOption) {
+        self.performances.cumulative.ref = {
+          id: selectedOption.id,
+          label: selectedOption.label,
+          value: self.performances.data[selectedOption.id]
+        };
       };
 
       this.setProgressScales = function(data) {
