@@ -1,12 +1,10 @@
 /**
+ * *** DEPRECATED ***
+ *
  * Only used to feed the dummy rosh review charts.
  *
  * As more details emerges about the upcoming Rosh Review api, the client
  * will be rewritten.
- *
- * TODO: replace all(), next() and prev() by something getAllStudents().
- * TODO: get stats out of all() result.
- *
  *
  */
 (function() {

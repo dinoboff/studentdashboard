@@ -91,6 +91,20 @@
           newUploadUrl: function() {
             return api.all('assessments').all('uploadurl').post();
           }
+        },
+
+        /**
+         * Rosh Review endpoints
+         */
+        review: {
+
+          /**
+           * Fetch Student Rosh Review ranks
+           *
+           */
+          listStats: function(params) {
+            return api.all('roshreview').all('stats').getList(params);
+          }
         }
       };
     }

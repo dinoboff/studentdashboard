@@ -27,11 +27,22 @@
   }).
 
 
-  filter('isEmpty', function() {
-    return function(o) {
-      return !o || Object.keys(o).length === 0;
-    };
-  }).
+  filter('isEmpty', [
+    '$window',
+    function($window) {
+      return function(obj) {
+        if (!obj) {
+          return true;
+        }
+
+        if (obj.length !== undefined) {
+          return obj.length === 0;
+        }
+
+        return $window._.keys(obj).length === 0;
+      };
+    }
+  ]).
 
   filter('rotate', function() {
     return function(angle) {

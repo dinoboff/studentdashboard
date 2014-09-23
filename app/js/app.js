@@ -69,14 +69,16 @@
         }
       }).
 
-      when('/review', {
-        templateUrl: 'views/scdashboard/review.html',
-        controller: 'scdReviewCtrl',
+      when('/review/stats', {
+        templateUrl: 'views/scdashboard/review-stats.html',
+        controller: 'ScdReviewStatsCtrl',
         controllerAs: 'ctrl',
         resolve: {
-          'currentUser': currentUser
+          'currentUser': currentUser,
+          'initialData': ['scdReviewStatsCtrlInitialData', function(scdReviewStatsCtrlInitialData) {
+            return  scdReviewStatsCtrlInitialData();
+          }]
         }
-
       }).
 
       when('/first-aid', {

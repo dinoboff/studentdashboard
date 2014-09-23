@@ -41,15 +41,15 @@
                         <li ng-class="{active: isActive('/', true)}">
                             <a ng-href="#/">Repository</a>
                         </li>
-                        <li ng-class="{active: isActive('/assessments')}">
+<!--                         <li ng-class="{active: isActive('/assessments')}">
                             <a ng-href="#/assessments">Assessments</a>
-                        </li>
+                        </li> -->
                         <li ng-class="{active: isActive('/review')}">
-                            <a ng-href="#/review">Rosh Review</a>
+                            <a ng-href="#/review/stats">Rosh Review</a>
                         </li>
-                        <li ng-class="{active: isActive('/first-aid')}" ng-if="currentUser.isAdmin || currentUser.isStaff">
+<!--                         <li ng-class="{active: isActive('/first-aid')}" ng-if="currentUser.isAdmin || currentUser.isStaff">
                             <a ng-href="#/first-aid">First Aid</a>
-                        </li>
+                        </li> -->
                         <li ng-class="{active: isActive('/students')}" ng-if="currentUser.isAdmin">
                             <a ng-href="#/students">Permissions</a>
                         </li>

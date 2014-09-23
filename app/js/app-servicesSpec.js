@@ -29,7 +29,9 @@
       });
 
       it('should get collection as object', function() {
-        $httpBackend.expectGET(apiRoot + '/foo').respond({foo: []});
+        $httpBackend.expectGET(apiRoot + '/foo').respond({
+          foo: []
+        });
         api.all('foo').getList();
         $httpBackend.flush();
       });
@@ -37,7 +39,12 @@
       it('should get collection as object with explicit type', function() {
         var resp;
 
-        $httpBackend.expectGET(apiRoot + '/foo').respond({type: 'bar', bar: [{foo: 2}]});
+        $httpBackend.expectGET(apiRoot + '/foo').respond({
+          type: 'bar',
+          bar: [{
+            foo: 2
+          }]
+        });
         api.all('foo').getList().then(function(_resp_) {
           resp = _resp_;
         });
@@ -49,7 +56,10 @@
       it('should get collection as object and include extra attributes', function() {
         var resp;
 
-        $httpBackend.expectGET(apiRoot + '/foo').respond({foo: [], bar: 1});
+        $httpBackend.expectGET(apiRoot + '/foo').respond({
+          foo: [],
+          bar: 1
+        });
         api.all('foo').getList().then(function(_resp_) {
           resp = _resp_;
         });
@@ -94,6 +104,50 @@
           api.newUploadUrl();
           $httpBackend.flush();
         });
+      });
+
+
+      describe('scdDashboardApi.review', function() {
+
+        beforeEach(inject(function(scdDashboardApi) {
+          api = scdDashboardApi.review;
+        }));
+
+        it('should query student stats rank', function() {
+          $httpBackend.expectGET(apiRoot + '/roshreview/stats').respond({
+            stats: [],
+            cursor: '',
+          });
+          api.listStats();
+          $httpBackend.flush();
+        });
+
+        it('should query student stats rank with parameters', function() {
+          var expected = {},
+            params = {
+              cursor: 'foo',
+              residents: 'all',
+              topic: 'all',
+              stats: 'cumulativePerformance'
+            },
+            urlPattern = /roshreview\/stats\?(.+)$/;
+
+          $httpBackend.expectGET(urlPattern).respond(function(m, url) {
+            urlPattern.exec(url)[1].split('&').forEach(function(part) {
+              var pair = part.split('=');
+              expected[pair[0]] = pair[1];
+            });
+            return [200, {
+              stats: [],
+              cursor: '',
+            }];
+          });
+
+          api.listStats(params);
+          $httpBackend.flush();
+          expect(expected).toEqual(params);
+        });
+
       });
 
     });
