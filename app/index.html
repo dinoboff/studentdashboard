@@ -51,7 +51,10 @@
                             <a ng-href="#/first-aid">First Aid</a>
                         </li> -->
                         <li ng-class="{active: isActive('/students')}" ng-if="currentUser.isAdmin">
-                            <a ng-href="#/students">Permissions</a>
+                            <a ng-href="#/students">Students</a>
+                        </li>
+                        <li ng-class="{active: isActive('/users')}" ng-if="currentUser.isAdmin">
+                            <a ng-href="#/users">Permissions</a>
                         </li>
                     </ul>
                     <scce-user-login></scce-user-login>
