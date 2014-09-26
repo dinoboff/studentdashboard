@@ -12,8 +12,9 @@
   ]).
 
 
-  run(function($httpBackend, SC_CORE_EDUCATION_FIXTURES) {
-    var fix = SC_CORE_EDUCATION_FIXTURES;
+  run(function($httpBackend, $window, SC_CORE_EDUCATION_FIXTURES) {
+    var fix = SC_CORE_EDUCATION_FIXTURES,
+      _ = $window._;
 
     $httpBackend.whenGET(fix.urls.login).respond(fix.data.user);
 
@@ -26,11 +27,12 @@
     });
 
     $httpBackend.whenGET(fix.urls.students).respond({
-      type: 'users',
-      users: Object.keys(fix.data.userList).filter(function(id) {
-        return fix.data.userList[id].isStudent;
-      }).map(function(id) {
-        return fix.data.userList[id];
+      type: 'students',
+      students: _.map(fix.data.studentList, function(student) {
+        var user = _.find(fix.data.userList, {studentId: student.studentId});
+
+        student = _.assign(_.cloneDeep(student), user || {});
+        return _.defaults(student, {isStudent: true});
       }),
       cursor: null
     });
@@ -57,6 +59,12 @@
       fix.data.userList[userId].isStaff = true;
       return [200, {}];
     });
+
+    $httpBackend.whenPOST(fix.urls.newStudentUploadUrl).respond({
+      url: '/_upload/'
+    });
+
+    $httpBackend.whenPOST('/_upload/').respond({});
 
     $httpBackend.whenGET(/.*/).passThrough();
 

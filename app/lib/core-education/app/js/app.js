@@ -3,11 +3,13 @@
 
   angular.module(
     'scCoreEducation', [
+      'angularFileUpload',
       'ngRoute',
+      'scceUpload.directives',
       'scceUser.controllers',
       'scceUser.directives',
       'scCoreEducation.controllers',
-      'scCoreEducation.templates'
+      'scCoreEducation.templates',
     ]
   ).
 
@@ -16,6 +18,20 @@
 
       function resolver(meth, userType) {
         return {
+          'currentUser': [
+            '$location',
+            'scceCurrentUserApi',
+            function($location, scceCurrentUserApi) {
+              return scceCurrentUserApi.auth().then(function(user) {
+                if (!user.isLoggedIn || (!user.isStaff && !user.isAdmin)) {
+                  $location.path('/error');
+                  return;
+                }
+
+                return user;
+              });
+            }
+          ],
           'getList': ['scceUsersApi',
             function(scceUsersApi) {
               return scceUsersApi[meth];
@@ -48,10 +64,10 @@
       })
 
       .when('/students', {
-        templateUrl: 'views/sccoreeducation/user-list.html',
+        templateUrl: 'views/sccoreeducation/student-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('students', 'Students')
+        resolve: resolver('listStudents', 'Students')
       })
 
       .when('/staff', {

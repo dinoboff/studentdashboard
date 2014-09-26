@@ -1,29 +1,47 @@
 <h1>{{ctrl.userType}}</h1>
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Photo</th>
-      <th>First name</th>
-      <th>Last name</th>
-      <th>Is student</th>
-      <th>Is Staff</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr ng-repeat="user in ctrl.users track by user.id">
-      <td><img ng-src="{{user.image.url}}"/></td>
-      <td>{{user.name.givenName}}</td>
-      <td>{{user.name.familyName}}</td>
-      <td><input type="checkbox" ng-checked="user.isStudent" disabled="disabled"></td>
-      <td><input type="checkbox" ng-checked="user.isStaff" ng-disabled="user.isStaff" ng-click="ctrl.makeStaff(user)"></td>
-    </tr>
-    <tr ng-if="ctrl.users.length == 0">
-      <td colspan="5">No {{ctrl.userType}}</td>
-    </tr>
-    <tr ng-if="ctrl.users == null">
-      <td colspan="5">Loading {{ctrl.userType}}</td>
-    </tr>
 
-  </tbody>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Photo</th>
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Is registered</th>
+            <th>Is student</th>
+            <th>Is Staff</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="user in ctrl.users track by user.id">
+            <td>
+                <img ng-src="{{user.image.url}}" />
+            </td>
+            <td>{{user.name.givenName}}</td>
+            <td>{{user.name.familyName}}</td>
+            <td>
+                <input type="checkbox" ng-checked="user.id" disabled="disabled">
+            </td>
+            <td>
+                <input type="checkbox" ng-checked="user.isStudent" disabled="disabled">
+            </td>
+            <td>
+                <input type="checkbox" ng-checked="user.isStaff" ng-disabled="user.isStaff || !user.id" ng-click="ctrl.makeStaff(user)">
+            </td>
+        </tr>
+        <tr ng-if="ctrl.users.length == 0">
+            <td colspan="6">No {{ctrl.userType}}</td>
+        </tr>
+        <tr ng-if="ctrl.users == null">
+            <td colspan="6">Loading {{ctrl.userType}}</td>
+        </tr>
+
+    </tbody>
+    <tfoot ng-show="ctrl.users.cursor">
+        <tr>
+            <td colspan="6" class="more-btn">
+                <button class="btn btn-primary" ng-click="ctrl.getMore()" ng-disabled="ctrl.loading">More</button>
+            </td>
+        </tr>
+    </tfoot>
 </table>

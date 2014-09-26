@@ -25,13 +25,15 @@
       this.defaultReturnUrl = url;
     };
 
-    this.$get = ['scceApi', function(scceApi) {
-      return {
-        appName: this.appName,
-        apiClient: scceApi.client(this.appName),
-        defaultReturnUrl: this.defaultReturnUrl
-      };
-    }];
+    this.$get = ['scceApi',
+      function(scceApi) {
+        return {
+          appName: this.appName,
+          apiClient: scceApi.client(this.appName),
+          defaultReturnUrl: this.defaultReturnUrl
+        };
+      }
+    ];
   }).
 
   /**
@@ -96,7 +98,10 @@
 
           loginUrl = loginUrl || currentLoginUrl;
           if (loginUrl) {
-            api.info = {loginUrl: loginUrl, error: msg};
+            api.info = {
+              loginUrl: loginUrl,
+              error: msg
+            };
           } else {
             api.info = null;
           }
@@ -136,13 +141,20 @@
           return client.one('users', userId).get();
         },
 
-        students: function(cursor) {
+        listStudents: function(cursor) {
           var params = {};
 
           if (cursor) {
             params.cursor = cursor;
           }
+
           return client.all('students').getList(params);
+        },
+
+        newStudentUploadUrl: function() {
+          return client.all('students').one('_uploadurl').post().then(function(resp){
+            return resp.url;
+          });
         },
 
         staff: function(cursor) {

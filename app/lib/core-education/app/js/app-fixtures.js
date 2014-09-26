@@ -10,6 +10,7 @@
       login: /\/api\/v1\/user($|\?.+)/,
       users: '/api/v1/users',
       students: '/api/v1/students',
+      newStudentUploadUrl: '/api/v1/students/_uploadurl',
       staff: '/api/v1/staff',
       newStaff: /\/api\/v1\/staff\/(\d+)/
     },
@@ -25,10 +26,11 @@
         }],
         'hasCredentials': true,
         'isStudent': true,
+        'studentId': 'A0123',
         'verified': false,
         'isLoggedIn': true,
         'domain': 'example.com',
-        'isAdmin': false,
+        'isAdmin': true,
         'id': '12345',
         'loginUrl': '/api/login',
         'logoutUrl': '/_ah/login?continue=http%3A//localhost%3A8080/dashboard/&action=logout',
@@ -57,7 +59,9 @@
           },
           'verified': false,
           'isStudent': true,
+          'studentId': 'A0124',
           'isStaff': true,
+          'isAdmin': true,
           'domain': 'chrisboesch.com',
           'displayName': 'Chris Boesch',
           'id': '12345',
@@ -73,7 +77,9 @@
           },
           'verified': false,
           'isStudent': true,
+          'studentId': 'A0123',
           'isStaff': false,
+          'isAdmin': true,
           'domain': 'chrisboesch.com',
           'displayName': 'Damien Lebrun',
           'id': '12346',
@@ -90,6 +96,7 @@
           'verified': false,
           'isStudent': false,
           'isStaff': false,
+          'isAdmin': false,
           'domain': null,
           'displayName': 'Bob Smith',
           'id': '12347',
@@ -98,7 +105,39 @@
             'familyName': 'Smith'
           }
         },
+      },
 
+      studentList: {
+        'A0123': {
+          'studentId': 'A0123',
+          'displayName': 'Damien Lebrun',
+          'name': {
+            'givenName': 'Damien',
+            'familyName': 'Lebrun'
+          },
+          'year': 2015,
+          'secondaryEmail': 'a0123@nus.edu.sg',
+        },
+        'A0124': {
+          'studentId': 'A0124',
+          'displayName': 'Chris Boesch',
+          'name': {
+            'givenName': 'Chris',
+            'familyName': 'Boesch'
+          },
+          'year': 2015,
+          'secondaryEmail': 'a0124@nus.edu.sg',
+        },
+        'A0125': {
+          'studentId': 'A0125',
+          'displayName': 'Jon Doe',
+          'name': {
+            'givenName': 'Jon',
+            'familyName': 'Doe'
+          },
+          'year': 2015,
+          'secondaryEmail': 'a0125@nus.edu.sg',
+        }
       }
     }
   })

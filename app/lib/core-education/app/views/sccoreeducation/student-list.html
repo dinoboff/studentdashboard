@@ -1,0 +1,79 @@
+<h1>{{ctrl.userType}}</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Year</th>
+                    <th>Is registered</th>
+                    <th>Is student</th>
+                    <th>Is Staff</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="user in ctrl.users track by user.studentId">
+                    <td>{{user.displayName}}</td>
+                    <td>{{user.year}}</td>
+                    <td>
+                        <input type="checkbox" ng-checked="user.id" disabled="disabled">
+                    </td>
+                    <td>
+                        <input type="checkbox" ng-checked="user.isStudent" disabled="disabled">
+                    </td>
+                    <td>
+                        <input type="checkbox" ng-checked="user.isStaff" ng-disabled="user.isStaff || !user.id" ng-click="ctrl.makeStaff(user)">
+                    </td>
+                </tr>
+                <tr ng-if="ctrl.users.length == 0">
+                    <td colspan="4">No {{ctrl.userType}}</td>
+                </tr>
+                <tr ng-if="ctrl.users == null">
+                    <td colspan="4">Loading {{ctrl.userType}}</td>
+                </tr>
+            </tbody>
+
+            <tfoot ng-show="ctrl.users.cursor">
+                <tr>
+                    <td colspan="6" class="more-btn">
+                        <button class="btn btn-primary" ng-click="ctrl.getMore()" ng-disabled="ctrl.loading">More</button>
+                    </td>
+                </tr>
+            </tfoot>
+
+        </table>
+    </div>
+
+    <div class="col-md-4" ng-if="ctrl.currentUser.isAdmin">
+        <div>
+            <form role="form" id="upload-form">
+                <fielset>
+                    <legend>Upload student list</legend>
+
+                    <div class="form-group">
+                        <label for="file-select">Select a csv file to upload :</label>
+                        <input type="file" id="file-select" class="form-control" ng-file-select="ctrl.fileSelected($files, ctrl.upload)" scce-file="ctrl.upload.file">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="file-year">Year :</label>
+                        <input type="text" class="form-control" id="file-year" placeholder="YYYY" ng-model="ctrl.upload.year" ng-pattern="/\d+/" ng-minlength="4" ng-maxlength="4" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" ng-click="ctrl.uploadFile(ctrl.upload)" ng-disabled="!ctrl.upload.file || !ctrl.upload.year || ctrl.upload.inProgress" id="upload-file">
+                        Upload
+                    </button>
+                    <hr/>
+                    <p>Expecting a csv file with the following format:</p>
+                    <pre>
+S/N,Surname,Student Name,NUS Email
+1,Bob,"Smith, Bob",A0000001@NUS.EDU.SG
+2,Alice,Alice Brown,A0000002@NUS.EDU.SG
+...</pre>
+                </fielset>
+            </form>
+        </div>
+    </div>
+
+</div>
