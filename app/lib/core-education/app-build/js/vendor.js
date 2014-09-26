@@ -1,3 +1,34 @@
+/**!
+ * AngularJS file upload shim for angular XHR HTML5 browsers
+ * @author  Danial  <danial.farid@gmail.com>
+ * @version 1.6.9
+ */
+if (window.XMLHttpRequest) {
+	if (window.FormData) {
+	    // allow access to Angular XHR private field: https://github.com/angular/angular.js/issues/1934
+		XMLHttpRequest = (function(origXHR) {
+			return function() {
+				var xhr = new origXHR();
+				xhr.setRequestHeader = (function(orig) {
+					return function(header, value) {
+						if (header === '__setXHR_') {
+							var val = value(xhr);
+							// fix for angular < 1.2.0
+							if (val instanceof Function) {
+								val(xhr);
+							}
+						} else {
+							orig.apply(xhr, arguments);
+						}
+					}
+				})(xhr.setRequestHeader);
+				return xhr;
+			}
+		})(XMLHttpRequest);
+		window.XMLHttpRequest.__isShim = true;
+	}
+}
+
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -38924,6 +38955,494 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
 })(window, window.angular);
 
+/* ========================================================================
+ * Bootstrap: collapse.js v3.1.1
+ * http://getbootstrap.com/javascript/#collapse
+ * ========================================================================
+ * Copyright 2011-2014 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // COLLAPSE PUBLIC CLASS DEFINITION
+  // ================================
+
+  var Collapse = function (element, options) {
+    this.$element      = $(element)
+    this.options       = $.extend({}, Collapse.DEFAULTS, options)
+    this.transitioning = null
+
+    if (this.options.parent) this.$parent = $(this.options.parent)
+    if (this.options.toggle) this.toggle()
+  }
+
+  Collapse.DEFAULTS = {
+    toggle: true
+  }
+
+  Collapse.prototype.dimension = function () {
+    var hasWidth = this.$element.hasClass('width')
+    return hasWidth ? 'width' : 'height'
+  }
+
+  Collapse.prototype.show = function () {
+    if (this.transitioning || this.$element.hasClass('in')) return
+
+    var startEvent = $.Event('show.bs.collapse')
+    this.$element.trigger(startEvent)
+    if (startEvent.isDefaultPrevented()) return
+
+    var actives = this.$parent && this.$parent.find('> .panel > .in')
+
+    if (actives && actives.length) {
+      var hasData = actives.data('bs.collapse')
+      if (hasData && hasData.transitioning) return
+      actives.collapse('hide')
+      hasData || actives.data('bs.collapse', null)
+    }
+
+    var dimension = this.dimension()
+
+    this.$element
+      .removeClass('collapse')
+      .addClass('collapsing')
+      [dimension](0)
+
+    this.transitioning = 1
+
+    var complete = function () {
+      this.$element
+        .removeClass('collapsing')
+        .addClass('collapse in')
+        [dimension]('auto')
+      this.transitioning = 0
+      this.$element.trigger('shown.bs.collapse')
+    }
+
+    if (!$.support.transition) return complete.call(this)
+
+    var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+    this.$element
+      .one($.support.transition.end, $.proxy(complete, this))
+      .emulateTransitionEnd(350)
+      [dimension](this.$element[0][scrollSize])
+  }
+
+  Collapse.prototype.hide = function () {
+    if (this.transitioning || !this.$element.hasClass('in')) return
+
+    var startEvent = $.Event('hide.bs.collapse')
+    this.$element.trigger(startEvent)
+    if (startEvent.isDefaultPrevented()) return
+
+    var dimension = this.dimension()
+
+    this.$element
+      [dimension](this.$element[dimension]())
+      [0].offsetHeight
+
+    this.$element
+      .addClass('collapsing')
+      .removeClass('collapse')
+      .removeClass('in')
+
+    this.transitioning = 1
+
+    var complete = function () {
+      this.transitioning = 0
+      this.$element
+        .trigger('hidden.bs.collapse')
+        .removeClass('collapsing')
+        .addClass('collapse')
+    }
+
+    if (!$.support.transition) return complete.call(this)
+
+    this.$element
+      [dimension](0)
+      .one($.support.transition.end, $.proxy(complete, this))
+      .emulateTransitionEnd(350)
+  }
+
+  Collapse.prototype.toggle = function () {
+    this[this.$element.hasClass('in') ? 'hide' : 'show']()
+  }
+
+
+  // COLLAPSE PLUGIN DEFINITION
+  // ==========================
+
+  var old = $.fn.collapse
+
+  $.fn.collapse = function (option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.collapse')
+      var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+      if (!data && options.toggle && option == 'show') option = !option
+      if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  $.fn.collapse.Constructor = Collapse
+
+
+  // COLLAPSE NO CONFLICT
+  // ====================
+
+  $.fn.collapse.noConflict = function () {
+    $.fn.collapse = old
+    return this
+  }
+
+
+  // COLLAPSE DATA-API
+  // =================
+
+  $(document).on('click.bs.collapse.data-api', '[data-toggle=collapse]', function (e) {
+    var $this   = $(this), href
+    var target  = $this.attr('data-target')
+        || e.preventDefault()
+        || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') //strip for ie7
+    var $target = $(target)
+    var data    = $target.data('bs.collapse')
+    var option  = data ? 'toggle' : $this.data()
+    var parent  = $this.attr('data-parent')
+    var $parent = parent && $(parent)
+
+    if (!data || !data.transitioning) {
+      if ($parent) $parent.find('[data-toggle=collapse][data-parent="' + parent + '"]').not($this).addClass('collapsed')
+      $this[$target.hasClass('in') ? 'addClass' : 'removeClass']('collapsed')
+    }
+
+    $target.collapse(option)
+  })
+
+}(jQuery);
+
+/**!
+ * AngularJS file upload/drop directive with http post and progress
+ * @author  Danial  <danial.farid@gmail.com>
+ * @version 1.6.9
+ */
+(function() {
+
+var angularFileUpload = angular.module('angularFileUpload', []);
+
+angularFileUpload.service('$upload', ['$http', '$q', '$timeout', function($http, $q, $timeout) {
+	function sendHttp(config) {
+		config.method = config.method || 'POST';
+		config.headers = config.headers || {};
+		config.transformRequest = config.transformRequest || function(data, headersGetter) {
+			if (window.ArrayBuffer && data instanceof window.ArrayBuffer) {
+				return data;
+			}
+			return $http.defaults.transformRequest[0](data, headersGetter);
+		};
+		var deferred = $q.defer();
+
+		if (window.XMLHttpRequest.__isShim) {
+			config.headers['__setXHR_'] = function() {
+				return function(xhr) {
+					if (!xhr) return;
+					config.__XHR = xhr;
+					config.xhrFn && config.xhrFn(xhr);
+					xhr.upload.addEventListener('progress', function(e) {
+						deferred.notify(e);
+					}, false);
+					//fix for firefox not firing upload progress end, also IE8-9
+					xhr.upload.addEventListener('load', function(e) {
+						if (e.lengthComputable) {
+							deferred.notify(e);
+						}
+					}, false);
+				};
+			};
+		}
+
+		$http(config).then(function(r){deferred.resolve(r)}, function(e){deferred.reject(e)}, function(n){deferred.notify(n)});
+		
+		var promise = deferred.promise;
+		promise.success = function(fn) {
+			promise.then(function(response) {
+				fn(response.data, response.status, response.headers, config);
+			});
+			return promise;
+		};
+
+		promise.error = function(fn) {
+			promise.then(null, function(response) {
+				fn(response.data, response.status, response.headers, config);
+			});
+			return promise;
+		};
+
+		promise.progress = function(fn) {
+			promise.then(null, null, function(update) {
+				fn(update);
+			});
+			return promise;
+		};
+		promise.abort = function() {
+			if (config.__XHR) {
+				$timeout(function() {
+					config.__XHR.abort();
+				});
+			}
+			return promise;
+		};
+		promise.xhr = function(fn) {
+			config.xhrFn = (function(origXhrFn) {
+				return function() {
+					origXhrFn && origXhrFn.apply(promise, arguments);
+					fn.apply(promise, arguments);
+				}
+			})(config.xhrFn);
+			return promise;
+		};
+		
+		return promise;
+	}
+
+	this.upload = function(config) {
+		config.headers = config.headers || {};
+		config.headers['Content-Type'] = undefined;
+		config.transformRequest = config.transformRequest || $http.defaults.transformRequest;
+		var formData = new FormData();
+		var origTransformRequest = config.transformRequest;
+		var origData = config.data;
+		config.transformRequest = function(formData, headerGetter) {
+			if (origData) {
+				if (config.formDataAppender) {
+					for (var key in origData) {
+						var val = origData[key];
+						config.formDataAppender(formData, key, val);
+					}
+				} else {
+					for (var key in origData) {
+						var val = origData[key];
+						if (typeof origTransformRequest == 'function') {
+							val = origTransformRequest(val, headerGetter);
+						} else {
+							for (var i = 0; i < origTransformRequest.length; i++) {
+								var transformFn = origTransformRequest[i];
+								if (typeof transformFn == 'function') {
+									val = transformFn(val, headerGetter);
+								}
+							}
+						}
+						formData.append(key, val);
+					}
+				}
+			}
+
+			if (config.file != null) {
+				var fileFormName = config.fileFormDataName || 'file';
+
+				if (Object.prototype.toString.call(config.file) === '[object Array]') {
+					var isFileFormNameString = Object.prototype.toString.call(fileFormName) === '[object String]';
+					for (var i = 0; i < config.file.length; i++) {
+						formData.append(isFileFormNameString ? fileFormName : fileFormName[i], config.file[i], 
+								(config.fileName && config.fileName[i]) || config.file[i].name);
+					}
+				} else {
+					formData.append(fileFormName, config.file, config.fileName || config.file.name);
+				}
+			}
+			return formData;
+		};
+
+		config.data = formData;
+
+		return sendHttp(config);
+	};
+
+	this.http = function(config) {
+		return sendHttp(config);
+	}
+}]);
+
+angularFileUpload.directive('ngFileSelect', [ '$parse', '$timeout', function($parse, $timeout) {
+	return function(scope, elem, attr) {
+		var fn = $parse(attr['ngFileSelect']);
+		if (elem[0].tagName.toLowerCase() !== 'input' || (elem.attr('type') && elem.attr('type').toLowerCase()) !== 'file') {
+			var fileElem = angular.element('<input type="file">')
+			for (var i = 0; i < elem[0].attributes.length; i++) {
+				fileElem.attr(elem[0].attributes[i].name, elem[0].attributes[i].value);
+			}
+			if (attr["multiple"]) fileElem.attr("multiple", "true");
+			fileElem.css("top", 0).css("bottom", 0).css("left", 0).css("right", 0).css("width", "100%").
+					css("opacity", 0).css("position", "absolute").css('filter', 'alpha(opacity=0)').css("padding", 0);
+			elem.append(fileElem);
+			elem.css("overflow", "hidden");
+			if (fileElem.parent()[0] != elem[0]) {
+				//fix #298 button element
+				elem.wrap('<span>');
+				elem.css("z-index", "-1000")
+				elem.parent().append(fileElem);
+				elem = elem.parent();
+			}
+			if (elem.css("position") === '' || elem.css("position") === 'static') {
+				elem.css("position", "relative");
+			}
+			elem = fileElem;
+		}
+		elem.bind('change', function(evt) {
+			var files = [], fileList, i;
+			fileList = evt.__files_ || evt.target.files;
+			if (fileList != null) {
+				for (i = 0; i < fileList.length; i++) {
+					files.push(fileList.item(i));
+				}
+			}
+			$timeout(function() {
+				fn(scope, {
+					$files : files,
+					$event : evt
+				});
+			});
+		});
+		// removed this since it was confusing if the user click on browse and then cancel #181
+//		elem.bind('click', function(){
+//			this.value = null;
+//		});
+
+		// removed because of #253 bug
+		// touch screens
+//		if (('ontouchstart' in window) ||
+//				(navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)) {
+//			elem.bind('touchend', function(e) {
+//				e.preventDefault();
+//				e.target.click();
+//			});
+//		}
+	};
+} ]);
+
+angularFileUpload.directive('ngFileDropAvailable', [ '$parse', '$timeout', function($parse, $timeout) {
+	return function(scope, elem, attr) {
+		if ('draggable' in document.createElement('span')) {
+			var fn = $parse(attr['ngFileDropAvailable']);
+			$timeout(function() {
+				fn(scope);
+			});
+		}
+	};
+} ]);
+
+angularFileUpload.directive('ngFileDrop', [ '$parse', '$timeout', '$location', function($parse, $timeout, $location) {
+	return function(scope, elem, attr) {
+		if ('draggable' in document.createElement('span')) {
+			var leaveTimeout = null;
+			elem[0].addEventListener("dragover", function(evt) {
+				evt.preventDefault();
+				$timeout.cancel(leaveTimeout);
+				if (!elem[0].__drag_over_class_) {
+					if (attr['ngFileDragOverClass'] && attr['ngFileDragOverClass'].search(/\) *$/) > -1) {
+						var dragOverClass = $parse(attr['ngFileDragOverClass'])(scope, {
+							$event : evt
+						});					
+						elem[0].__drag_over_class_ = dragOverClass; 
+					} else {
+						elem[0].__drag_over_class_ = attr['ngFileDragOverClass'] || "dragover";
+					}
+				}
+				elem.addClass(elem[0].__drag_over_class_);
+			}, false);
+			elem[0].addEventListener("dragenter", function(evt) {
+				evt.preventDefault();
+			}, false);
+			elem[0].addEventListener("dragleave", function(evt) {
+				leaveTimeout = $timeout(function() {
+					elem.removeClass(elem[0].__drag_over_class_);
+					elem[0].__drag_over_class_ = null;
+				}, attr['ngFileDragOverDelay'] || 1);
+			}, false);
+			var fn = $parse(attr['ngFileDrop']);
+			elem[0].addEventListener("drop", function(evt) {
+				evt.preventDefault();
+				elem.removeClass(elem[0].__drag_over_class_);
+				elem[0].__drag_over_class_ = null;
+				extractFiles(evt, function(files) {
+					fn(scope, {
+						$files : files,
+						$event : evt
+					});					
+				});
+			}, false);
+						
+			function isASCII(str) {
+				return /^[\000-\177]*$/.test(str);
+			}
+
+			function extractFiles(evt, callback) {
+				var files = [], items = evt.dataTransfer.items;
+				if (items && items.length > 0 && items[0].webkitGetAsEntry && $location.protocol() != 'file' && 
+						items[0].webkitGetAsEntry().isDirectory) {
+					for (var i = 0; i < items.length; i++) {
+						var entry = items[i].webkitGetAsEntry();
+						if (entry != null) {
+							//fix for chrome bug https://code.google.com/p/chromium/issues/detail?id=149735
+							if (isASCII(entry.name)) {
+								traverseFileTree(files, entry);
+							} else if (!items[i].webkitGetAsEntry().isDirectory) {
+								files.push(items[i].getAsFile());
+							}
+						}
+					}
+				} else {
+					var fileList = evt.dataTransfer.files;
+					if (fileList != null) {
+						for (var i = 0; i < fileList.length; i++) {
+							files.push(fileList.item(i));
+						}
+					}
+				}
+				(function waitForProcess(delay) {
+					$timeout(function() {
+						if (!processing) {
+							callback(files);
+						} else {
+							waitForProcess(10);
+						}
+					}, delay || 0)
+				})();
+			}
+			
+			var processing = 0;
+			function traverseFileTree(files, entry, path) {
+				if (entry != null) {
+					if (entry.isDirectory) {
+						var dirReader = entry.createReader();
+						processing++;
+						dirReader.readEntries(function(entries) {
+							for (var i = 0; i < entries.length; i++) {
+								traverseFileTree(files, entries[i], (path ? path : "") + entry.name + "/");
+							}
+							processing--;
+						});
+					} else {
+						processing++;
+						entry.file(function(file) {
+							processing--;
+							file._relativePath = (path ? path : "") + file.name;
+							files.push(file);
+						});
+					}
+				}
+			}
+		}
+	};
+} ]);
+
+})();
+
 /**
  * Restful Resources service for AngularJS apps
  * @version v1.3.1 - 2014-01-29 * @link https://github.com/mgonto/restangular
@@ -40195,174 +40714,3 @@ module.provider('Restangular', function() {
 );
 
 })();
-
-/* ========================================================================
- * Bootstrap: collapse.js v3.1.1
- * http://getbootstrap.com/javascript/#collapse
- * ========================================================================
- * Copyright 2011-2014 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // COLLAPSE PUBLIC CLASS DEFINITION
-  // ================================
-
-  var Collapse = function (element, options) {
-    this.$element      = $(element)
-    this.options       = $.extend({}, Collapse.DEFAULTS, options)
-    this.transitioning = null
-
-    if (this.options.parent) this.$parent = $(this.options.parent)
-    if (this.options.toggle) this.toggle()
-  }
-
-  Collapse.DEFAULTS = {
-    toggle: true
-  }
-
-  Collapse.prototype.dimension = function () {
-    var hasWidth = this.$element.hasClass('width')
-    return hasWidth ? 'width' : 'height'
-  }
-
-  Collapse.prototype.show = function () {
-    if (this.transitioning || this.$element.hasClass('in')) return
-
-    var startEvent = $.Event('show.bs.collapse')
-    this.$element.trigger(startEvent)
-    if (startEvent.isDefaultPrevented()) return
-
-    var actives = this.$parent && this.$parent.find('> .panel > .in')
-
-    if (actives && actives.length) {
-      var hasData = actives.data('bs.collapse')
-      if (hasData && hasData.transitioning) return
-      actives.collapse('hide')
-      hasData || actives.data('bs.collapse', null)
-    }
-
-    var dimension = this.dimension()
-
-    this.$element
-      .removeClass('collapse')
-      .addClass('collapsing')
-      [dimension](0)
-
-    this.transitioning = 1
-
-    var complete = function () {
-      this.$element
-        .removeClass('collapsing')
-        .addClass('collapse in')
-        [dimension]('auto')
-      this.transitioning = 0
-      this.$element.trigger('shown.bs.collapse')
-    }
-
-    if (!$.support.transition) return complete.call(this)
-
-    var scrollSize = $.camelCase(['scroll', dimension].join('-'))
-
-    this.$element
-      .one($.support.transition.end, $.proxy(complete, this))
-      .emulateTransitionEnd(350)
-      [dimension](this.$element[0][scrollSize])
-  }
-
-  Collapse.prototype.hide = function () {
-    if (this.transitioning || !this.$element.hasClass('in')) return
-
-    var startEvent = $.Event('hide.bs.collapse')
-    this.$element.trigger(startEvent)
-    if (startEvent.isDefaultPrevented()) return
-
-    var dimension = this.dimension()
-
-    this.$element
-      [dimension](this.$element[dimension]())
-      [0].offsetHeight
-
-    this.$element
-      .addClass('collapsing')
-      .removeClass('collapse')
-      .removeClass('in')
-
-    this.transitioning = 1
-
-    var complete = function () {
-      this.transitioning = 0
-      this.$element
-        .trigger('hidden.bs.collapse')
-        .removeClass('collapsing')
-        .addClass('collapse')
-    }
-
-    if (!$.support.transition) return complete.call(this)
-
-    this.$element
-      [dimension](0)
-      .one($.support.transition.end, $.proxy(complete, this))
-      .emulateTransitionEnd(350)
-  }
-
-  Collapse.prototype.toggle = function () {
-    this[this.$element.hasClass('in') ? 'hide' : 'show']()
-  }
-
-
-  // COLLAPSE PLUGIN DEFINITION
-  // ==========================
-
-  var old = $.fn.collapse
-
-  $.fn.collapse = function (option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.collapse')
-      var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
-
-      if (!data && options.toggle && option == 'show') option = !option
-      if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  $.fn.collapse.Constructor = Collapse
-
-
-  // COLLAPSE NO CONFLICT
-  // ====================
-
-  $.fn.collapse.noConflict = function () {
-    $.fn.collapse = old
-    return this
-  }
-
-
-  // COLLAPSE DATA-API
-  // =================
-
-  $(document).on('click.bs.collapse.data-api', '[data-toggle=collapse]', function (e) {
-    var $this   = $(this), href
-    var target  = $this.attr('data-target')
-        || e.preventDefault()
-        || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') //strip for ie7
-    var $target = $(target)
-    var data    = $target.data('bs.collapse')
-    var option  = data ? 'toggle' : $this.data()
-    var parent  = $this.attr('data-parent')
-    var $parent = parent && $(parent)
-
-    if (!data || !data.transitioning) {
-      if ($parent) $parent.find('[data-toggle=collapse][data-parent="' + parent + '"]').not($this).addClass('collapsed')
-      $this[$target.hasClass('in') ? 'addClass' : 'removeClass']('collapsed')
-    }
-
-    $target.collapse(option)
-  })
-
-}(jQuery);

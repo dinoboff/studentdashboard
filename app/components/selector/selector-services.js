@@ -29,13 +29,32 @@
         selectorPromise = null,
         studentsPromise = null;
 
+      function addStudents(students) {
+        if (!selector) {
+          return $q.reject('selector not instantiated');
+        }
+
+        if (!selector.students) {
+          selector.students = students;
+        } else {
+          selector.students = selector.students.concat(students);
+          selector.students.cursor = students.cursor;
+        }
+
+        if (students.cursor) {
+          return scceUsersApi.listStudents(students.cursor).then(function(students){
+            return addStudents(students);
+          });
+        }
+      }
+
       function listStudents(selector) {
         if (selector.students || studentsPromise) {
           return;
         }
 
-        studentsPromise = scceUsersApi.students().then(function(studentList) {
-          selector.students = studentList;
+        studentsPromise = scceUsersApi.listStudents().then(function(studentList) {
+          return addStudents(studentList);
         })['finally'](function() {
           studentsPromise = null;
         });
@@ -58,12 +77,12 @@
 
           selector = {
             students: null,
-            selectedId: null,
+            selected: null,
             available: false
           };
 
           if (user.isStudent) {
-            selector.selectedId = user.id;
+            selector.selected = user;
           }
 
           if (user.isStaff || user.isAdmin) {

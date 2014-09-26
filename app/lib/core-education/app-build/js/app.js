@@ -3,11 +3,13 @@
 
   angular.module(
     'scCoreEducation', [
+      'angularFileUpload',
       'ngRoute',
+      'scceUpload.directives',
       'scceUser.controllers',
       'scceUser.directives',
       'scCoreEducation.controllers',
-      'scCoreEducation.templates'
+      'scCoreEducation.templates',
     ]
   ).
 
@@ -16,6 +18,20 @@
 
       function resolver(meth, userType) {
         return {
+          'currentUser': [
+            '$location',
+            'scceCurrentUserApi',
+            function($location, scceCurrentUserApi) {
+              return scceCurrentUserApi.auth().then(function(user) {
+                if (!user.isLoggedIn || (!user.isStaff && !user.isAdmin)) {
+                  $location.path('/error');
+                  return;
+                }
+
+                return user;
+              });
+            }
+          ],
           'getList': ['scceUsersApi',
             function(scceUsersApi) {
               return scceUsersApi[meth];
@@ -48,10 +64,10 @@
       })
 
       .when('/students', {
-        templateUrl: 'views/sccoreeducation/user-list.html',
+        templateUrl: 'views/sccoreeducation/student-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('students', 'Students')
+        resolve: resolver('listStudents', 'Students')
       })
 
       .when('/staff', {
@@ -70,6 +86,7 @@
   ;
 
 })();
+
 (function() {
   'use strict';
 
@@ -144,296 +161,6 @@
       $scope.files = {};
     }
   ])
-
-  ;
-
-})();
-(function() {
-  'use strict';
-
-  // Keep a reference to scceCurrentUserApi to avoid for the interceptor
-  // to avoid a circular dependency.
-  //
-  // TODO: Create a session service which both scceCurrentUserApi
-  // and the the http inceptor can depend on.
-  var api;
-
-
-  angular.module('scceUser.services', ['scCoreEducation.services']).
-
-
-  provider('scceUserOptions', function scceUserOptionsProvider() {
-    this.appName = 'core';
-    this.apiClient = null;
-    this.defaultReturnUrl = null; // Should return to the current URL.
-
-    this.setAppName = function(name) {
-      this.appName = name;
-    };
-
-    this.setDefaultUrl = function(url) {
-      this.defaultReturnUrl = url;
-    };
-
-    this.$get = ['scceApi', function(scceApi) {
-      return {
-        appName: this.appName,
-        apiClient: scceApi.client(this.appName),
-        defaultReturnUrl: this.defaultReturnUrl
-      };
-    }];
-  }).
-
-  /**
-   * scceCurrentUserApi - api to access user info.
-   *
-   * scceCurrentUserApi.get(returnUrl)  Return the user name, id and the
-   * the logout url if the user logged in. Return the login url if the
-   * user logged off.
-   *
-   * Note that it returns a promise that resole in either case. If the promise
-   * fails, there was either a problem with the optional return url, or
-   * there's an unexpected issue with the backend.
-   *
-   * TODO: handle lose of authentication.
-   *
-   */
-  factory('scceCurrentUserApi', ['$location', '$q', 'scceUserOptions',
-    function($location, $q, scceUserOptions) {
-      var client = scceUserOptions.apiClient;
-
-      api = {
-        info: null,
-        loading: null,
-
-        _get: function(returnUrl) {
-          var params = {
-            returnUrl: (
-              returnUrl ||
-              scceUserOptions.defaultReturnUrl ||
-              $location.absUrl()
-            )
-          };
-
-          return client.one('user').get(params).then(function(data) {
-            return data;
-          });
-        },
-
-        auth: function(returnUrl) {
-
-          if (api.info) {
-            return $q.when(api.info);
-          }
-
-          if (api.loading) {
-            return api.loading;
-          }
-
-
-          api.loading = api._get(returnUrl).then(function(user) {
-            api.info = user;
-            return user;
-          })['finally'](function() {
-            api.loading = null;
-          });
-
-          return api.loading;
-        },
-
-        reset: function(loginUrl, msg) {
-          var currentLoginUrl = api.info && api.info.loginUrl || null;
-
-          loginUrl = loginUrl || currentLoginUrl;
-          if (loginUrl) {
-            api.info = {loginUrl: loginUrl, error: msg};
-          } else {
-            api.info = null;
-          }
-        }
-      };
-
-      return api;
-    }
-  ]).
-
-  /**
-   * Api to query users.
-   *
-   * scceUsersApi.users, scceUsersApi.students and scceUsersApi.staff
-   * return promises that resolve to list of user.
-   *
-   * makeStaff sends a request make a user a member of staff.
-   *
-   * TODO: add support to revoke staff.
-   */
-  factory('scceUsersApi', ['scceUserOptions',
-    function(scceUserOptions) {
-      var client = scceUserOptions.apiClient;
-
-      return {
-
-        all: function(cursor) {
-          var params = {};
-
-          if (cursor) {
-            params.cursor = cursor;
-          }
-          return client.all('users').getList(params);
-        },
-
-        getById: function(userId) {
-          return client.one('users', userId).get();
-        },
-
-        students: function(cursor) {
-          var params = {};
-
-          if (cursor) {
-            params.cursor = cursor;
-          }
-          return client.all('students').getList(params);
-        },
-
-        staff: function(cursor) {
-          var params = {};
-
-          if (cursor) {
-            params.cursor = cursor;
-          }
-          return client.all('staff').getList(params);
-        },
-
-        makeStaff: function(user) {
-          return client.one('staff', user.id).put();
-        }
-      };
-    }
-  ]).
-
-  /**
-   * Intercept http response error to reset scceCurrentUserApi on http
-   * 401 response.
-   *
-   */
-  factory('scceCurrentHttpInterceptor', ['$q', '$location',
-    function($q, $location) {
-      var httpPattern = /https?:\/\//,
-        thisDomainPattern = new RegExp(
-          'https?://' + $location.host().replace('.', '\\.')
-        );
-
-      function isSameDomain(url) {
-        return !httpPattern.test(url) || thisDomainPattern.test(url);
-      }
-
-      return {
-        responseError: function(resp) {
-          if (
-            api &&
-            resp.status === 401 &&
-            isSameDomain(resp.config.url)
-          ) {
-            api.reset(resp.data.loginUrl, resp.data.error);
-          }
-
-          return $q.reject(resp);
-        }
-      };
-    }
-  ]).
-
-  config(['$httpProvider',
-    function($httpProvider) {
-      $httpProvider.interceptors.push('scceCurrentHttpInterceptor');
-    }
-  ])
-
-  ;
-
-})();
-(function() {
-  'use strict';
-
-  angular.module(
-    'scceUser.directives', ['scceUser.services', 'scCoreEducation.templates']
-  ).
-
-  /**
-   * Directive creating a login info link for a boostrap navbar
-   */
-  directive('scceUserLogin', function() {
-    return {
-      restrict: 'E',
-      replace: true,
-      templateUrl: 'views/sccoreeducation/user/login.html',
-      scope: {},
-      controller: ['$scope', 'scceCurrentUserApi',
-        function($scope, scceCurrentUserApi) {
-          $scope.user = scceCurrentUserApi;
-          scceCurrentUserApi.auth();
-        }
-      ]
-    };
-  });
-
-})();
-(function() {
-  'use strict';
-
-  angular.module('scceUser.controllers', []).
-
-  controller('ScceUserListCtrl', ['$q', 'scceUsersApi', 'getList', 'initialList', 'userType',
-    function($q, scceUsersApi, getList, initialList, userType) {
-      var self = this;
-
-      this.users = initialList;
-      this.userType = userType;
-      this.loading = null;
-
-      this.updateUserList = function() {
-        this.loading = $q.when(this.loading).then(function(){
-          return getList();
-        }).then(function(users){
-          self.users = users;
-          self.loading = null;
-          return users;
-        });
-
-        return this.loading;
-      };
-
-      this.getMore = function() {
-        if (!this.users || !this.users.cursor) {
-          return $q.when([]);
-        }
-
-        this.loading = $q.when(this.loading).then(function(){
-          return getList(this.users.cursor);
-        }).then(function(users){
-          self.users = self.users.concat(users);
-          self.users.cursor = users.cursor;
-          self.loading = null;
-          return users;
-        });
-
-        return this.loading;
-      };
-
-      this.makeStaff = function(user) {
-        user.isStaff = true;
-        scceUsersApi.makeStaff(user).catch(function() {
-          user.isStaff = false;
-        });
-      };
-
-      this.revokeStaff = function(user) {
-        // TODO
-        console.dir(user);
-      };
-    }
-  ])
-
 
   ;
 
@@ -608,22 +335,30 @@
 (function() {
   'use strict';
 
+  angular.module('scceUpload.directives', []).
 
-  angular.module('scceStaff.services', ['scCoreEducation.services']).
-
-  factory('scceStaffApi', ['scceUsersApi',
-    function(scceUsersApi) {
+  /**
+   * The attribute should point to the property holding the file.
+   *
+   * The file value will be watched and the file input will be reset
+   * if the property become false.
+   *
+   */
+  directive('scceFile', [
+    function scceFileFactory() {
       return {
-        all: function() {
-          console.log('Deprecated... Use scceUsersApi.students() instead');
-          return scceUsersApi.students();
-        },
-        add: function(userId) {
-          console.log(
-            'Deprecated... Use scceUsersApi.makeStaff({id:userID}) instead'
-          );
-          return scceUsersApi.makeStaff({
-            id: userId
+        restrict: 'A',
+        // arguments: scope, iElement, iAttrs, controller
+        link: function scceFilePostLink(scope, elem, attr) {
+
+          elem.bind('click', function() {
+            this.value = null;
+          });
+
+          scope.$watch(attr.scceFile, function(newVal) {
+            if (!newVal) {
+              elem.get(0).value = null;
+            }
           });
         }
       };
@@ -633,20 +368,334 @@
   ;
 
 })();
+
 (function() {
   'use strict';
 
+  angular.module('scceUser.controllers', []).
 
-  angular.module('scceStudents.services', ['scCoreEducation.services']).
+  controller('ScceUserListCtrl', ['$q', '$upload', 'scceUsersApi', 'getList', 'initialList', 'userType', 'currentUser',
+    function($q, $upload, scceUsersApi, getList, initialList, userType, currentUser) {
+      var self = this;
 
-  factory('scceStudentsApi', ['scceUsersApi',
-    function(scceUsersApi) {
-      return {
-        all: function() {
-          console.log('Deprecated... Use scceUsersApi.students() instead');
-          return scceUsersApi.students();
+      this.currentUser = currentUser;
+      this.users = initialList;
+      this.userType = userType;
+      this.loading = null;
+      this.upload = {
+        file: null,
+        year: null,
+        inProgress: false
+      };
+
+      this.updateUserList = function() {
+        this.loading = $q.when(this.loading).then(function() {
+          return getList();
+        }).then(function(users) {
+          self.users = users;
+          self.loading = null;
+          return users;
+        });
+
+        return this.loading;
+      };
+
+      this.getMore = function() {
+        if (!this.users || !this.users.cursor) {
+          return $q.when([]);
+        }
+
+        this.loading = $q.when(this.loading).then(function() {
+          return getList(self.users.cursor);
+        }).then(function(users) {
+          self.users = self.users.concat(users);
+          self.users.cursor = users.cursor;
+          self.loading = null;
+          return users;
+        });
+
+        return this.loading;
+      };
+
+      this.makeStaff = function(user) {
+        user.isStaff = true;
+        scceUsersApi.makeStaff(user).catch(function() {
+          user.isStaff = false;
+        });
+      };
+
+      this.revokeStaff = function(user) {
+        // TODO
+        console.dir(user);
+      };
+
+      this.fileSelected = function($files, info) {
+        info.file = $files[0];
+      };
+
+      this.uploadFile = function(info) {
+        this.inProgress = true;
+        scceUsersApi.newStudentUploadUrl().then(function(url) {
+          return $upload.upload({
+            url: url,
+            method: 'POST',
+            withCredentials: true,
+            data: {
+              year: info.year
+            },
+            file: info.file
+          });
+        }).then(function() {
+          info.file = null;
+          info.year = null;
+        }).finally(function() {
+          info.inProgress = false;
+        });
+      };
+    }
+  ])
+
+
+  ;
+
+})();
+
+(function() {
+  'use strict';
+
+  angular.module(
+    'scceUser.directives', ['scceUser.services', 'scCoreEducation.templates']
+  ).
+
+  /**
+   * Directive creating a login info link for a boostrap navbar
+   */
+  directive('scceUserLogin', function() {
+    return {
+      restrict: 'E',
+      replace: true,
+      templateUrl: 'views/sccoreeducation/user/login.html',
+      scope: {},
+      controller: ['$scope', 'scceCurrentUserApi',
+        function($scope, scceCurrentUserApi) {
+          $scope.user = scceCurrentUserApi;
+          scceCurrentUserApi.auth();
+        }
+      ]
+    };
+  });
+
+})();
+(function() {
+  'use strict';
+
+  // Keep a reference to scceCurrentUserApi to avoid for the interceptor
+  // to avoid a circular dependency.
+  //
+  // TODO: Create a session service which both scceCurrentUserApi
+  // and the the http inceptor can depend on.
+  var api;
+
+
+  angular.module('scceUser.services', ['scCoreEducation.services']).
+
+
+  provider('scceUserOptions', function scceUserOptionsProvider() {
+    this.appName = 'core';
+    this.apiClient = null;
+    this.defaultReturnUrl = null; // Should return to the current URL.
+
+    this.setAppName = function(name) {
+      this.appName = name;
+    };
+
+    this.setDefaultUrl = function(url) {
+      this.defaultReturnUrl = url;
+    };
+
+    this.$get = ['scceApi',
+      function(scceApi) {
+        return {
+          appName: this.appName,
+          apiClient: scceApi.client(this.appName),
+          defaultReturnUrl: this.defaultReturnUrl
+        };
+      }
+    ];
+  }).
+
+  /**
+   * scceCurrentUserApi - api to access user info.
+   *
+   * scceCurrentUserApi.get(returnUrl)  Return the user name, id and the
+   * the logout url if the user logged in. Return the login url if the
+   * user logged off.
+   *
+   * Note that it returns a promise that resole in either case. If the promise
+   * fails, there was either a problem with the optional return url, or
+   * there's an unexpected issue with the backend.
+   *
+   * TODO: handle lose of authentication.
+   *
+   */
+  factory('scceCurrentUserApi', ['$location', '$q', 'scceUserOptions',
+    function($location, $q, scceUserOptions) {
+      var client = scceUserOptions.apiClient;
+
+      api = {
+        info: null,
+        loading: null,
+
+        _get: function(returnUrl) {
+          var params = {
+            returnUrl: (
+              returnUrl ||
+              scceUserOptions.defaultReturnUrl ||
+              $location.absUrl()
+            )
+          };
+
+          return client.one('user').get(params).then(function(data) {
+            return data;
+          });
+        },
+
+        auth: function(returnUrl) {
+
+          if (api.info) {
+            return $q.when(api.info);
+          }
+
+          if (api.loading) {
+            return api.loading;
+          }
+
+
+          api.loading = api._get(returnUrl).then(function(user) {
+            api.info = user;
+            return user;
+          })['finally'](function() {
+            api.loading = null;
+          });
+
+          return api.loading;
+        },
+
+        reset: function(loginUrl, msg) {
+          var currentLoginUrl = api.info && api.info.loginUrl || null;
+
+          loginUrl = loginUrl || currentLoginUrl;
+          if (loginUrl) {
+            api.info = {
+              loginUrl: loginUrl,
+              error: msg
+            };
+          } else {
+            api.info = null;
+          }
         }
       };
+
+      return api;
+    }
+  ]).
+
+  /**
+   * Api to query users.
+   *
+   * scceUsersApi.users, scceUsersApi.students and scceUsersApi.staff
+   * return promises that resolve to list of user.
+   *
+   * makeStaff sends a request make a user a member of staff.
+   *
+   * TODO: add support to revoke staff.
+   */
+  factory('scceUsersApi', ['scceUserOptions',
+    function(scceUserOptions) {
+      var client = scceUserOptions.apiClient;
+
+      return {
+
+        all: function(cursor) {
+          var params = {};
+
+          if (cursor) {
+            params.cursor = cursor;
+          }
+          return client.all('users').getList(params);
+        },
+
+        getById: function(userId) {
+          return client.one('users', userId).get();
+        },
+
+        listStudents: function(cursor) {
+          var params = {};
+
+          if (cursor) {
+            params.cursor = cursor;
+          }
+
+          return client.all('students').getList(params);
+        },
+
+        newStudentUploadUrl: function() {
+          return client.all('students').one('_uploadurl').post().then(function(resp){
+            return resp.url;
+          });
+        },
+
+        staff: function(cursor) {
+          var params = {};
+
+          if (cursor) {
+            params.cursor = cursor;
+          }
+          return client.all('staff').getList(params);
+        },
+
+        makeStaff: function(user) {
+          return client.one('staff', user.id).put();
+        }
+      };
+    }
+  ]).
+
+  /**
+   * Intercept http response error to reset scceCurrentUserApi on http
+   * 401 response.
+   *
+   */
+  factory('scceCurrentHttpInterceptor', ['$q', '$location',
+    function($q, $location) {
+      var httpPattern = /https?:\/\//,
+        thisDomainPattern = new RegExp(
+          'https?://' + $location.host().replace('.', '\\.')
+        );
+
+      function isSameDomain(url) {
+        return !httpPattern.test(url) || thisDomainPattern.test(url);
+      }
+
+      return {
+        responseError: function(resp) {
+          if (
+            api &&
+            resp.status === 401 &&
+            isSameDomain(resp.config.url)
+          ) {
+            api.reset(resp.data.loginUrl, resp.data.error);
+          }
+
+          return $q.reject(resp);
+        }
+      };
+    }
+  ]).
+
+  config(['$httpProvider',
+    function($httpProvider) {
+      $httpProvider.interceptors.push('scceCurrentHttpInterceptor');
     }
   ])
 

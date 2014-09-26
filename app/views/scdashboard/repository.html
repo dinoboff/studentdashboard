@@ -4,9 +4,9 @@
 <form role="form" class="form-inline" ng-if="selector.available">
   <div class="form-group">
     <label for="selected-student">Show repository of </label>
-    <select id="selected-student" class="form-control " ng-model="selector.selectedId"
-      ng-options="s.id as s.displayName for s in selector.students"
-      ng-change="listFile(selector.selectedId)"
+    <select id="selected-student" class="form-control " ng-model="selector.selected"
+      ng-options="s as s.displayName for s in selector.students track by s.studentId"
+      ng-change="listFile(selector.selected.studentId)"
     >
       <option value="">Select a student</option>
     </select>

@@ -33,3 +33,7 @@ footer > .container {
 .table-scroll {
   overflow-x: scroll;
 }
+
+.more-btn {
+  text-align: center;
+}

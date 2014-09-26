@@ -44,7 +44,7 @@
           self.showGlobals = false;
           // TODO: redirect.
         } else {
-          self.selector.selectedId = null;
+          self.selector.selected.studentId = null;
         }
       };
 
@@ -77,8 +77,8 @@
         return $q.all({
           selector: selectorPromise,
           portfolio: selectorPromise.then(function(selector) {
-            if (selector.selectedId) {
-              return scdDashboardApi.assessments.listExams(selector.selectedId);
+            if (selector.selected.studentId) {
+              return scdDashboardApi.assessments.listExams(selector.selected.studentId);
             }
           }),
           globalsResults: selectorPromise.then(function(selector) {

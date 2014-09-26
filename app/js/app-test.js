@@ -26,18 +26,18 @@
       files = {};
       Object.keys(students).forEach(function(id) {
         var dest = students[id];
-        files[dest.id] = fixtures.data.files(dest, Math.round(Math.random() * 10));
+        files[dest.studentId] = fixtures.data.files(dest, Math.round(Math.random() * 10));
       });
 
       // Get file list
       $httpBackend.whenGET(fixtures.urls.studentFiles).respond(function(m, url) {
-        var id = fixtures.urls.studentFiles.exec(url)[1],
+        var studentId = fixtures.urls.studentFiles.exec(url)[1],
           resp = {
             files: []
           };
 
-        if (files[id]) {
-          resp.files = files[id];
+        if (files[studentId]) {
+          resp.files = files[studentId];
         }
         return [200, resp];
       });
@@ -52,12 +52,12 @@
 
       // upload file
       $httpBackend.whenPOST(fixtures.urls.upload).respond(function() {
-        var dest = students[lastStudentId];
+        var dest = _.find(students, {studentId: lastStudentId});
         return [
           200,
           fixtures.data.newFile(
             'new file ' + newFileCount++,
-            dest.id,
+            dest.studentId,
             dest.displayName
           )
         ];

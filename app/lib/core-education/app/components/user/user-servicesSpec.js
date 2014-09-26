@@ -278,73 +278,42 @@
 
       });
 
+
       describe('students', function() {
 
         it('should query students users', function() {
           $httpBackend.expectGET('/api/v1/students').respond(
             JSON.stringify({
-              type: 'users',
-              users: _(users).map().filter(function(user) {
-                return user.isStudent;
-              }).value(),
+              type: 'students',
+              students: [],
               cursor: 'foo'
             })
           );
 
-          usersApi.students();
+          usersApi.listStudents();
           $httpBackend.flush();
         });
 
         it('should return a promise', function() {
-          expect(usersApi.students().then).toBeDefined();
+          expect(usersApi.listStudents().then).toBeDefined();
         });
 
-        it('should return a promise resolving to an array of user', function() {
-          var data;
+        it('should query an upload URL', function() {
+          var url;
 
-          $httpBackend.whenGET('/api/v1/students').respond(
-            JSON.stringify({
-              type: 'users',
-              users: _(users).map().filter(function(user) {
-                return user.isStudent;
-              }).value(),
-              cursor: 'foo'
-            })
-          );
-
-          usersApi.students().then(function(users) {
-            data = users;
+          $httpBackend.expectPOST('/api/v1/students/_uploadurl').respond({
+            url: '/foo'
           });
-          $httpBackend.flush();
-
-          expect(data.length > 0).toBe(true);
-          expect(data.length).toBe(_(users).map().filter(function(user) {
-            return user.isStudent;
-          }).value().length);
-        });
-
-        it('should return promise resolving to array with a cursor', function() {
-          var data;
-
-          $httpBackend.whenGET('/api/v1/students').respond(
-            JSON.stringify({
-              type: 'users',
-              users: _(users).map().filter(function(user) {
-                return user.isStudent;
-              }).value(),
-              cursor: 'foo'
-            })
-          );
-
-          usersApi.students().then(function(users) {
-            data = users;
+          usersApi.newStudentUploadUrl().then(function(_url_){
+            url = _url_;
           });
-          $httpBackend.flush();
 
-          expect(data.cursor).toBe('foo');
+          $httpBackend.flush();
+          expect(url).toBe('/foo');
         });
 
       });
+
 
       describe('staff', function() {
 
@@ -414,11 +383,13 @@
 
       });
 
-      describe('makeStaff', function(){
+      describe('makeStaff', function() {
 
         it('should put a new staff', function() {
           $httpBackend.expectPUT('/api/v1/staff/12345').respond({});
-          usersApi.makeStaff({id:'12345'});
+          usersApi.makeStaff({
+            id: '12345'
+          });
           $httpBackend.flush();
         });
 
