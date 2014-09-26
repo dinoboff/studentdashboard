@@ -4,7 +4,6 @@
   angular.module(
     'scdRepository.controllers', [
       'angularFileUpload',
-      'scceStudents.services',
       'scceUser.services',
       'scDashboard.services',
       'scdRepository.directives',
@@ -20,7 +19,7 @@
 
       selectedStudent().then(function(selector) {
         $scope.selector = selector;
-        $scope.listFile(selector.selectedId);
+        $scope.listFile(selector.selected.studentId);
       }).catch(function(){
         $scope.error = 'You need to be logged to list a repository';
         $scope.files = [];
@@ -67,7 +66,7 @@
       }
 
       function uploadFile(file) {
-        scdRepositoryApi.newUploadUrl($scope.selector.selectedId).then(function(uploadInfo) {
+        scdRepositoryApi.newUploadUrl($scope.selector.selected.studentId).then(function(uploadInfo) {
           $scope.upload = $upload.upload({
             url: uploadInfo.url,
             method: 'POST',
@@ -75,7 +74,7 @@
             data: {
               name: $scope.fileMeta.name || file.name,
               docType: $scope.fileMeta.docType,
-              destId: $scope.selector.selectedId
+              destId: $scope.selector.selected.studentId
             },
             file: file
           }).progress(

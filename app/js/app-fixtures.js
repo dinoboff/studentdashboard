@@ -51,51 +51,42 @@
               'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
               'isDefault': true
             },
-            'emails': [{
-              'type': 'account',
-              'value': 'chris@example.com'
-            }],
-            'hasCredentials': true,
+            'studentId': 'A00001',
             'isStudent': true,
-            'verified': false,
-            'isLoggedIn': true,
-            'domain': 'example.com',
+            'isStaff': true,
             'isAdmin': true,
-            'id': '12345',
-            'loginUrl': '/api/login',
-            'logoutUrl': '/_ah/login?continue=http%3A//localhost%3A8080/dashboard/&action=logout',
+            'primaryEmail': 'chris@example.com',
+            'domain': 'example.com',
             'displayName': 'Chris Boesch',
+            'id': '12345',
             'name': {
               'givenName': 'Chris',
               'familyName': 'Boesch'
             },
-            'isStaff': true
+            'isLoggedIn': true,
+            'loginUrl': '/#_login',
+            'logoutUrl': '/#_logout'
           },
           studentUser: {
             'image': {
               'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
               'isDefault': true
             },
-            'emails': [{
-              'type': 'account',
-              'value': 'damien@example.com'
-            }],
-            'hasCredentials': true,
+            'studentId': 'A00001',
             'isStudent': true,
-            'verified': false,
-            'isLoggedIn': true,
-            'domain': 'example.com',
+            'isStaff': false,
             'isAdmin': false,
+            'primaryEmail': 'chris@example.com',
+            'domain': 'example.com',
+            'displayName': 'Chris Boesch',
             'id': '12345',
-            'loginUrl': '/api/login',
-            'logoutUrl': '/_ah/login?continue=http%3A//localhost%3A8080/dashboard/&action=logout',
-            'displayName': 'Damien Lebrun',
-            'isDomainAdmin': false,
             'name': {
-              'givenName': 'Damien',
-              'familyName': 'Lebrun'
+              'givenName': 'Chris',
+              'familyName': 'Boesch'
             },
-            'isStaff': false
+            'isLoggedIn': true,
+            'loginUrl': '/#_login',
+            'logoutUrl': '/#_logout'
           },
           students: {
             '12345': {
@@ -202,7 +193,7 @@
 
             while (count > 0) {
               results.push(
-                newFile('File ' + count--, dest.id, destName, senderName)
+                newFile('File ' + count--, dest.studentId, destName, senderName)
               );
             }
 
