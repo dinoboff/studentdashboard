@@ -19,7 +19,7 @@
 
       selectedStudent().then(function(selector) {
         $scope.selector = selector;
-        $scope.listFile(selector.selected.studentId);
+        $scope.listFile(selector.selected && selector.selected.studentId);
       }).catch(function(){
         $scope.error = 'You need to be logged to list a repository';
         $scope.files = [];

@@ -42,7 +42,9 @@
         }
 
         if (students.cursor) {
-          return scceUsersApi.listStudents(students.cursor);
+          return scceUsersApi.listStudents(students.cursor).then(function(students){
+            return addStudents(students);
+          });
         }
       }
 
