@@ -36,7 +36,11 @@ rect {
 .data text, .data tspan {
   dominant-baseline: middle;
   text-anchor: start;
-  font-size: 10px;
+  font-size: 12px;
+}
+
+text.data-label {
+  font-size: 16px;
 }
 
 rect {

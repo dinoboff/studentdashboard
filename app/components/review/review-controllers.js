@@ -133,9 +133,9 @@
           innerHeight: rowHeight * students.length,
           margin: {
             top: 20,
-            right: 150,
+            right: 200,
             bottom: 30,
-            left: 150
+            left: 200
           }
         });
       }
