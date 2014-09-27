@@ -30,8 +30,15 @@
 
     </form>
 
+    <div class="chart-nav">
+        <p class="btn-group">
+            <button type="button" class="btn btn-default" ng-disabled="ctrl.pages.position() == 0" ng-click="ctrl.prev(ctrl.filters)">Prev</button>
+            <button type="button" class="btn btn-default" ng-disabled="!ctrl.pages.hasMore()" ng-click="ctrl.next(ctrl.filters)">Next</button>
+        </p>
+    </div>
+
     <p ng-show="ctrl.students|isEmpty" class="alert alert-info" role="alert">
-        <strong>No student data.</strong>
+        <strong>No student (more) data.</strong>
     </p>
 
     <scd-chart-histogram

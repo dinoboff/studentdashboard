@@ -31,6 +31,22 @@
           return this.cache.length - this.viewPos[1];
         };
 
+        this.hasMore = function() {
+          if (this.remaining() > 0) {
+            return true;
+          }
+
+          if ((this.viewPos[1] - this.viewPos[0]) < this.viewSize) {
+            return false;
+          }
+
+          if (!this.cursor) {
+            return false;
+          }
+
+          return true;
+        };
+
         this.clear = function() {
           this.cache = [];
         };
@@ -166,12 +182,12 @@
 
         if (
           this.pages.cursor &&
-          this.pages.remaining < this.page.viewSize
+          this.pages.remaining() < this.pages.viewSize
         ) {
           params.cursor = this.pages.cursor;
           scdDashboardApi.review.listStats(params).then(function(students) {
-            this.pages.add(students);
-            setStudent(this.pages.next());
+            self.pages.add(students);
+            setStudent(self.pages.next());
           });
         } else {
           setStudent(this.pages.next());
@@ -183,7 +199,7 @@
        *
        */
       this.prev = function() {
-        if (this.pages.position > 0) {
+        if (this.pages.position() > 0) {
           setStudent(this.pages.prev());
         }
       };
