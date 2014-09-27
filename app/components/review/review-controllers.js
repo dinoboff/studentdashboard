@@ -3,6 +3,7 @@
 
   angular.module('scdReview.controllers', [
     'scceSvg.services',
+    'scceUser.services',
     'scDashboard.services',
     'scdMisc.filters',
     'scdSelector.services'
@@ -49,6 +50,7 @@
 
         this.clear = function() {
           this.cache = [];
+          this.viewPos = [0, 0];
         };
 
         this.add = function(items) {
@@ -85,9 +87,10 @@
    */
   factory('scdReviewStatsCtrlInitialData', [
     '$q',
+    'scceUsersApi',
     'scdDashboardApi',
     'scdSelectedStudent',
-    function scdReviewStatsCtrlInitialDataFactory($q, scdDashboardApi, scdSelectedStudent) {
+    function scdReviewStatsCtrlInitialDataFactory($q, scceUsersApi, scdDashboardApi, scdSelectedStudent) {
       return function scdReviewStatsCtrlInitialData() {
         var params = {
             limit: 30,
@@ -112,11 +115,13 @@
           params: params,
           students: studentsPromise,
           paramOptions: $q.all({
+            residents: scceUsersApi.listPgys().then(function(years) {
+              return [{
+                id: 'all',
+                label: 'All Residents',
+              }].concat(years);
+            }),
             // TODO: use api
-            residents: [{
-              id: 'all',
-              label: 'All Residents',
-            }],
             topics: [{
               id: 'all',
               label: 'All Categories'
@@ -213,8 +218,8 @@
       this.filterChanged = function(params) {
         this.pages.clear();
         scdDashboardApi.review.listStats(params).then(function(students) {
-          this.pages.add(students);
-          setStudent(this.pages.next());
+          self.pages.add(students);
+          setStudent(self.pages.next());
         });
       };
     }

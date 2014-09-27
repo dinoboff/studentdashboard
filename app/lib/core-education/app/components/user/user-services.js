@@ -151,6 +151,10 @@
           return client.all('students').getList(params);
         },
 
+        listPgys: function() {
+          return client.all('pgy').getList();
+        },
+
         newStudentUploadUrl: function() {
           return client.all('students').one('_uploadurl').post().then(function(resp){
             return resp.url;

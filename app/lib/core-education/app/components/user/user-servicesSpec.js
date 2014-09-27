@@ -304,12 +304,25 @@
           $httpBackend.expectPOST('/api/v1/students/_uploadurl').respond({
             url: '/foo'
           });
-          usersApi.newStudentUploadUrl().then(function(_url_){
+          usersApi.newStudentUploadUrl().then(function(_url_) {
             url = _url_;
           });
 
           $httpBackend.flush();
           expect(url).toBe('/foo');
+        });
+
+        it('should get the list of year', function() {
+          var years;
+
+          $httpBackend.expectGET('/api/v1/pgy').respond(
+            [2015, 2016, 2017, 2018]
+          );
+          usersApi.listPgys().then(function(resp) {
+            years = resp;
+          });
+
+          $httpBackend.flush();
         });
 
       });
