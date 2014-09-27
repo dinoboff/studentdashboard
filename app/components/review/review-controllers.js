@@ -148,7 +148,7 @@
       this.chartRef = null; // no average stats yet.
       this.chartOptions = {
         getLabel: function(row) {
-          return row.studentId;
+          return row.displayName;
         },
         getValue: function(row) {
           return row[self.filters.stats];
