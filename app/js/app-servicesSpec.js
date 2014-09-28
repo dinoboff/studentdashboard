@@ -148,6 +148,26 @@
           expect(expected).toEqual(params);
         });
 
+        it('should query the topics', function() {
+          $httpBackend.expectGET(apiRoot + '/roshreview/topic').respond([]);
+          api.listTopics();
+          $httpBackend.flush();
+        });
+
+        it('should query a student detailed stats', function() {
+          var urlPattern = /\/roshreview\/stats\/([^\/]+)$/,
+            studentId;
+
+          $httpBackend.expectGET(urlPattern).respond(function(m, url) {
+            studentId = urlPattern.exec(url)[1];
+            return [200, {}];
+          });
+          api.getStats('A0001');
+          $httpBackend.flush();
+
+          expect(studentId).toBe('A0001');
+        });
+
       });
 
     });

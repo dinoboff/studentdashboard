@@ -107,11 +107,19 @@
           },
 
           /**
+           * Fetch detailled stats of a student
+           */
+          getStats: function(studentId) {
+            return api.all('roshreview').one('stats', studentId).get();
+          },
+
+          /**
            * Fetch the list of of Rosh Review topics
            */
           listTopics: function() {
             return api.all('roshreview').all('topic').getList();
           }
+
         }
       };
     }

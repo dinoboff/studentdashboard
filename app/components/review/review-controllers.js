@@ -96,7 +96,7 @@
             limit: 30,
             residents: 'all',
             topic: 'all',
-            stats: 'cumulativePerformance'
+            stats: 'programAverage'
           },
           selectorPromise = scdSelectedStudent(),
           studentsPromise = selectorPromise.then(function(selector) {
@@ -133,7 +133,7 @@
               }].concat(topics);
             }),
             stats: [{
-              id: 'cumulativePerformance',
+              id: 'programAverage',
               label: 'Program Average'
             }]
           })
@@ -143,12 +143,13 @@
   ]).
 
   controller('ScdReviewStatsCtrl', [
+    '$location',
     '$window',
     'ScceLayout',
     'scdDashboardApi',
     'ScdPageCache',
     'initialData',
-    function ScdReviewStatsCtrl($window, ScceLayout, scdDashboardApi, ScdPageCache, initialData) {
+    function ScdReviewStatsCtrl($location, $window, ScceLayout, scdDashboardApi, ScdPageCache, initialData) {
       var self = this,
         _ = $window._,
         rowHeight = 25;
@@ -228,108 +229,223 @@
           setStudent(self.pages.next());
         });
       };
+
+      this.showDetails = function(studentStats) {
+        initialData.selector.select({
+          studentId: studentStats.studentId
+        });
+        $location.path('/review');
+      };
+    }
+  ]).
+
+  /**
+   * Use to resolve `initialData` of `ScdReviewUserStatsCtrl`.
+   *
+   */
+  factory('scdReviewUserStatsCtrlInitialData', [
+    '$q',
+    'scdSelectedStudent',
+    'scdDashboardApi',
+    function scdReviewUserStatsCtrlInitialDataFactory($q, scdSelectedStudent, scdDashboardApi) {
+      return function scdReviewUserStatsCtrlInitialData() {
+        var selectorPromise = scdSelectedStudent(),
+          params = {
+            ref: 'programAverage'
+          };
+
+        return $q.all({
+          params: params,
+          selector: selectorPromise,
+          userStats: selectorPromise.then(function(selector) {
+            if (!selector.selected || !selector.selected.studentId) {
+              return null;
+            }
+
+            return scdDashboardApi.review.getStats(selector.selected.studentId, params).catch(function() {
+              return null;
+            });
+          }),
+          filterOptions: $q.all({
+            refs: [{
+              id: 'programAverage',
+              label: 'Program Average'
+            }]
+          })
+        });
+      };
+    }
+  ]).
+
+  /**
+   * ScdReviewUserStatsCtrl
+   *
+   */
+  controller('ScdReviewUserStatsCtrl', [
+    'ScceLayout',
+    'scdDashboardApi',
+    'initialData',
+    function ScdReviewUserStatsCtrl(ScceLayout, scdDashboardApi, initialData) {
+      var self = this;
+
+      this.selector = initialData.selector;
+      this.userStats = initialData.userStats;
+      this.filters = initialData.params;
+      this.filterOptions = initialData.filterOptions;
+
+      this.cummulativePerf = {
+        layout: ScceLayout.contentSizing({
+          innerWidth: 400,
+          innerHeight: 360,
+          margin: {
+            top: 20,
+            right: 150,
+            bottom: 30,
+            left: 70
+          },
+        }),
+        options: {
+          getValue: function(day) {
+            return day.performance;
+          }
+        }
+      };
+
+      function components(userStats) {
+        var correct, left;
+        if (!userStats) {
+          return;
+        }
+
+        correct = userStats.performance * userStats.percentageComplete / 100;
+        left = 100 - userStats.percentageComplete;
+
+        return [{
+          label: 'Correct',
+          value: correct,
+          id: 'correct'
+        }, {
+          label: 'Incorrect',
+          value: 100 - correct - left,
+          id: 'incorrect'
+        }, {
+          label: 'Unattempted',
+          value: left,
+          id: 'unattempted'
+        }].filter(function(c) {
+          return c.value > 0;
+        });
+      }
+
+      this.progress = {
+        layout: ScceLayout.contentSizing({
+          innerWidth: 300,
+          innerHeight: 149,
+          margin: {
+            top: 30,
+            right: 50,
+            bottom: 110,
+            left: 50
+          },
+        }),
+        components: components(this.userStats)
+      };
+
+      this.passing = {
+        layout: ScceLayout.contentSizing({
+          innerWidth: 100,
+          innerHeight: 50,
+          margin: {
+            top: 12,
+            right: 12,
+            bottom: 50,
+            left: 12
+          },
+        }),
+        steps: [{
+          min: 0,
+          max: 75,
+          id: 'danger'
+        }, {
+          max: 90,
+          id: 'warning'
+        }, {
+          max: 100,
+          id: 'ok'
+        }]
+      };
+
+      this.abem = {
+        layout: this.passing.layout,
+        steps: [{
+          min: 0,
+          max: 75,
+          id: 'danger'
+        }, {
+          max: 100,
+          id: 'ok'
+        }]
+
+      };
+
+      this.byCategory = {
+        layout: null,
+        baseLayout: {
+          rowHeight: 27,
+          innerWidth: 500,
+          margin: {
+            top: 10,
+            right: 60,
+            bottom: 50,
+            left: 220
+          },
+        },
+        options: {
+          getLabel: function(row) {
+            return row.name;
+          },
+          hasRef: function() {
+            return false;
+          },
+          getRef: function(row) {
+            return {
+              value: self.performances.statsByTopics[row.id][self.comparison.selected.id]
+            };
+          },
+          getUnit: function() {
+            return '%';
+          },
+          getValue: function(row) {
+            return row.value;
+          },
+        }
+      };
+
+
+
+      this.showStats = function(studentId) {
+        if (!studentId) {
+          this.userStats = null;
+          return;
+        }
+
+        self.userStats = null;
+        return scdDashboardApi.review.getStats(studentId).then(function(stats) {
+          self.userStats = stats;
+          self.progress.components = components(stats);
+        });
+      };
     }
   ])
 
   // controller('scdReviewCtrl', ['currentUser', 'scdSelectedStudent', 'scdReviewApi', '$window',
   //   function(currentUser, scdSelectedStudent, scdReviewApi, $window) {
-  //     var self = this,
-  //       _ = $window._;
 
-  //     /** Student selector **/
-
-  //     this.selector = null;
-  //     this.showGlobals = null;
-  //     this.studentPerformance = null;
-
-  //     this.showGlobalPerformance = function(doShow) {
-  //       self.showGlobals = doShow;
-  //       if (!doShow) {
-  //         return;
-  //       }
-
-  //       if (!self.selector.available) {
-  //         self.showGlobals = false;
-  //         // TODO: redirect.
-  //       } else {
-  //         self.selector.selectedId = null;
-  //       }
-  //     };
-
-  //     this.showStudentPerformance = function(studentId) {
-  //       if (!studentId) {
-  //         self.studentPerformance = null;
-  //         self.showGlobalPerformance(true);
-  //         return;
-  //       }
-
-  //       self.showGlobals = false;
-  //       self.setPerformances();
-  //     };
-
-  //     scdSelectedStudent().then(function(selector) {
-  //       self.selector = selector;
-  //       self.showStudentPerformance(selector.selectedId);
-  //     });
-
-  //     /** Student performance **/
-
-  //     this.comparison = {
-  //       available: [{
-  //         label: 'National Average',
-  //         id: 'nationalAvg',
-  //         type: 'Average'
-  //       }, {
-  //         label: 'University Average',
-  //         id: 'uniAvg',
-  //         type: 'Average'
-  //       }, ],
-  //     };
-  //     this.comparison.selected = this.comparison.available[0];
 
   //     this.performances = {
-  //       data: null,
-  //       statsByTopics: null,
-
-  //       cumulative: {
-  //         series: [],
-  //         ref: null,
-  //         current: null,
-  //         layout: layout({
-  //           innerWidth: 400,
-  //           innerHeight: 360,
-  //           margin: {
-  //             top: 20,
-  //             right: 150,
-  //             bottom: 30,
-  //             left: 70
-  //           },
-  //         }),
-  //         options: {
-  //           getValue: function(day) {
-  //             return day.performance;
-  //           }
-  //         }
-  //       },
 
   //       progress: {
-  //         mainData: {
-  //           title: 'Progress',
-  //           subTitle: 'Percentage completed',
-  //           value: null,
-  //           unit: '%'
-  //         },
   //         components: null,
-  //         layout: layout({
-  //           innerWidth: 300,
-  //           innerHeight: 149,
-  //           margin: {
-  //             top: 30,
-  //             right: 50,
-  //             bottom: 110,
-  //             left: 50
-  //           },
-  //         })
   //       },
 
   //       abem: {
@@ -351,35 +467,9 @@
   //           max: 100,
   //           id: 'ok'
   //         }],
-  //         reading: {
-  //           value: null,
-  //           unit: '%',
-  //           label: 'Projected ABEM score'
-  //         }
   //       },
 
-  //       passing: {
-  //         layout: layout({
-  //           innerWidth: 100,
-  //           innerHeight: 50,
-  //           margin: {
-  //             top: 12,
-  //             right: 12,
-  //             bottom: 50,
-  //             left: 12
-  //           },
-  //         }),
-  //         steps: [{
-  //           min: 0,
-  //           max: 75,
-  //           id: 'danger'
-  //         }, {
-  //           max: 90,
-  //           id: 'warning'
-  //         }, {
-  //           max: 100,
-  //           id: 'ok'
-  //         }],
+
   //         reading: {
   //           value: null,
   //           unit: '%',
@@ -387,38 +477,7 @@
   //         }
   //       },
 
-  //       byCategory: {
-  //         layout: null,
-  //         baseLayout: {
-  //           rowHeight: 27,
-  //           innerWidth: 500,
-  //           margin: {
-  //             top: 10,
-  //             right: 60,
-  //             bottom: 50,
-  //             left: 220
-  //           },
-  //         },
-  //         options: {
-  //           getLabel: function(row) {
-  //             return row.name;
-  //           },
-  //           hasRef: function() {
-  //             return self.performances.statsByTopics && self.comparison.selected.id;
-  //           },
-  //           getRef: function(row) {
-  //             return {
-  //               value: self.performances.statsByTopics[row.id][self.comparison.selected.id]
-  //             };
-  //           },
-  //           getUnit: function() {
-  //             return '%';
-  //           },
-  //           getValue: function(row) {
-  //             return row.value;
-  //           },
-  //         }
-  //       }
+
   //     };
 
   //     this.updateMeters = function(data) {
@@ -461,26 +520,6 @@
   //       };
   //     };
 
-  //     this.updateProgressChart = function(data) {
-  //       var correct = data.cumulativePerformance * data.percentageComplete / 100,
-  //         left = 100 - data.percentageComplete;
-
-  //       this.performances.progress.mainData.value = data.percentageComplete;
-  //       this.performances.progress.components = [{
-  //         label: 'Correct',
-  //         value: correct,
-  //         id: 'correct'
-  //       }, {
-  //         label: 'Incorrect',
-  //         value: 100 - correct - left,
-  //         id: 'incorrect'
-  //       }, {
-  //         label: 'Unattempted',
-  //         value: left,
-  //         id: 'unattempted'
-  //       }];
-
-  //     };
 
   //     this.updatePerfByCategoryChart = function(data) {
   //       var config = this.performances.byCategory;

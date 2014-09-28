@@ -26,7 +26,12 @@
    */
   function currentUserIsStaff(scceCurrentUserApi, $window, $q) {
     return scceCurrentUserApi.auth().then(function(user) {
-      if (!user.isLoggedIn || (!user.isStaff && !user.isAdmin)) {
+      if (!user.isLoggedIn && user.loginUrl) {
+        $window.location.replace(user.loginUrl);
+        return user;
+      }
+
+      if (!user.isStaff && !user.isAdmin) {
         return $q.reject('Only staff or admins can access this page.');
       }
       return user;
@@ -69,15 +74,31 @@
         }
       }).
 
+      when('/review', {
+        templateUrl: 'views/scdashboard/review-user.html',
+        controller: 'ScdReviewUserStatsCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUser,
+          'initialData': ['scdReviewUserStatsCtrlInitialData',
+            function(scdReviewUserStatsCtrlInitialData) {
+              return scdReviewUserStatsCtrlInitialData();
+            }
+          ]
+        }
+      }).
+
       when('/review/stats', {
         templateUrl: 'views/scdashboard/review-stats.html',
         controller: 'ScdReviewStatsCtrl',
         controllerAs: 'ctrl',
         resolve: {
-          'currentUser': currentUser,
-          'initialData': ['scdReviewStatsCtrlInitialData', function(scdReviewStatsCtrlInitialData) {
-            return  scdReviewStatsCtrlInitialData();
-          }]
+          'currentUser': currentUserIsStaff,
+          'initialData': ['scdReviewStatsCtrlInitialData',
+            function(scdReviewStatsCtrlInitialData) {
+              return scdReviewStatsCtrlInitialData();
+            }
+          ]
         }
       }).
 
@@ -95,9 +116,11 @@
         controllerAs: 'ctrl',
         resolve: {
           'currentUser': currentUser,
-          'initialData': ['scdPortfolioCtrlInitialData', function(scdPortfolioCtrlInitialData) {
-            return scdPortfolioCtrlInitialData();
-          }]
+          'initialData': ['scdPortfolioCtrlInitialData',
+            function(scdPortfolioCtrlInitialData) {
+              return scdPortfolioCtrlInitialData();
+            }
+          ]
         }
       }).
 
@@ -107,9 +130,11 @@
         controllerAs: 'ctrl',
         resolve: {
           'currentUser': currentUserIsStaff,
-          'initialData': ['scdPortfolioExamStatsCtrlInitialData', function(scdPortfolioExamStatsCtrlInitialData) {
-            return scdPortfolioExamStatsCtrlInitialData();
-          }]
+          'initialData': ['scdPortfolioExamStatsCtrlInitialData',
+            function(scdPortfolioExamStatsCtrlInitialData) {
+              return scdPortfolioExamStatsCtrlInitialData();
+            }
+          ]
         }
       }).
 
@@ -119,9 +144,11 @@
         controllerAs: 'ctrl',
         resolve: {
           'currentUser': currentUser,
-          'initialData': ['scdPortfolioStudentExamCtrlInitialData', function(scdPortfolioStudentExamCtrlInitialData) {
-            return scdPortfolioStudentExamCtrlInitialData();
-          }]
+          'initialData': ['scdPortfolioStudentExamCtrlInitialData',
+            function(scdPortfolioStudentExamCtrlInitialData) {
+              return scdPortfolioStudentExamCtrlInitialData();
+            }
+          ]
         }
       }).
 
