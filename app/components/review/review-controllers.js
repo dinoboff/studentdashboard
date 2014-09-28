@@ -122,10 +122,16 @@
               }].concat(years);
             }),
             // TODO: use api
-            topics: [{
+            oldtopics: [{
               id: 'all',
               label: 'All Categories'
             }],
+            topics: scdDashboardApi.review.listTopics().then(function(topics) {
+              return [{
+                id: 'all',
+                label: 'All Categories'
+              }].concat(topics);
+            }),
             stats: [{
               id: 'cumulativePerformance',
               label: 'Program Average'
@@ -172,7 +178,7 @@
           return row.displayName;
         },
         getValue: function(row) {
-          return row[self.filters.stats];
+          return row.performance;
         }
       };
 

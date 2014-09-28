@@ -104,6 +104,13 @@
            */
           listStats: function(params) {
             return api.all('roshreview').all('stats').getList(params);
+          },
+
+          /**
+           * Fetch the list of of Rosh Review topics
+           */
+          listTopics: function() {
+            return api.all('roshreview').all('topic').getList();
           }
         }
       };

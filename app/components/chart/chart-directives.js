@@ -440,8 +440,6 @@
             // set ranges
             scope.scales.x.range([0, scope.layout.innerWidth]);
             scope.scales.y.rangeBands([0, scope.layout.innerHeight], 0, 0);
-
-            console.dir(scope.ref);
           }
 
           scope.$watch('layout', setHistogramScales);
