@@ -11,20 +11,20 @@
     <form role="form" class="form-inline filter-selectors">
 
         <div class="form-group">
-            <label for="resident-filter">Show:</label>
+            <label for="stats-filter">Rank student by:</label>
+            <select id="stats-filter" class="form-control" ng-model="ctrl.filters.sortBy" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.sortBy" required="true" ng-change="ctrl.filterChanged(ctrl.filters)">
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="resident-filter">Filter by:</label>
             <select id="resident-filter" class="form-control" ng-model="ctrl.filters.residents" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.residents" required="true" ng-change="ctrl.filterChanged(ctrl.filters)">
             </select>
         </div>
 
         <div class="form-group">
-            <label class="sr-only" for="category-filter">filter by category:</label>
+            <label class="sr-only" for="category-filter">And by category:</label>
             <select id="category-filter" class="form-control" ng-model="ctrl.filters.topic" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.topics" required="true" ng-change="ctrl.filterChanged(ctrl.filters)">
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="stats-filter">Compared to:</label>
-            <select id="stats-filter" class="form-control" ng-model="ctrl.filters.stats" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.stats" required="true" ng-change="ctrl.filterChanged(ctrl.filters)">
             </select>
         </div>
 

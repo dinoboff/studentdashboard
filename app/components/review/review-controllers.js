@@ -96,7 +96,7 @@
             limit: 30,
             residents: 'all',
             topic: 'all',
-            stats: 'programAverage'
+            sortBy: 'performance'
           },
           selectorPromise = scdSelectedStudent(),
           studentsPromise = selectorPromise.then(function(selector) {
@@ -115,27 +115,29 @@
           params: params,
           students: studentsPromise,
           paramOptions: $q.all({
+
             residents: scceUsersApi.listPgys().then(function(years) {
               return [{
                 id: 'all',
                 label: 'All Residents',
               }].concat(years);
             }),
-            // TODO: use api
-            oldtopics: [{
-              id: 'all',
-              label: 'All Categories'
-            }],
+
             topics: scdDashboardApi.review.listTopics().then(function(topics) {
               return [{
                 id: 'all',
                 label: 'All Categories'
               }].concat(topics);
             }),
-            stats: [{
-              id: 'programAverage',
-              label: 'Program Average'
+
+            sortBy: [{
+              id: 'performance',
+              label: 'Performance',
+            }, {
+              id: 'percentageComplete',
+              label: 'Percentage Complete'
             }]
+
           })
         });
       };
@@ -179,7 +181,7 @@
           return row.displayName;
         },
         getValue: function(row) {
-          return row.performance;
+          return row[self.filters.sortBy];
         }
       };
 
@@ -224,6 +226,11 @@
        */
       this.filterChanged = function(params) {
         this.pages.clear();
+
+        if (params.topic !== 'all') {
+          params.sortBy = 'performance';
+        }
+
         scdDashboardApi.review.listStats(params).then(function(students) {
           self.pages.add(students);
           setStudent(self.pages.next());
