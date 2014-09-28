@@ -159,15 +159,27 @@
       function setStudent(students) {
         self.students = students;
         self.chartLayout = ScceLayout.contentSizing({
-          innerWidth: 900,
+          innerWidth: 600,
           innerHeight: rowHeight * students.length,
           margin: {
             top: 20,
             right: 200,
-            bottom: 30,
+            bottom: 50,
             left: 200
           }
         });
+      }
+
+      function setLegend(sortById) {
+        var sortBy = _.find(
+          self.filterOptions.sortBy, {id: sortById}
+        );
+        return {
+          x: {
+            label: sortBy.label + ' (%)',
+            unit: '%'
+          }
+        };
       }
 
       this.pages = new ScdPageCache(initialData.params.limit);
@@ -176,6 +188,7 @@
       this.filterOptions = initialData.paramOptions;
 
       this.chartRef = null; // no average stats yet.
+      this.chartLegend = setLegend(this.filters.sortBy);
       this.chartOptions = {
         getLabel: function(row) {
           return row.displayName;
@@ -231,6 +244,7 @@
           params.sortBy = 'performance';
         }
 
+        self.chartLegend = setLegend(params.sortBy);
         scdDashboardApi.review.listStats(params).then(function(students) {
           self.pages.add(students);
           setStudent(self.pages.next());

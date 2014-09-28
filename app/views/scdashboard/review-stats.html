@@ -43,11 +43,13 @@
 
     <scd-chart-histogram
         ng-if="!(ctrl.students|isEmpty)"
+        class="review-rank"
         scd-layout="ctrl.chartLayout"
         scd-series="ctrl.students"
         scd-options="ctrl.chartOptions"
         scd-ref="ctrl.chartRef"
         scd-row-clicked="ctrl.showDetails"
+        scd-legend="ctrl.chartLegend"
     >
     </scd-chart-histogram>
 
