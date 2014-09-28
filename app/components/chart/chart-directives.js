@@ -398,7 +398,7 @@
         },
         // arguments: scope, iElement, iAttrs, controller
         link: function scdChartHistogramPostLink(scope) {
-
+          console.log(scope.legend);
           scope.scales = {};
           scope.options = scope.options || {};
           _.defaults(scope.options, {
