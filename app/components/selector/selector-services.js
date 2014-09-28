@@ -55,7 +55,7 @@
         }
 
         studentsPromise = scceUsersApi.listStudents().then(function(studentList) {
-          return addStudents(studentList);
+          return addStudents(studentList, {limit:0});
         })['finally'](function() {
           studentsPromise = null;
         });
