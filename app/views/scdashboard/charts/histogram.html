@@ -16,7 +16,7 @@
         </g>
 
         <g class="data">
-            <g class="chart-row" ng-class="{'failing': options.isFailing(row)}" ng-repeat="row in series track by row.id" ng-attr-transform="translate(0,{{scales.y(row.id) + scales.y.rangeBand()/2}})">
+            <g class="chart-row" ng-click="onClick(row)" ng-class="{'failing': options.isFailing(row), 'click': onClick}" ng-repeat="row in series track by row.id" ng-attr-transform="translate(0,{{scales.y(row.id) + scales.y.rangeBand()/2}})">
                 <text class="data-label" x="-7">{{options.getLabel(row)}}</text>
                 <rect y="-5" height="10" ng-attr-width="{{scales.x(options.getValue(row))}}" />
                 <line class="average" ng-if="options.hasRef(row)" ng-attr-transform="translate({{scales.x(options.getRef(row).value)}},0)" y1='-5' y2='5' />

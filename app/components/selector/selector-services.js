@@ -23,11 +23,12 @@
    *   him / herself)
    *
    */
-  factory('scdSelectedStudent', ['scceCurrentUserApi', 'scceUsersApi', '$q',
-    function(scceCurrentUserApi, scceUsersApi, $q) {
+  factory('scdSelectedStudent', ['$window', 'scceCurrentUserApi', 'scceUsersApi', '$q',
+    function($window, scceCurrentUserApi, scceUsersApi, $q) {
       var selector = null,
         selectorPromise = null,
-        studentsPromise = null;
+        studentsPromise = null,
+        _ = $window._;
 
       function addStudents(students) {
         if (!selector) {
@@ -78,7 +79,10 @@
           selector = {
             students: null,
             selected: null,
-            available: false
+            available: false,
+            select: function(find) {
+              this.selected = _.find(this.students, find);
+            }
           };
 
           if (user.isStudent) {

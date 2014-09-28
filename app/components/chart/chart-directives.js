@@ -59,10 +59,21 @@
           'layout': '=scdLayout',
           'donutWidth': '&scdDonut',
           'levels': '=scdLevels',
-          'reading': '=scdReading'
+          'reading': '=scdReading',
+          'options': '=?scdOptions'
         },
         // arguments: scope, iElement, iAttrs, controller
         link: function scdChartMeterPostLink(scope) {
+          scope.options = scope.options || {};
+          _.defaults(scope.options, {
+            getValueAsText: function(reading) {
+              if (reading.value === null) {
+                return 'N/A';
+              } else {
+                return reading.value + ' ' + reading.unit;
+              }
+            },
+          });
           scope.scales = {
             degres: null
           };
@@ -297,14 +308,12 @@
               return day.value;
             },
             getDate: function(day) {
-              return day.date;
+              return new Date(day.date);
             },
             domain: [0, 100]
           });
 
           function setScales() {
-            var xTicks;
-
             scope.xTicks = [];
             scope.scales = {
               x: null,
@@ -316,16 +325,11 @@
               return;
             }
 
-            xTicks = d3.time.scale();
             scope.scales.x = d3.scale.ordinal();
             scope.scales.y = d3.scale.linear();
 
             // setup scale domains
             scope.scales.y.domain(scope.options.domain);
-            xTicks.domain([
-              scope.options.getDate(scope.series[0]),
-              scope.options.getDate(scope.series.slice(-1).pop())
-            ]);
             scope.series.forEach(function(day) {
               scope.scales.x(
                 scope.options.getDate(day)
@@ -342,7 +346,9 @@
             );
 
             // Set x ticks
-            scope.xTicks = xTicks.ticks(3);
+            scope.xTicks = _.range(1, 4).map(function(i) {
+              return  scope.series[Math.round(i*scope.series.length/4)];
+            }).map(scope.options.getDate);
           }
 
           scope.$watch('layout', setScales);
@@ -387,7 +393,8 @@
           legend: '=scdLegend',
           options: '=scdOptions',
           ref: '=scdRef',
-          series: '=scdSeries'
+          series: '=scdSeries',
+          onClick: '=scdRowClicked'
         },
         // arguments: scope, iElement, iAttrs, controller
         link: function scdChartHistogramPostLink(scope) {

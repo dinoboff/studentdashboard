@@ -21,7 +21,7 @@
         </g>
 
         <g class="data">
-            <rect class="day" ng-repeat="day in series track by day.date" ng-attr-x="{{scales.x(day.date)}}" ng-attr-y="{{scales.yReversed(options.getValue(day))}}" ng-attr-width="{{scales.x.rangeBand()}}" ng-attr-height="{{scales.y(options.getValue(day))}}" />
+            <rect class="day" ng-repeat="day in series track by day.date" ng-attr-x="{{scales.x(options.getDate(day))}}" ng-attr-y="{{scales.yReversed(options.getValue(day))}}" ng-attr-width="{{scales.x.rangeBand()}}" ng-attr-height="{{scales.y(options.getValue(day))}}" />
         </g>
 
         <g class="axis x-axis" ng-attr-transform="translate(0,{{layout.innerHeight}})">
@@ -37,7 +37,7 @@
             </g>
         </g>
 
-        <g class="compareTo" ng-attr-transform="translate(0,{{scales.yReversed(ref.value)}})">
+        <g class="compareTo" ng-if="ref.value" ng-attr-transform="translate(0,{{scales.yReversed(ref.value)}})">
             <line ng-attr-x2="{{layout.innerWidth}}" />
             <text dx="15" dy="-0.5em">
                 <tspan>{{ref.label}}</tspan>

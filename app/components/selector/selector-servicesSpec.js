@@ -60,7 +60,7 @@
           selector = _selector_;
         });
         $httpBackend.flush();
-        expect(selector.selectedId).toBe(fix.data.studentUser.id);
+        expect(selector.selected.studentId).toBe(fix.data.studentUser.studentId);
       });
 
       it('should query the student list when the user is an admin', function() {
