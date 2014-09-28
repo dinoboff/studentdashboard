@@ -102,7 +102,7 @@
   var interceptor = function(data, operation, what) {
     var resp;
 
-    if (operation !== 'getList') {
+    if (operation !== 'getList' || angular.isArray(data)) {
       return data;
     }
 
@@ -142,6 +142,7 @@
 
   ;
 })();
+
 (function() {
   'use strict';
 
@@ -637,6 +638,10 @@
           }
 
           return client.all('students').getList(params);
+        },
+
+        listPgys: function() {
+          return client.all('pgy').getList();
         },
 
         newStudentUploadUrl: function() {

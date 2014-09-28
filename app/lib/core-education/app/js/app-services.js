@@ -4,7 +4,7 @@
   var interceptor = function(data, operation, what) {
     var resp;
 
-    if (operation !== 'getList') {
+    if (operation !== 'getList' || angular.isArray(data)) {
       return data;
     }
 

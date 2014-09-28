@@ -3,6 +3,7 @@
 
   angular.module('scdReview.controllers', [
     'scceSvg.services',
+    'scceUser.services',
     'scDashboard.services',
     'scdMisc.filters',
     'scdSelector.services'
@@ -31,8 +32,25 @@
           return this.cache.length - this.viewPos[1];
         };
 
+        this.hasMore = function() {
+          if (this.remaining() > 0) {
+            return true;
+          }
+
+          if ((this.viewPos[1] - this.viewPos[0]) < this.viewSize) {
+            return false;
+          }
+
+          if (!this.cursor) {
+            return false;
+          }
+
+          return true;
+        };
+
         this.clear = function() {
           this.cache = [];
+          this.viewPos = [0, 0];
         };
 
         this.add = function(items) {
@@ -69,9 +87,10 @@
    */
   factory('scdReviewStatsCtrlInitialData', [
     '$q',
+    'scceUsersApi',
     'scdDashboardApi',
     'scdSelectedStudent',
-    function scdReviewStatsCtrlInitialDataFactory($q, scdDashboardApi, scdSelectedStudent) {
+    function scdReviewStatsCtrlInitialDataFactory($q, scceUsersApi, scdDashboardApi, scdSelectedStudent) {
       return function scdReviewStatsCtrlInitialData() {
         var params = {
             limit: 30,
@@ -96,15 +115,23 @@
           params: params,
           students: studentsPromise,
           paramOptions: $q.all({
+            residents: scceUsersApi.listPgys().then(function(years) {
+              return [{
+                id: 'all',
+                label: 'All Residents',
+              }].concat(years);
+            }),
             // TODO: use api
-            residents: [{
-              id: 'all',
-              label: 'All Residents',
-            }],
-            topics: [{
+            oldtopics: [{
               id: 'all',
               label: 'All Categories'
             }],
+            topics: scdDashboardApi.review.listTopics().then(function(topics) {
+              return [{
+                id: 'all',
+                label: 'All Categories'
+              }].concat(topics);
+            }),
             stats: [{
               id: 'cumulativePerformance',
               label: 'Program Average'
@@ -133,9 +160,9 @@
           innerHeight: rowHeight * students.length,
           margin: {
             top: 20,
-            right: 150,
+            right: 200,
             bottom: 30,
-            left: 150
+            left: 200
           }
         });
       }
@@ -148,10 +175,10 @@
       this.chartRef = null; // no average stats yet.
       this.chartOptions = {
         getLabel: function(row) {
-          return row.studentId;
+          return row.displayName;
         },
         getValue: function(row) {
-          return row[self.filters.stats];
+          return row.performance;
         }
       };
 
@@ -166,12 +193,12 @@
 
         if (
           this.pages.cursor &&
-          this.pages.remaining < this.page.viewSize
+          this.pages.remaining() < this.pages.viewSize
         ) {
           params.cursor = this.pages.cursor;
           scdDashboardApi.review.listStats(params).then(function(students) {
-            this.pages.add(students);
-            setStudent(this.pages.next());
+            self.pages.add(students);
+            setStudent(self.pages.next());
           });
         } else {
           setStudent(this.pages.next());
@@ -183,7 +210,7 @@
        *
        */
       this.prev = function() {
-        if (this.pages.position > 0) {
+        if (this.pages.position() > 0) {
           setStudent(this.pages.prev());
         }
       };
@@ -197,8 +224,8 @@
       this.filterChanged = function(params) {
         this.pages.clear();
         scdDashboardApi.review.listStats(params).then(function(students) {
-          this.pages.add(students);
-          setStudent(this.pages.next());
+          self.pages.add(students);
+          setStudent(self.pages.next());
         });
       };
     }
