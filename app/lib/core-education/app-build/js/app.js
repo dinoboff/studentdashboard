@@ -373,10 +373,20 @@
 (function() {
   'use strict';
 
-  angular.module('scceUser.controllers', []).
+  var module = angular.module('scceUser.controllers', [
+    'angularFileUpload',
+    'scceUser.services'
+  ]).
 
-  controller('ScceUserListCtrl', ['$q', '$upload', 'scceUsersApi', 'getList', 'initialList', 'userType', 'currentUser',
-    function($q, $upload, scceUsersApi, getList, initialList, userType, currentUser) {
+  controller('ScceUserListCtrl', [
+    '$q',
+    '$upload',
+    'scceUsersApi',
+    'getList',
+    'initialList',
+    'userType',
+    'currentUser',
+    function ScceUserListCtrl($q, $upload, scceUsersApi, getList, initialList, userType, currentUser) {
       var self = this;
 
       this.currentUser = currentUser;
@@ -454,10 +464,44 @@
         });
       };
     }
-  ])
+  ]);
 
+  function SccePortraitUploadListCtrl($upload, scceUsersApi) {
+    this.showForm = false;
+    this.$upload = $upload;
+    this.scceUsersApi = scceUsersApi;
+  }
+  SccePortraitUploadListCtrl.$inject = ['$upload', 'scceUsersApi'];
 
-  ;
+  SccePortraitUploadListCtrl.prototype.image = function(image, size) {
+    if (image && image.url) {
+      return image.url + '=s' + size;
+    } else {
+      return 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=' + size;
+    }
+  };
+
+  SccePortraitUploadListCtrl.prototype.upload = function(student, $file) {
+    var self = this;
+    console.log('Student: ', student);
+    this.scceUsersApi.newStudentProfileUploadUrl().then(function(url) {
+      return self.$upload.upload({
+        url: url,
+        method: 'POST',
+        withCredentials: true,
+        data: {
+          studentId: student.studentId
+        },
+        file: $file[0]
+      });
+    }).then(function(resp) {
+      console.log(resp.data);
+      student.image = {url: resp.data.url};
+      self.showForm = false;
+    });
+  };
+
+  module.controller('SccePortraitUploadListCtrl', SccePortraitUploadListCtrl);
 
 })();
 
@@ -646,6 +690,12 @@
 
         newStudentUploadUrl: function() {
           return client.all('students').one('_uploadurl').post().then(function(resp){
+            return resp.url;
+          });
+        },
+
+        newStudentProfileUploadUrl: function() {
+          return client.all('students').one('_uploadprofileurl').post().then(function(resp){
             return resp.url;
           });
         },
