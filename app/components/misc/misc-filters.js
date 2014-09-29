@@ -53,6 +53,20 @@
         'transform': 'rotate(' + angle + 'deg)'
       };
     };
+  }).
+
+  filter('portrait', function portraitFactory() {
+    return function portrait(url, size) {
+      console.log(url, size);
+      if (url) {
+        return url + '=s' + size;
+      } else {
+        return (
+          'https://lh3.googleusercontent.com/-XdUIqdMkCWA/' +
+          'AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=' + size
+        );
+      }
+    };
   })
 
   ;

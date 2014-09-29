@@ -43,7 +43,7 @@
         }
 
         if (students.cursor) {
-          return scceUsersApi.listStudents(students.cursor).then(function(students){
+          return scceUsersApi.listStudents(students.cursor, {limit: 0}).then(function(students){
             return addStudents(students);
           });
         }
@@ -54,8 +54,8 @@
           return;
         }
 
-        studentsPromise = scceUsersApi.listStudents().then(function(studentList) {
-          return addStudents(studentList, {limit:0});
+        studentsPromise = scceUsersApi.listStudents('', {limit: 0}).then(function(studentList) {
+          return addStudents(studentList);
         })['finally'](function() {
           studentsPromise = null;
         });

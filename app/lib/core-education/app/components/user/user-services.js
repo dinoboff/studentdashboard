@@ -161,6 +161,12 @@
           });
         },
 
+        newStudentProfileUploadUrl: function() {
+          return client.all('students').one('_uploadprofileurl').post().then(function(resp){
+            return resp.url;
+          });
+        },
+
         staff: function(cursor) {
           var params = {};
 

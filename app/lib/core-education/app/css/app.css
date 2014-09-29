@@ -31,3 +31,16 @@ footer > .container {
 .more-btn {
   text-align: center
 }
+
+.upload-portrait {
+  height: 49px;
+}
+
+.upload-portrait img {
+  cursor: pointer;
+  cursor: hand;
+}
+
+.student-list tbody tr td {
+  vertical-align: middle;
+}

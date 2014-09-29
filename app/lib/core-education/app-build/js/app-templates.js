@@ -11,9 +11,10 @@ angular.module("views/sccoreeducation/student-list.html", []).run(["$templateCac
     "\n" +
     "<div class=\"row\">\n" +
     "    <div class=\"col-md-8\">\n" +
-    "        <table class=\"table table-striped\">\n" +
+    "        <table class=\"table table-striped student-list\">\n" +
     "            <thead>\n" +
     "                <tr>\n" +
+    "                    <th>Profile</th>\n" +
     "                    <th>Name</th>\n" +
     "                    <th>Year</th>\n" +
     "                    <th>Is registered</th>\n" +
@@ -23,6 +24,10 @@ angular.module("views/sccoreeducation/student-list.html", []).run(["$templateCac
     "            </thead>\n" +
     "            <tbody>\n" +
     "                <tr ng-repeat=\"user in ctrl.users track by user.studentId\">\n" +
+    "                    <td ng-controller=\"SccePortraitUploadListCtrl as uploadCtrl\" class=\"upload-portrait\">\n" +
+    "                        <a href=\"\" ng-click=\"uploadCtrl.showForm = true\"><img ng-if=\"!uploadCtrl.showForm\" ng-src=\"{{uploadCtrl.image(user.image, 32)}}\" ng-attr-alt=\"{{user.displayName}}'s portrait;\"/></a>\n" +
+    "                        <input ng-if=\"uploadCtrl.showForm\" type=\"file\" ng-file-select=\"uploadCtrl.upload(user, $files)\" />\n" +
+    "                    </td>\n" +
     "                    <td>{{user.displayName}}</td>\n" +
     "                    <td>{{user.year}}</td>\n" +
     "                    <td>\n" +
@@ -45,7 +50,7 @@ angular.module("views/sccoreeducation/student-list.html", []).run(["$templateCac
     "\n" +
     "            <tfoot ng-show=\"ctrl.users.cursor\">\n" +
     "                <tr>\n" +
-    "                    <td colspan=\"6\" class=\"more-btn\">\n" +
+    "                    <td colspan=\"8\" class=\"more-btn\">\n" +
     "                        <button class=\"btn btn-primary\" ng-click=\"ctrl.getMore()\" ng-disabled=\"ctrl.loading\">More</button>\n" +
     "                    </td>\n" +
     "                </tr>\n" +
