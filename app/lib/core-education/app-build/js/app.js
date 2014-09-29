@@ -630,8 +630,8 @@
           return client.one('users', userId).get();
         },
 
-        listStudents: function(cursor) {
-          var params = {};
+        listStudents: function(cursor, params) {
+          params = params || {};
 
           if (cursor) {
             params.cursor = cursor;
