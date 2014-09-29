@@ -68,9 +68,15 @@
 
       when('/', {
         templateUrl: 'views/scdashboard/repository.html',
-        controller: 'scdRepositoryListCtrl',
+        controller: 'ScdRepositoryListCtrl',
+        controllerAs: 'ctrl',
         resolve: {
-          'currentUser': currentUser
+          'currentUser': currentUser,
+          'initialData': ['scdRepositoryListCtrlInitialData',
+            function(scdRepositoryListCtrlInitialData) {
+              return scdRepositoryListCtrlInitialData();
+            }
+          ]
         }
       }).
 
