@@ -57,7 +57,7 @@
 
   filter('portrait', function portraitFactory() {
     return function portrait(url, size) {
-      console.log(url, size);
+
       if (url) {
         return url + '=s' + size;
       } else {
