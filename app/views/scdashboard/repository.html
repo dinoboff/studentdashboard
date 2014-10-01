@@ -69,12 +69,12 @@
 
                     <div class="form-group">
                         <label for="selected-doc-type">Document type</label>
-                        <select id="selected-doc-type" class="form-control" ng-model="uploadCtrl.fileMeta.docType" ng-options="n for n in docTypes">
+                        <select id="selected-doc-type" class="form-control" ng-model="uploadCtrl.fileMeta.docType" ng-options="n for n in uploadCtrl.docTypes">
                             <option value="">Select a document type</option>
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block" ng-click="uploadButtonClicked(uploadCtrl.selected.file)" ng-hide="showProgress" ng-disabled="!uploadCtrl.selected.file || !uploadCtrl.fileMeta.docType" id="upload-file">
+                    <button type="submit" class="btn btn-primary btn-block" ng-click="uploadCtrl.uploadButtonClicked(ctrl.selector.selected, uploadCtrl.selected.file, ctrl.files)" ng-hide="uploadCtrl.showProgress" ng-disabled="!ctrl.selector.selected || !uploadCtrl.selected.file || !uploadCtrl.fileMeta.docType" id="upload-file">
                         Upload
                     </button>
 

@@ -66,9 +66,10 @@
   ]).
 
   controller('ScdRepositoryUploadFileCtrl', [
+    '$q',
     '$upload',
     'scdRepositoryApi',
-    function ScdRepositoryUploadFileCtrl($upload, scdRepositoryApi) {
+    function ScdRepositoryUploadFileCtrl($q, $upload, scdRepositoryApi) {
       var self = this;
 
       this.docTypes = ['SHELF', 'USMLE', 'Peer Evaluations'];
@@ -78,15 +79,19 @@
         self.progress = parseInt(100.0 * evt.loaded / evt.total, 10);
       }
 
-      function onSucess(data) {
-        self.files.unshift(data);
+      function onSucess(data, fileList) {
+        fileList.unshift(data);
         self.success = 'New file uploaded.';
         self.selected.file = null;
         self.reset();
       }
 
-      function uploadFile(file) {
-        scdRepositoryApi.newUploadUrl(self.selector.selected.studentId).then(function(uploadInfo) {
+      function uploadFile(student, file, fileList) {
+        if (!student || !student.studentId) {
+          return $q.reject('No student selected');
+        }
+
+        scdRepositoryApi.newUploadUrl(student.studentId).then(function(uploadInfo) {
           self.upload = $upload.upload({
             url: uploadInfo.url,
             method: 'POST',
@@ -94,14 +99,14 @@
             data: {
               name: self.fileMeta.name || file.name,
               docType: self.fileMeta.docType,
-              destId: self.selector.selected.studentId
+              destId: student.studentId
             },
             file: file
           }).progress(
             onProgress
-          ).success(
-            onSucess
-          );
+          ).success(function(data) {
+            onSucess(data, fileList);
+          });
         });
 
       }
@@ -117,8 +122,8 @@
         this.fileMeta.name = file.name;
       };
 
-      this.uploadButtonClicked = function(file) {
-        uploadFile(file);
+      this.uploadButtonClicked = function(student, file, fileList) {
+        uploadFile(student, file, fileList);
         this.showProgress = true;
       };
 
