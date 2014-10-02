@@ -1,3 +1,5 @@
+/* ** DEPRECATED ** */
+
 (function() {
   'use strict';
 

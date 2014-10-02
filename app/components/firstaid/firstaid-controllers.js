@@ -1,196 +1,220 @@
 (function() {
   'use strict';
 
-  function layout(innerHeight, margin, width) {
-    margin = margin || {
-      top: 20,
-      right: 150,
-      bottom: 30,
-      left: 150
-    };
-    width = width || 900;
+  angular.module('scdFirstAid.controllers', [
+    'scceSvg.services',
+    'scceUser.services',
+    'scDashboard.services',
+    'scdMisc.services',
+    'scdSelector.services'
+  ]).
 
-    return {
-      margin: margin,
-      width: width,
-      height: innerHeight + margin.top + margin.bottom,
-      innerWidth: width - margin.right - margin.left,
-      innerHeight: innerHeight
-    };
+  /**
+   * Use to resolve `initialData` of `scdFirstAidStatsCtrl`.
+   *
+   */
+  factory('scdFirstAidStatsCtrlInitialData', [
+    '$q',
+    'scceUsersApi',
+    'scdDashboardApi',
+    'scdSelectedStudent',
+    function scdFirstAidStatsCtrlInitialDataFactory($q, scceUsersApi, scdDashboardApi, scdSelectedStudent) {
+      return function scdFirstAidStatsCtrlInitialData() {
+        var params = {
+            limit: 30,
+            residents: 'all',
+            topic: 'all',
+            sortBy: 'predictive'
+          },
+          selectorPromise = scdSelectedStudent(),
+          studentsPromise = selectorPromise.then(function(selector) {
+            // If the selector is not available, the current user cannot
+            // see the stats either
+            if (!selector.available) {
+              return $q.reject('Only staff or admins can access this page.');
+            }
 
-  }
+            return scdDashboardApi.firstAid.listStats(params);
+          });
 
-  function FirstAidCtrl($scope, currentUser, window, firstAidApi) {
-    this._ = window._;
-    this.d3 = window.d3;
-    this.firstAidApi = firstAidApi;
-    this.scope = $scope;
 
-    $scope.residents = firstAidApi.residents;
-    $scope.categories = firstAidApi.categories;
-    $scope.stats = firstAidApi.stats;
-    $scope.cursor = {};
+        return $q.all({
+          selector: selectorPromise,
+          params: params,
+          students: studentsPromise,
+          paramOptions: $q.all({
 
-    $scope.filters = {
-      chart: {
-        year: firstAidApi.residents[0],
-        sortBy: {
-          category: firstAidApi.categories[0],
-          property: firstAidApi.stats[0]
-        }
-      },
-      table: {
-        year: firstAidApi.residents[0],
-        show: {
-          category: firstAidApi.categories[0],
-          property: firstAidApi.stats[0]
+            residents: scceUsersApi.listPgys().then(function(years) {
+              return [{
+                id: 'all',
+                label: 'All Students',
+              }].concat(years);
+            }),
+
+            topics: scdDashboardApi.firstAid.listTopics().then(function(topics) {
+              return [{
+                id: 'all',
+                label: 'All Categories'
+              }].concat(topics);
+            }),
+
+            sortBy: [{
+              id: 'predictive',
+              label: 'Average of Predictions'
+            }, {
+              id: 'performance',
+              label: 'Performance',
+            }],
+
+          })
+        });
+      };
+    }
+  ]).
+
+  /**
+   * scdFirstAidStatsCtrl
+   *
+   */
+  controller('ScdFirstAidStatsCtrl', [
+    '$window',
+    '$location',
+    'ScceLayout',
+    'ScdPageCache',
+    'scdDashboardApi',
+    'initialData',
+    function ScdFirstAidStatsCtrl($window, $location, ScceLayout, ScdPageCache, scdDashboardApi, initialData) {
+      var self = this,
+        _ = $window._,
+        rowHeight = 25;
+
+      function setStudent(students) {
+        self.students = students;
+        self.chartLayout = ScceLayout.contentSizing({
+          innerWidth: 600,
+          innerHeight: rowHeight * students.length,
+          margin: {
+            top: 20,
+            right: 200,
+            bottom: 50,
+            left: 200
+          }
+        });
+      }
+
+      function setLegend(sortById) {
+        var sortBy = _.find(
+          self.filterOptions.sortBy, {
+            id: sortById
+          }
+        );
+
+        if (sortBy.id === 'performance') {
+          return {
+            x: {
+              label: sortBy.label + ' (%)',
+              unit: '%'
+            }
+          };
+        } else {
+          return {
+            x: {
+              label: sortBy.label,
+              unit: ''
+            }
+          };
         }
       }
-    };
 
-    $scope.firstAid = {
-      chart: {},
-      table: {
-        sortedBy: 'firstName',
-        searchFor: '',
-        reversed: null,
-        source: {},
-        students: [],
-      }
-    };
+      this.pages = new ScdPageCache(initialData.params.limit);
+      this.pages.add(initialData.students);
+      this.filters = initialData.params;
+      this.filterOptions = initialData.paramOptions;
 
-    $scope.next = this.nextChartData.bind(this);
-    $scope.prev = this.prevChartData.bind(this);
-    $scope.chartFiltersChanged = this.getChartData.bind(this);
-    $scope.tableFiltersChanged = this.filterTableData.bind(this);
-    $scope.tableSortBy = this.sortTableDataBy.bind(this);
-
-    this.getChartData();
-    this.getTableData();
-  }
-
-  FirstAidCtrl.prototype.getTableData = function() {
-    this.firstAidApi.all().then(this.updateTableData.bind(this));
-  };
-
-  FirstAidCtrl.prototype.updateTableData = function(data) {
-    this.scope.firstAid.table.source = data.firstAid;
-    this.filterTableData();
-  };
-
-  FirstAidCtrl.prototype.filterTableData = function() {
-    if (this.scope.filters.table.year.id) {
-      this.scope.firstAid.table.students = this._.filter(
-        this.scope.firstAid.table.source.students, {
-          'PGY': this.scope.filters.table.year.id
+      this.chartRef = null; // no average stats yet.
+      this.chartLegend = setLegend(this.filters.sortBy);
+      this.chartOptions = {
+        domain: function(series) {
+          var max, min, domain;
+          if (self.filters.sortBy === 'performance') {
+            domain = [0, 100];
+          } else {
+            max = _.max(series, function(s) {
+              return s[self.filters.sortBy];
+            });
+            min = _.min(series, function(s) {
+              return s[self.filters.sortBy];
+            });
+            domain = _.map([min, max], self.filters.sortBy);
+          }
+          console.log(domain);
+          return domain;
+        },
+        getLabel: function(row) {
+          return row.displayName;
+        },
+        getValue: function(row) {
+          return row[self.filters.sortBy];
         }
-      );
-    } else {
-      this.scope.firstAid.table.students = this.scope.firstAid.table.source.students;
-    }
-
-    this.sortTableDataBy(this.scope.firstAid.table.sortedBy);
-  };
-
-  FirstAidCtrl.prototype.sortTableDataBy = function(sortBy) {
-    var getKey,
-      self = this;
-
-    this.scope.firstAid.table.reversed = (
-      this.scope.firstAid.table.sortedBy === sortBy &&
-      this.scope.firstAid.table.reversed === false
-    );
-
-    this.scope.firstAid.table.sortedBy = sortBy;
-
-    if (this.scope.firstAid.table.reversed) {
-      this.scope.firstAid.table.students.reverse();
-      return;
-    }
-
-    switch(sortBy) {
-    case 'selected-category':
-      getKey = function(student) {
-        return student.data[self.scope.filters.table.show.category].result;
       };
-      break;
-    case 'PGY-average':
-      getKey = function(student) {
-        return self.scope.firstAid.table.source.overallAverage['PGY ' + student.PGY][self.scope.filters.table.show.category][self.scope.filters.table.show.property.id];
+
+      setStudent(this.pages.next());
+
+      /**
+       * Query next page of student
+       *
+       */
+      this.next = function(params) {
+        params = _.clone(params);
+
+        if (
+          this.pages.cursor &&
+          this.pages.remaining() < this.pages.viewSize
+        ) {
+          params.cursor = this.pages.cursor;
+          scdDashboardApi.firstAid.listStats(params).then(function(students) {
+            self.pages.add(students);
+            setStudent(self.pages.next());
+          });
+        } else {
+          setStudent(this.pages.next());
+        }
       };
-      break;
-    case '%-completed':
-      getKey = function(student) {
-        return student.data[self.scope.filters.table.show.category].completed;
+
+      /**
+       * Query previous page of student
+       *
+       */
+      this.prev = function() {
+        if (this.pages.position() > 0) {
+          setStudent(this.pages.prev());
+        }
       };
-      break;
-    case 'probability-of-passing':
-      getKey = function(student) {
-        return student.data[self.scope.filters.table.show.category].probabilityOfPassing;
+
+      /**
+       * To be called after the parameter have been changed.
+       *
+       * It should query the student list with new parameters.
+       *
+       */
+      this.filterChanged = function(params) {
+        this.pages.clear();
+
+        self.chartLegend = setLegend(params.sortBy);
+        scdDashboardApi.firstAid.listStats(params).then(function(students) {
+          self.pages.add(students);
+          setStudent(self.pages.next());
+        });
       };
-      break;
-    default:
-      getKey = function(student) {
-        return student[sortBy];
-      };
-      break;
-    }
 
-    this.scope.firstAid.table.students = this._.sortBy(
-      this.scope.firstAid.table.students, getKey
-    );
-
-  };
-
-  FirstAidCtrl.prototype.getChartData = function() {
-    this.firstAidApi.next('', this.scope.filters.chart).then(this.updateChartData.bind(this));
-  };
-
-  FirstAidCtrl.prototype.nextChartData = function() {
-    this.firstAidApi.next(this.scope.cursor.next, this.scope.filters.chart).then(this.updateChartData.bind(this));
-  };
-
-  FirstAidCtrl.prototype.prevChartData = function() {
-    this.firstAidApi.prev(this.scope.cursor.prev, this.scope.filters.chart).then(this.updateChartData.bind(this));
-  };
-
-  FirstAidCtrl.prototype.updateChartData = function(data) {
-    this.scope.cursor.next = data.next;
-    this.scope.cursor.prev = data.prev;
-    this.scope.firstAid.chart = data.firstAid;
-    this.setLayout();
-    this.setScales();
-  };
-
-  FirstAidCtrl.prototype.setScales = function() {
-    var self = this;
-
-    if (!this.scope.scales) {
-      this.scope.scales = {
-        x: this.d3.scale.linear().domain(
-          [0, 100]
-        ).range(
-          [0, this.scope.layout.innerWidth]
-        )
+      this.showDetails = function(studentStats) {
+        initialData.selector.select({
+          studentId: studentStats.studentId
+        });
+        $location.path('/firstaid');
       };
     }
-
-    this.scope.scales.y = this.d3.scale.ordinal();
-    this.scope.firstAid.chart.students.forEach(function(student) {
-      self.scope.scales.y(student.id);
-    });
-    this.scope.scales.y = this.scope.scales.y.rangePoints([this.scope.layout.innerHeight, 0], 1);
-  };
-
-
-  FirstAidCtrl.prototype.setLayout = function() {
-    this.scope.layout = layout(this.scope.firstAid.chart.students.length * 20); // 20px per student
-  };
-
-
-  angular.module('scdFirstAid.controllers', ['scceSvg.directives', 'scdFirstAid.services']).
-
-  controller('scdFirstAidCtrl', ['$scope', 'currentUser', '$window', 'scdFirstAidApi', FirstAidCtrl])
+  ])
 
   ;
 
