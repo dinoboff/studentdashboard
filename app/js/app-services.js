@@ -120,6 +120,35 @@
             return api.all('roshreview').all('topic').getList();
           }
 
+        },
+
+        /**
+         * First Aid endpoints
+         */
+        firstAid: {
+
+          /**
+           * Fetch Student Rosh Review ranks
+           *
+           */
+          listStats: function(params) {
+            return api.all('firstaid').all('stats').getList(params);
+          },
+
+          /**
+           * Fetch detailled stats of a student
+           */
+          getStats: function(studentId) {
+            return api.all('firstaid').one('stats', studentId).get();
+          },
+
+          /**
+           * Fetch the list of of Rosh Review topics
+           */
+          listTopics: function() {
+            return api.all('firstaid').all('topics').getList();
+          }
+
         }
       };
     }

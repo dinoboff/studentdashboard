@@ -108,11 +108,17 @@
         }
       }).
 
-      when('/first-aid', {
-        templateUrl: 'views/scdashboard/first-aid.html',
-        controller: 'scdFirstAidCtrl',
+      when('/first-aid/stats', {
+        templateUrl: 'views/scdashboard/firstaid-stats.html',
+        controller: 'ScdFirstAidStatsCtrl',
+        controllerAs: 'ctrl',
         resolve: {
-          'currentUser': currentUser
+          'currentUser': currentUserIsStaff,
+          'initialData': ['scdFirstAidStatsCtrlInitialData',
+            function(scdFirstAidStatsCtrlInitialData) {
+              return scdFirstAidStatsCtrlInitialData();
+            }
+          ]
         }
       }).
 
