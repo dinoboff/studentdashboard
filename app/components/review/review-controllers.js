@@ -103,7 +103,9 @@
 
       function setLegend(sortById) {
         var sortBy = _.find(
-          self.filterOptions.sortBy, {id: sortById}
+          self.filterOptions.sortBy, {
+            id: sortById
+          }
         );
         return {
           x: {
@@ -234,11 +236,13 @@
    *
    */
   controller('ScdReviewUserStatsCtrl', [
+    '$window',
     'ScceLayout',
     'scdDashboardApi',
     'initialData',
-    function ScdReviewUserStatsCtrl(ScceLayout, scdDashboardApi, initialData) {
-      var self = this;
+    function ScdReviewUserStatsCtrl($window, ScceLayout, scdDashboardApi, initialData) {
+      var self = this,
+        _ = $window._;
 
       this.selector = initialData.selector;
       this.userStats = initialData.userStats;
@@ -287,6 +291,18 @@
         }].filter(function(c) {
           return c.value > 0;
         });
+      }
+
+      function categoriesLayout(stats, baseLayout) {
+        if (!stats || !stats.categoryPerformances) {
+          return;
+        }
+
+        return new ScceLayout.contentSizing(_.assign({
+            'innerHeight': stats.categoryPerformances.length * baseLayout.rowHeight
+          },
+          baseLayout
+        ));
       }
 
       this.progress = {
@@ -352,26 +368,29 @@
             left: 220
           },
         },
+
         options: {
           getLabel: function(row) {
-            return row.name;
+            return row.label;
           },
           hasRef: function() {
             return false;
           },
-          getRef: function(row) {
-            return {
-              value: self.performances.statsByTopics[row.id][self.comparison.selected.id]
-            };
+          getRef: function() {
+            return null;
           },
           getUnit: function() {
             return '%';
           },
           getValue: function(row) {
-            return row.value;
+            return row.performance;
           },
         }
       };
+      this.byCategory.layout = categoriesLayout(
+        this.userStats,
+        this.byCategory.baseLayout
+      );
 
 
 
@@ -385,106 +404,14 @@
         return scdDashboardApi.review.getStats(studentId).then(function(stats) {
           self.userStats = stats;
           self.progress.components = components(stats);
+          self.byCategory.layout = categoriesLayout(
+            self.userStats,
+            self.byCategory.baseLayout
+          );
         });
       };
     }
   ])
-
-  // controller('scdReviewCtrl', ['currentUser', 'scdSelectedStudent', 'scdReviewApi', '$window',
-  //   function(currentUser, scdSelectedStudent, scdReviewApi, $window) {
-
-
-  //     this.performances = {
-
-  //       progress: {
-  //         components: null,
-  //       },
-
-  //       abem: {
-  //         layout: layout({
-  //           innerWidth: 100,
-  //           innerHeight: 50,
-  //           margin: {
-  //             top: 12,
-  //             right: 12,
-  //             bottom: 50,
-  //             left: 12
-  //           },
-  //         }),
-  //         steps: [{
-  //           min: 0,
-  //           max: 75,
-  //           id: 'danger'
-  //         }, {
-  //           max: 100,
-  //           id: 'ok'
-  //         }],
-  //       },
-
-
-  //         reading: {
-  //           value: null,
-  //           unit: '%',
-  //           label: 'Probability of Passing'
-  //         }
-  //       },
-
-
-  //     };
-
-  //     this.updateMeters = function(data) {
-  //       this.performances.abem.reading.value = data.abem;
-  //       this.performances.passing.reading.value = data.passingProbability;
-  //     };
-
-  //     // Other charts needs the data
-  //     this.setPerformances = function(studentId) {
-  //       self.performances.data = null;
-  //       self.performances.statsByTopics = null;
-
-  //       scdReviewApi.performancesById(studentId).then(function(data) {
-  //         self.performances.data = data;
-  //         self.updateMeters(data);
-  //         self.updateCumulativePerfChart(data);
-  //         self.updateCumulativePerfChartRef(self.comparison.selected);
-  //         self.updateProgressChart(data);
-  //         self.updatePerfByCategoryChart(data);
-  //       });
-
-  //       scdReviewApi.topicsStats().then(function(stats) {
-  //         self.performances.statsByTopics = stats;
-  //       });
-  //     };
-
-  //     this.updateCumulativePerfChart = function(data) {
-  //       self.performances.cumulative.series = data.progress;
-  //       self.performances.cumulative.current = {
-  //         label: 'Overall percent correct',
-  //         value: data.cumulativePerformance
-  //       };
-  //     };
-
-  //     this.updateCumulativePerfChartRef = function(selectedOption) {
-  //       self.performances.cumulative.ref = {
-  //         id: selectedOption.id,
-  //         label: selectedOption.label,
-  //         value: self.performances.data[selectedOption.id]
-  //       };
-  //     };
-
-
-  //     this.updatePerfByCategoryChart = function(data) {
-  //       var config = this.performances.byCategory;
-
-  //       config.series = _.sortBy(data.categoryPerformances, 'id');
-  //       config.layout = layout(_.extend({
-  //           innerHeight: config.baseLayout.rowHeight * data.categoryPerformances.length
-  //         },
-  //         config.baseLayout
-  //       ));
-  //     };
-  //   }
-  // ])
 
   ;
 

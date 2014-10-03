@@ -66,12 +66,12 @@
             <div class="well">
                 <!-- Probablility of passing -->
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-sm-6">
                         <scd-chart-meter scd-layout="ctrl.abem.layout" scd-levels="ctrl.abem.steps" scd-reading="{value: null, unit: '%', label: 'Projected ABEM score'}">
                         </scd-chart-meter>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-sm-6">
                         <scd-chart-meter scd-layout="ctrl.passing.layout" scd-levels="ctrl.passing.steps" scd-reading="{value: null, unit: '%', label: 'Probability of Passing'}">
                         </scd-chart-meter>
                     </div>
@@ -84,7 +84,7 @@
     </div>
 
     <!-- Result breakdown by topics -->
-<!--     <div class="row">
+    <div class="row">
 
         <div class="col-md-12">
 
@@ -92,22 +92,27 @@
                 <h2>Performance by Category</h2>
                 <hr/>
 
-                <form role="form" class="form-inline filter-selectors">
+<!--                 <form role="form" class="form-inline filter-selectors">
 
                     <div class="form-group">
                         <label for="compare-user-to">Compared to:</label>
                         <select id="compare-user-to" class="form-control" ng-model="ctrl.filters.ref" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.refs"></select>
                     </div>
 
-                </form>
+                </form> -->
 
-                <scd-chart-histogram scd-layout="ctrl.byCategory.layout" scd-series="ctrl.byCategory.series" scd-options="ctrl.byCategory.options" scd-legend="{x: 'Score (%)'}">
+                <scd-chart-histogram
+                    scd-layout="ctrl.byCategory.layout"
+                    scd-series="ctrl.userStats.categoryPerformances"
+                    scd-options="ctrl.byCategory.options"
+                    scd-legend="{x: 'Score (%)'}"
+                >
                 </scd-chart-histogram>
 
             </div>
 
         </div>
-    </div> -->
+    </div>
 
 
 </div>
