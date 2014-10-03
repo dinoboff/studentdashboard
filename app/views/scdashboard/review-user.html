@@ -7,7 +7,7 @@
 
         <div class="form-group">
             <label for="selected-student">Show stats of</label>
-            <select id="selected-student" class="form-control" ng-model="ctrl.selector.selected" ng-options="s as s.displayName for s in ctrl.selector.students track by s.studentId" ng-change="ctrl.showStats(ctrl.selector.selected.studentId)">
+            <select id="selected-student" class="form-control" ng-model="ctrl.selector.selected" ng-options="s as s.displayName group by s.year for s in ctrl.selector.students track by s.studentId" ng-change="ctrl.showStats(ctrl.selector.selected.studentId)">
                 <option value="">Select a student</option>
             </select>
         </div>
