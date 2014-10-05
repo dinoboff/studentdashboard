@@ -24,7 +24,7 @@
             limit: 30,
             residents: 'all',
             topic: 'all',
-            sortBy: 'predictive'
+            sortBy: 'predictiveSum'
           },
           selectorPromise = scdSelectedStudent(),
           studentsPromise = selectorPromise.then(function(selector) {
@@ -59,11 +59,11 @@
             }),
 
             sortBy: [{
-              id: 'predictive',
-              label: 'Average of Predictions'
+              id: 'predictiveSum',
+              label: 'Sum of Predictions',
             }, {
-              id: 'performance',
-              label: 'Performance',
+              id: 'predictiveAverage',
+              label: 'Average of Predictions'
             }],
 
           })
