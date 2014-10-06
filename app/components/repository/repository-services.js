@@ -11,6 +11,9 @@
         },
         newUploadUrl: function(studentId) {
           return scdDashboardBaseApi.one('repository', studentId).one('uploadurl').post();
+        },
+        deleteDocument: function(doc) {
+          return scdDashboardBaseApi.one('repository', doc.destId).one('files', doc.id).remove();
         }
       };
     }

@@ -27,18 +27,32 @@
                     <th>Type</th>
                     <th>Sender</th>
                     <th>Sent date</th>
-                    <th>Last download data</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-repeat="file in ctrl.files" class="file-details">
-                    <td>{{file.name}}</td>
+                    <td><a ng-href="{{file.url}}">{{file.name}}</a>
+                    </td>
                     <td>{{file.type}}</td>
                     <td>{{file.sender}}</td>
                     <td>{{file.uploadedAt}}</td>
-                    <td>{{file.lastDownloadAt || '-'}}</td>
-                    <td><a ng-href="{{file.url}}">download</a>
+                    <td>
+                        <a ng-href="{{file.url}}" ng-hide="file.confirmDelete" role="button" class="btn btn-primary btn-sm">
+                            <span class="glyphicon glyphicon-download"></span>
+                        </a>
+
+                        <button type="button" ng-hide="file.confirmDelete"  class="btn btn-danger btn-sm" ng-click="file.confirmDelete = true">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+
+                        <button type="button" ng-show="file.confirmDelete"  class="btn btn-danger" ng-click="ctrl.delete(file)">
+                            Confirm delete
+                        </button>
+                        <button type="button" ng-show="file.confirmDelete"  class="btn btn-default" ng-click="file.confirmDelete = false">
+                            Cancel
+                        </button>
+
                     </td>
                 </tr>
                 <tr ng-if="ctrl.files == null">

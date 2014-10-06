@@ -32,11 +32,14 @@
   ]).
 
   controller('ScdRepositoryListCtrl', [
+    '$window',
     '$q',
     'scdRepositoryApi',
     'initialData',
-    function ScdRepositoryListCtrl($q, scdRepositoryApi, initialData) {
-      var self = this;
+    function ScdRepositoryListCtrl($window, $q, scdRepositoryApi, initialData) {
+      var self = this,
+        _ = $window._;
+
       this.files = initialData.files;
       this.selector = initialData.selector;
 
@@ -60,6 +63,12 @@
           } else {
             self.error = 'Unexpected error while trying to fetch the file list';
           }
+        });
+      };
+
+      this.delete = function(file) {
+        scdRepositoryApi.deleteDocument(file).then(function() {
+          _.remove(self.files, {id: file.id});
         });
       };
     }
