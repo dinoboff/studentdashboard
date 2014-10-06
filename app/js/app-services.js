@@ -7,7 +7,7 @@
   factory('scdDashboardBaseApi', ['$window', 'Restangular', 'SCD_API_BASE',
     function scdDashboardBaseApiFactory($window, Restangular, SCD_API_BASE) {
       var _ = $window._,
-        interceptor = function(data, operation, what) {
+        respInterceptor = function(data, operation, what) {
           var resp;
 
           if (operation !== 'getList') {
@@ -31,11 +31,24 @@
 
           resp.cursor = data.cursor ? data.cursor : null;
           return resp;
+        },
+        reqInterceptor = function(element, operation, route, url, headers, params) {
+          if (operation === 'remove') {
+            element = null;
+          }
+
+          return {
+            headers: headers,
+            params: params,
+            element: element,
+            httpConfig: {}
+          };
         };
 
       return Restangular.withConfig(function(RestangularConfigurer) {
         RestangularConfigurer.setBaseUrl(SCD_API_BASE);
-        RestangularConfigurer.addResponseInterceptor(interceptor);
+        RestangularConfigurer.setFullRequestInterceptor(reqInterceptor);
+        RestangularConfigurer.addResponseInterceptor(respInterceptor);
         RestangularConfigurer.setDefaultHeaders({
           'X-App-Name': 'dashboard'
         });
