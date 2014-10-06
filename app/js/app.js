@@ -122,6 +122,20 @@
         }
       }).
 
+      when('/first-aid', {
+        templateUrl: 'views/scdashboard/firstaid-user.html',
+        controller: 'ScdFirstAidUserStatsCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUser,
+          'initialData': ['scdFirstAidUserStatsCtrlInitialData',
+            function(scdFirstAidUserStatsCtrlInitialData) {
+              return scdFirstAidUserStatsCtrlInitialData();
+            }
+          ]
+        }
+      }).
+
       when('/assessments', {
         templateUrl: 'views/scdashboard/portfolio.html',
         controller: 'ScdPortfolioCtrl',

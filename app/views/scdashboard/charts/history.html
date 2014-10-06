@@ -14,7 +14,7 @@
             <g ng-repeat="tick in scales.y.ticks(5)" ng-attr-transform="translate(0,{{scales.yReversed(tick)}})">
                 <line x1="-5" ng-attr-x2="{{layout.innerWidth }}" />
                 <text x="-10">
-                    {{tick}}%
+                    {{tick}}{{options.unit}}
                 </text>
             </g>
             <line class="tick miner-tick" ng-repeat="tick in scales.y.ticks(20)" ng-attr-transform="translate(0,{{scales.yReversed(tick)}})" ng-attr-x2="{{layout.innerWidth }}" />
@@ -43,14 +43,15 @@
                 <tspan>{{ref.label}}</tspan>
                 <tspan>(</tspan>
                 <tspan>{{ref.value}}</tspan>
-                <tspan>%)</tspan>
+                <tspan>{{options.unit}}</tspan>
+                <tspan>)</tspan>
             </text>
         </g>
 
         <g class="current-performance" ng-attr-transform="translate({{layout.innerWidth + layout.margin.right/2}},{{layout.innerHeight/2}})">
             <text y="-24" style="font-size:48px">
                 <tspan>{{current.value}}</tspan>
-                <tspan>%</tspan>
+                <tspan>{{options.unit}}</tspan>
             </text>
             <text dy="24" style="font-size:12px; font-weight:200">{{current.label}}</text>
         </g>
