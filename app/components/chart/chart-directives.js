@@ -310,7 +310,8 @@
             getDate: function(day) {
               return new Date(day.date);
             },
-            domain: [0, 100]
+            domain: [0, 100],
+            unit: '%'
           });
 
           function setScales() {

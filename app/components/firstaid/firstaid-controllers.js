@@ -135,9 +135,9 @@
       this.chartLegend = setLegend(this.filters.sortBy);
       this.chartOptions = {
         domain: function(series) {
-          var max, min, domain;
+          var max, min;
           if (self.filters.sortBy === 'performance') {
-            domain = [0, 100];
+            return [0, 100];
           } else {
             max = _.max(series, function(s) {
               return s[self.filters.sortBy];
@@ -145,10 +145,8 @@
             min = _.min(series, function(s) {
               return s[self.filters.sortBy];
             });
-            domain = _.map([min, max], self.filters.sortBy);
+            return _.map([min, max], self.filters.sortBy);
           }
-          console.log(domain);
-          return domain;
         },
         getLabel: function(row) {
           return row.displayName;
@@ -211,7 +209,231 @@
         initialData.selector.select({
           studentId: studentStats.studentId
         });
-        $location.path('/firstaid');
+        $location.path('/first-aid');
+      };
+    }
+  ]).
+
+  /**
+   * Use to resolve `initialData` of `ScdFirstAidUserStatsCtrl`.
+   *
+   */
+  factory('scdFirstAidUserStatsCtrlInitialData', [
+    '$window',
+    '$q',
+    'scdSelectedStudent',
+    'scdDashboardApi',
+    function scdFirstAidUserStatsCtrlInitialDataFactory($window, $q, scdSelectedStudent, scdDashboardApi) {
+      return function scdFirstAidUserStatsCtrlInitialData() {
+        var _ = $window._,
+          selectorPromise = scdSelectedStudent(),
+          params = {
+            ref: 'programAverage'
+          };
+
+        return $q.all({
+          topics: scdDashboardApi.firstAid.listTopics().then(function(topics) {
+            return _.reduce(topics, function(map, topic) {
+              map[topic.id] = topic;
+              return map;
+            }, {});
+          }),
+          params: params,
+          selector: selectorPromise,
+          userStats: selectorPromise.then(function(selector) {
+            if (!selector.selected || !selector.selected.studentId) {
+              return null;
+            }
+
+            return scdDashboardApi.firstAid.getStats(selector.selected.studentId, params).catch(function() {
+              return null;
+            });
+          }),
+          filterOptions: $q.all({
+            refs: [{
+              id: 'programAverage',
+              label: 'Program Average'
+            }]
+          })
+        });
+      };
+    }
+  ]).
+
+  /**
+   * ScdFirstAidUserStatsCtrl
+   *
+   */
+  controller('ScdFirstAidUserStatsCtrl', [
+    '$window',
+    'ScceLayout',
+    'scdDashboardApi',
+    'initialData',
+    function ScdFirstAidUserStatsCtrl($window, ScceLayout, scdDashboardApi, initialData) {
+      var self = this,
+        _ = $window._;
+
+      this.selector = initialData.selector;
+      this.userStats = initialData.userStats;
+      this.filters = initialData.params;
+      this.filterOptions = initialData.filterOptions;
+
+      this.cummulativePerf = {
+        layout: ScceLayout.contentSizing({
+          innerWidth: 400,
+          innerHeight: 360,
+          margin: {
+            top: 20,
+            right: 150,
+            bottom: 30,
+            left: 70
+          },
+        }),
+        options: {
+          domain: [-300, 300],
+          unit: '',
+          getValue: function(day) {
+            return day.predictiveSum;
+          }
+        }
+      };
+
+      function components() {
+        return [{
+          label: 'N/A',
+          value: 100,
+          id: 'unattempted'
+        }];
+      }
+
+      function categoriesLayout(stats, baseLayout) {
+        if (!stats || !stats.categoryPerformances) {
+          return;
+        }
+
+        return new ScceLayout.contentSizing(_.assign({
+            'innerHeight': stats.categoryPerformances.length * baseLayout.rowHeight
+          },
+          baseLayout
+        ));
+      }
+
+      this.progress = {
+        layout: ScceLayout.contentSizing({
+          innerWidth: 300,
+          innerHeight: 149,
+          margin: {
+            top: 30,
+            right: 50,
+            bottom: 110,
+            left: 50
+          },
+        }),
+        components: components(this.userStats)
+      };
+
+      this.passing = {
+        layout: ScceLayout.contentSizing({
+          innerWidth: 100,
+          innerHeight: 50,
+          margin: {
+            top: 12,
+            right: 12,
+            bottom: 50,
+            left: 12
+          },
+        }),
+        steps: [{
+          min: 0,
+          max: 75,
+          id: 'danger'
+        }, {
+          max: 90,
+          id: 'warning'
+        }, {
+          max: 100,
+          id: 'ok'
+        }]
+      };
+
+      this.abem = {
+        layout: this.passing.layout,
+        steps: [{
+          min: 0,
+          max: 75,
+          id: 'danger'
+        }, {
+          max: 100,
+          id: 'ok'
+        }]
+
+      };
+
+      this.byCategory = {
+        layout: null,
+        baseLayout: {
+          rowHeight: 27,
+          innerWidth: 500,
+          margin: {
+            top: 10,
+            right: 60,
+            bottom: 50,
+            left: 220
+          },
+        },
+
+        options: {
+          domain: function(series) {
+            var max, min;
+
+            max = _.max(series, function(s) {
+              return s.predictiveSum;
+            });
+            min = _.min(series, function(s) {
+              return s.predictiveSum;
+            });
+
+            return _.map([min, max], 'predictiveSum');
+          },
+          getLabel: function(row) {
+            return initialData.topics[row.id].label;
+          },
+          hasRef: function() {
+            return false;
+          },
+          getRef: function() {
+            return null;
+          },
+          getUnit: function() {
+            return '';
+          },
+          getValue: function(row) {
+            return row.predictiveSum;
+          },
+        }
+      };
+      this.byCategory.layout = categoriesLayout(
+        this.userStats,
+        this.byCategory.baseLayout
+      );
+
+
+
+      this.showStats = function(studentId) {
+        if (!studentId) {
+          this.userStats = null;
+          return;
+        }
+
+        self.userStats = null;
+        return scdDashboardApi.firstAid.getStats(studentId).then(function(stats) {
+          self.userStats = stats;
+          self.progress.components = components(stats);
+          self.byCategory.layout = categoriesLayout(
+            self.userStats,
+            self.byCategory.baseLayout
+          );
+        });
       };
     }
   ])
