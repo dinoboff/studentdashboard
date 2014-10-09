@@ -325,6 +325,41 @@
           $httpBackend.flush();
         });
 
+        it('should delete student', function() {
+          var req, studentId;
+
+          $httpBackend.expectDELETE(fix.urls.oneStudent).respond(function(m, url, body) {
+            req = body;
+            studentId = fix.urls.oneStudent.exec(url)[1];
+            return [200, {}];
+          });
+          usersApi.deleteStudent('A1234');
+          $httpBackend.flush();
+
+          expect(studentId).toBe('A1234');
+          expect(req).toBe(null);
+        });
+
+        it('should edit student names', function() {
+          var req, studentId, name={
+            givenName: 'foo',
+            familyName: 'bar',
+            displayName: 'foo bar'
+          };
+
+          $httpBackend.expectPUT(fix.urls.oneStudentName).respond(function(m, url, body) {
+            req = JSON.parse(body);
+            studentId = fix.urls.oneStudentName.exec(url)[1];
+            return [200, {}];
+          });
+          usersApi.saveStudentName('A1234', name);
+
+          $httpBackend.flush();
+
+          expect(studentId).toBe('A1234');
+          expect(req).toEqual(name);
+        });
+
       });
 
 

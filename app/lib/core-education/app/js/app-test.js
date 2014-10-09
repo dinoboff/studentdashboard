@@ -39,6 +39,10 @@
 
     $httpBackend.whenPOST(fix.urls.students).respond(echo);
 
+    $httpBackend.whenDELETE(fix.urls.oneStudent).respond({});
+
+    $httpBackend.whenPUT(fix.urls.oneStudentName).respond({});
+
 
     $httpBackend.whenGET(fix.urls.staff).respond(function() {
       return [200, {

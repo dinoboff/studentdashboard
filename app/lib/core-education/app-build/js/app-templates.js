@@ -19,15 +19,50 @@ angular.module("views/sccoreeducation/student-list.html", []).run(["$templateCac
     "                    <th>Year</th>\n" +
     "                    <th>Is student</th>\n" +
     "                    <th>Is Staff</th>\n" +
+    "                    <th>Action</th>\n" +
     "                </tr>\n" +
     "            </thead>\n" +
     "            <tbody>\n" +
     "                <tr ng-repeat=\"user in ctrl.users track by user.studentId\">\n" +
     "                    <td ng-controller=\"SccePortraitUploadListCtrl as uploadCtrl\" class=\"upload-portrait\">\n" +
-    "                        <a href=\"\" ng-click=\"uploadCtrl.showForm = true\"><img ng-if=\"!uploadCtrl.showForm\" ng-src=\"{{uploadCtrl.image(user.image, 32)}}\" ng-attr-alt=\"{{user.displayName}}'s portrait;\"/></a>\n" +
+    "                        <a href=\"\" ng-click=\"uploadCtrl.showForm = true\">\n" +
+    "                            <img ng-if=\"!uploadCtrl.showForm\" ng-src=\"{{uploadCtrl.image(user.image, 32)}}\" ng-attr-alt=\"{{user.displayName}}'s portrait;\" />\n" +
+    "                        </a>\n" +
     "                        <input ng-if=\"uploadCtrl.showForm\" type=\"file\" ng-file-select=\"uploadCtrl.upload(user, $files)\" />\n" +
     "                    </td>\n" +
-    "                    <td>{{user.displayName}}</td>\n" +
+    "                    <td>\n" +
+    "                        <span ng-hide=\"user.editName\">\n" +
+    "                            {{user.displayName}} -\n" +
+    "                            <button type=\"button\" ng-hide=\"user.editName\" class=\"btn btn-default btn-xs\" ng-click=\"ctrl.editUserName(user)\">\n" +
+    "                                <span class=\"glyphicon glyphicon-pencil\"></span>\n" +
+    "                            </button>\n" +
+    "                        </span>\n" +
+    "                        <form class=\"form-inline\" role=\"form\" ng-show=\"user.editName\">\n" +
+    "\n" +
+    "                            <div class=\"form-group\">\n" +
+    "                                <label class=\"sr-only\" ng-attr-for=\"{{user.studentId}}-given-name\">given name</label>\n" +
+    "                                <input type=\"text\" ng-model=\"user.newName.givenName\" placeholder=\"given name\" ng-change=\"ctrl.updateNewDisplayName(user)\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-given-name\"/>\n" +
+    "                            </div>\n" +
+    "\n" +
+    "                            <div class=\"form-group\">\n" +
+    "                                <label class=\"sr-only\" ng-attr-for=\"{{user.studentId}}-family-name\">family name</label>\n" +
+    "                                <input type=\"text\" ng-model=\"user.newName.familyName\" placeholder=\"family name\" ng-change=\"ctrl.updateNewDisplayName(user)\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-family-name\"/>\n" +
+    "                            </div>\n" +
+    "\n" +
+    "                            <div class=\"form-group\">\n" +
+    "                                <label class=\"sr-only\" ng-attr-for=\"{{user.studentId}}-display-name\">display name</label>\n" +
+    "                                <input type=\"text\" ng-model=\"user.newName.displayName\" placeholder=\"display name\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-display-name\"/>\n" +
+    "                            </div>\n" +
+    "\n" +
+    "                            <button type=\"button\" class=\"btn btn-primary\" ng-click=\"ctrl.saveUserName(user)\">\n" +
+    "                                <span class=\"glyphicon glyphicon-ok\"></span>\n" +
+    "                            </button>\n" +
+    "                            <button type=\"button\" class=\"btn btn-default\" ng-click=\"ctrl.cancelEditName()\">\n" +
+    "                                <span class=\"glyphicon glyphicon-remove\"></span>\n" +
+    "                            </button>\n" +
+    "                        </form>\n" +
+    "\n" +
+    "                    </td>\n" +
     "                    <td>{{user.year}}</td>\n" +
     "                    <td>\n" +
     "                        <input type=\"checkbox\" ng-checked=\"user.isStudent\" disabled=\"disabled\">\n" +
@@ -35,18 +70,32 @@ angular.module("views/sccoreeducation/student-list.html", []).run(["$templateCac
     "                    <td>\n" +
     "                        <input type=\"checkbox\" ng-checked=\"user.isStaff\" ng-disabled=\"user.isStaff || !user.id\" ng-click=\"ctrl.makeStaff(user)\">\n" +
     "                    </td>\n" +
+    "                    <td>\n" +
+    "\n" +
+    "                        <button type=\"button\" ng-hide=\"user.confirmDelete\" class=\"btn btn-danger btn-xs\" ng-click=\"user.confirmDelete = true\">\n" +
+    "                            <span class=\"glyphicon glyphicon-remove\"></span>\n" +
+    "                        </button>\n" +
+    "\n" +
+    "                        <button type=\"button\" ng-show=\"user.confirmDelete\" class=\"btn btn-danger\" ng-click=\"ctrl.deleteStudent(user)\">\n" +
+    "                            Confirm delete\n" +
+    "                        </button>\n" +
+    "                        <button type=\"button\" ng-show=\"user.confirmDelete\" class=\"btn btn-default\" ng-click=\"user.confirmDelete = false\">\n" +
+    "                            Cancel\n" +
+    "                        </button>\n" +
+    "\n" +
+    "                    </td>\n" +
     "                </tr>\n" +
     "                <tr ng-if=\"ctrl.users.length == 0\">\n" +
-    "                    <td colspan=\"5\">No {{ctrl.userType}}</td>\n" +
+    "                    <td colspan=\"6\">No {{ctrl.userType}}</td>\n" +
     "                </tr>\n" +
     "                <tr ng-if=\"ctrl.users == null\">\n" +
-    "                    <td colspan=\"5\">Loading {{ctrl.userType}}</td>\n" +
+    "                    <td colspan=\"6\">Loading {{ctrl.userType}}</td>\n" +
     "                </tr>\n" +
     "            </tbody>\n" +
     "\n" +
     "            <tfoot ng-show=\"ctrl.users.cursor\">\n" +
     "                <tr>\n" +
-    "                    <td colspan=\"5\" class=\"more-btn\">\n" +
+    "                    <td colspan=\"6\" class=\"more-btn\">\n" +
     "                        <button class=\"btn btn-primary\" ng-click=\"ctrl.getMore()\" ng-disabled=\"ctrl.loading\">More</button>\n" +
     "                    </td>\n" +
     "                </tr>\n" +
