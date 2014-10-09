@@ -1,30 +1,42 @@
 (function() {
   'use strict';
 
-  var interceptor = function(data, operation, what) {
-    var resp;
+  var respInterceptor = function(data, operation, what) {
+      var resp;
 
-    if (operation !== 'getList' || angular.isArray(data)) {
-      return data;
-    }
+      if (operation !== 'getList' || angular.isArray(data)) {
+        return data;
+      }
 
-    if (!data) {
-      resp = [];
-      resp.cursor = null;
+      if (!data) {
+        resp = [];
+        resp.cursor = null;
+        return resp;
+      }
+
+      if (data.type && data[data.type]) {
+        resp = data[data.type];
+      } else if (data[what]) {
+        resp = data[what];
+      } else {
+        resp = [];
+      }
+
+      resp.cursor = data.cursor ? data.cursor : null;
       return resp;
-    }
+    },
+    reqInterceptor = function(element, operation, route, url, headers, params) {
+      if (operation === 'remove') {
+        element = null;
+      }
 
-    if (data.type && data[data.type]) {
-      resp = data[data.type];
-    } else if (data[what]) {
-      resp = data[what];
-    } else {
-      resp = [];
-    }
-
-    resp.cursor = data.cursor ? data.cursor : null;
-    return resp;
-  };
+      return {
+        headers: headers,
+        params: params,
+        element: element,
+        httpConfig: {}
+      };
+    };
 
   angular.module('scCoreEducation.services', ['restangular', 'scCoreEducation.config']).
 
@@ -34,8 +46,11 @@
         client: function(appName) {
           return Restangular.withConfig(function(RestangularConfigurer) {
             RestangularConfigurer.setBaseUrl(SCCE_API_BASE);
-            RestangularConfigurer.addResponseInterceptor(interceptor);
-            RestangularConfigurer.setDefaultHeaders({'X-App-Name': appName});
+            RestangularConfigurer.setFullRequestInterceptor(reqInterceptor);
+            RestangularConfigurer.addResponseInterceptor(respInterceptor);
+            RestangularConfigurer.setDefaultHeaders({
+              'X-App-Name': appName
+            });
           });
         }
       };

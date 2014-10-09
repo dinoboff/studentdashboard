@@ -167,6 +167,14 @@
           });
         },
 
+        deleteStudent: function(studentId) {
+          return client.one('students', studentId).remove();
+        },
+
+        saveStudentName: function(studentId, name) {
+          return client.one('students', studentId).customPUT(name, 'name');
+        },
+
         staff: function(cursor) {
           var params = {};
 

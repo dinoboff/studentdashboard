@@ -10,6 +10,8 @@
       login: /\/api\/v1\/user($|\?.+)/,
       users: '/api/v1/users',
       students: '/api/v1/students',
+      oneStudent: /api\/v1\/students\/(A\d+)$/i,
+      oneStudentName: /api\/v1\/students\/(A\d+)\/name$/i,
       newStudentUploadUrl: '/api/v1/students/_uploadurl',
       staff: '/api/v1/staff',
       newStaff: /\/api\/v1\/staff\/(\d+)/

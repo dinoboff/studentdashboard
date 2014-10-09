@@ -99,30 +99,42 @@
 (function() {
   'use strict';
 
-  var interceptor = function(data, operation, what) {
-    var resp;
+  var respInterceptor = function(data, operation, what) {
+      var resp;
 
-    if (operation !== 'getList' || angular.isArray(data)) {
-      return data;
-    }
+      if (operation !== 'getList' || angular.isArray(data)) {
+        return data;
+      }
 
-    if (!data) {
-      resp = [];
-      resp.cursor = null;
+      if (!data) {
+        resp = [];
+        resp.cursor = null;
+        return resp;
+      }
+
+      if (data.type && data[data.type]) {
+        resp = data[data.type];
+      } else if (data[what]) {
+        resp = data[what];
+      } else {
+        resp = [];
+      }
+
+      resp.cursor = data.cursor ? data.cursor : null;
       return resp;
-    }
+    },
+    reqInterceptor = function(element, operation, route, url, headers, params) {
+      if (operation === 'remove') {
+        element = null;
+      }
 
-    if (data.type && data[data.type]) {
-      resp = data[data.type];
-    } else if (data[what]) {
-      resp = data[what];
-    } else {
-      resp = [];
-    }
-
-    resp.cursor = data.cursor ? data.cursor : null;
-    return resp;
-  };
+      return {
+        headers: headers,
+        params: params,
+        element: element,
+        httpConfig: {}
+      };
+    };
 
   angular.module('scCoreEducation.services', ['restangular', 'scCoreEducation.config']).
 
@@ -132,8 +144,11 @@
         client: function(appName) {
           return Restangular.withConfig(function(RestangularConfigurer) {
             RestangularConfigurer.setBaseUrl(SCCE_API_BASE);
-            RestangularConfigurer.addResponseInterceptor(interceptor);
-            RestangularConfigurer.setDefaultHeaders({'X-App-Name': appName});
+            RestangularConfigurer.setFullRequestInterceptor(reqInterceptor);
+            RestangularConfigurer.addResponseInterceptor(respInterceptor);
+            RestangularConfigurer.setDefaultHeaders({
+              'X-App-Name': appName
+            });
           });
         }
       };
@@ -373,12 +388,14 @@
 (function() {
   'use strict';
 
-  var module = angular.module('scceUser.controllers', [
-    'angularFileUpload',
-    'scceUser.services'
-  ]).
+  var googleImage = /^(.+)?sz=\d+$/,
+    module = angular.module('scceUser.controllers', [
+      'angularFileUpload',
+      'scceUser.services'
+    ]);
 
-  controller('ScceUserListCtrl', [
+  module.controller('ScceUserListCtrl', [
+    '$window',
     '$q',
     '$upload',
     'scceUsersApi',
@@ -386,8 +403,9 @@
     'initialList',
     'userType',
     'currentUser',
-    function ScceUserListCtrl($q, $upload, scceUsersApi, getList, initialList, userType, currentUser) {
-      var self = this;
+    function ScceUserListCtrl($window, $q, $upload, scceUsersApi, getList, initialList, userType, currentUser) {
+      var self = this,
+        _ = $window._;
 
       this.currentUser = currentUser;
       this.users = initialList;
@@ -463,6 +481,40 @@
           info.inProgress = false;
         });
       };
+
+      this.deleteStudent = function(user) {
+        scceUsersApi.deleteStudent(user.studentId).then(function(){
+          _.remove(self.users, {studentId: user.studentId});
+        });
+      };
+
+      this.editUserName = function(user) {
+        user.editName = true;
+        user.newName = {
+          givenName: user.name.givenName,
+          familyName: user.name.familyName,
+          displayName: user.displayName
+        };
+      };
+
+      this.updateNewDisplayName = function(user) {
+        user.newName.displayName = user.newName.givenName + ' ' + user.newName.familyName;
+      };
+
+      this.saveUserName = function(user) {
+        scceUsersApi.saveStudentName(user.studentId, user.newName).then(function(){
+          user.displayName = user.newName.displayName;
+          user.name = {
+            givenName: user.newName.givenName,
+            familyName: user.newName.familyName
+          };
+          user.editName = false;
+        });
+      };
+
+      this.cancelEditName = function(user) {
+        user.editName = false;
+      };
     }
   ]);
 
@@ -474,16 +526,19 @@
   SccePortraitUploadListCtrl.$inject = ['$upload', 'scceUsersApi'];
 
   SccePortraitUploadListCtrl.prototype.image = function(image, size) {
-    if (image && image.url) {
-      return image.url + '=s' + size;
-    } else {
+    if (!image || !image.url) {
       return 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=' + size;
+    } else if (googleImage.test(image.url)) {
+      return googleImage.exec(image.url)[1] + 'sz=' + size;
+    } else {
+      return image.url + '=s' + size;
     }
+
   };
 
   SccePortraitUploadListCtrl.prototype.upload = function(student, $file) {
     var self = this;
-    console.log('Student: ', student);
+
     this.scceUsersApi.newStudentProfileUploadUrl().then(function(url) {
       return self.$upload.upload({
         url: url,
@@ -496,7 +551,9 @@
       });
     }).then(function(resp) {
       console.log(resp.data);
-      student.image = {url: resp.data.url};
+      student.image = {
+        url: resp.data.url
+      };
       self.showForm = false;
     });
   };
@@ -698,6 +755,14 @@
           return client.all('students').one('_uploadprofileurl').post().then(function(resp){
             return resp.url;
           });
+        },
+
+        deleteStudent: function(studentId) {
+          return client.one('students', studentId).remove();
+        },
+
+        saveStudentName: function(studentId, name) {
+          return client.one('students', studentId).customPUT(name, 'name');
         },
 
         staff: function(cursor) {

@@ -10,15 +10,50 @@
                     <th>Year</th>
                     <th>Is student</th>
                     <th>Is Staff</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-repeat="user in ctrl.users track by user.studentId">
                     <td ng-controller="SccePortraitUploadListCtrl as uploadCtrl" class="upload-portrait">
-                        <a href="" ng-click="uploadCtrl.showForm = true"><img ng-if="!uploadCtrl.showForm" ng-src="{{uploadCtrl.image(user.image, 32)}}" ng-attr-alt="{{user.displayName}}'s portrait;"/></a>
+                        <a href="" ng-click="uploadCtrl.showForm = true">
+                            <img ng-if="!uploadCtrl.showForm" ng-src="{{uploadCtrl.image(user.image, 32)}}" ng-attr-alt="{{user.displayName}}'s portrait;" />
+                        </a>
                         <input ng-if="uploadCtrl.showForm" type="file" ng-file-select="uploadCtrl.upload(user, $files)" />
                     </td>
-                    <td>{{user.displayName}}</td>
+                    <td>
+                        <span ng-hide="user.editName">
+                            {{user.displayName}} -
+                            <button type="button" ng-hide="user.editName" class="btn btn-default btn-xs" ng-click="ctrl.editUserName(user)">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                            </button>
+                        </span>
+                        <form class="form-inline" role="form" ng-show="user.editName">
+
+                            <div class="form-group">
+                                <label class="sr-only" ng-attr-for="{{user.studentId}}-given-name">given name</label>
+                                <input type="text" ng-model="user.newName.givenName" placeholder="given name" ng-change="ctrl.updateNewDisplayName(user)" class="form-control" ng-attr-id="{{user.studentId}}-given-name"/>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="sr-only" ng-attr-for="{{user.studentId}}-family-name">family name</label>
+                                <input type="text" ng-model="user.newName.familyName" placeholder="family name" ng-change="ctrl.updateNewDisplayName(user)" class="form-control" ng-attr-id="{{user.studentId}}-family-name"/>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="sr-only" ng-attr-for="{{user.studentId}}-display-name">display name</label>
+                                <input type="text" ng-model="user.newName.displayName" placeholder="display name" class="form-control" ng-attr-id="{{user.studentId}}-display-name"/>
+                            </div>
+
+                            <button type="button" class="btn btn-primary" ng-click="ctrl.saveUserName(user)">
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </button>
+                            <button type="button" class="btn btn-default" ng-click="ctrl.cancelEditName()">
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </button>
+                        </form>
+
+                    </td>
                     <td>{{user.year}}</td>
                     <td>
                         <input type="checkbox" ng-checked="user.isStudent" disabled="disabled">
@@ -26,18 +61,32 @@
                     <td>
                         <input type="checkbox" ng-checked="user.isStaff" ng-disabled="user.isStaff || !user.id" ng-click="ctrl.makeStaff(user)">
                     </td>
+                    <td>
+
+                        <button type="button" ng-hide="user.confirmDelete" class="btn btn-danger btn-xs" ng-click="user.confirmDelete = true">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+
+                        <button type="button" ng-show="user.confirmDelete" class="btn btn-danger" ng-click="ctrl.deleteStudent(user)">
+                            Confirm delete
+                        </button>
+                        <button type="button" ng-show="user.confirmDelete" class="btn btn-default" ng-click="user.confirmDelete = false">
+                            Cancel
+                        </button>
+
+                    </td>
                 </tr>
                 <tr ng-if="ctrl.users.length == 0">
-                    <td colspan="5">No {{ctrl.userType}}</td>
+                    <td colspan="6">No {{ctrl.userType}}</td>
                 </tr>
                 <tr ng-if="ctrl.users == null">
-                    <td colspan="5">Loading {{ctrl.userType}}</td>
+                    <td colspan="6">Loading {{ctrl.userType}}</td>
                 </tr>
             </tbody>
 
             <tfoot ng-show="ctrl.users.cursor">
                 <tr>
-                    <td colspan="5" class="more-btn">
+                    <td colspan="6" class="more-btn">
                         <button class="btn btn-primary" ng-click="ctrl.getMore()" ng-disabled="ctrl.loading">More</button>
                     </td>
                 </tr>
