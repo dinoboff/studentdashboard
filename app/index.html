@@ -75,6 +75,24 @@
         </div>
     </footer>
 
+    <!--(if target dev || e2e)><!-->
+    <script>
+        // See https://github.com/danialfarid/angular-file-upload#-old-browsers
+        window.FileAPI = {
+            jsUrl: 'lib/ng-file-upload/FileAPI.min.js',
+            flashUrl: 'lib/ng-file-upload/FileAPI.flash.swf'
+        };
+    </script>
+    <!--<!(endif)-->
+    <!--(if target build)>
+    <script>
+        window.FileAPI = {
+            jsUrl: 'js/FileAPI.min.js',
+            flashUrl: 'js/FileAPI.flash.swf'
+        };
+    </script>
+    <!(endif)-->
+
     <!-- build:js(app) js/vendor.js -->
     <script src="lib/jquery/dist/jquery.js"></script>
     <script src="lib/lodash/dist/lodash.js"></script>
