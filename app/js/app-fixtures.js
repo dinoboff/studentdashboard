@@ -37,6 +37,7 @@
           examUploadUrl: /\/api\/v1\/dashboard\/assessments\/uploadurl$/,
           examUpload: '/_exam/upload',
           students: '/api/v1/students',
+          allStudents: '/api/v1/students?limit=0',
           studentFiles: /\/api\/v1\/dashboard\/repository\/([^\/]+)\/files/,
           uploadUrl: /api\/v1\/dashboard\/repository\/([^\/]+)\/uploadurl/,
           upload: /_ah\/upload\/(.*)/,

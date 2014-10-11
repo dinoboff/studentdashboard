@@ -36,12 +36,14 @@
     '$q',
     'scdRepositoryApi',
     'initialData',
-    function ScdRepositoryListCtrl($window, $q, scdRepositoryApi, initialData) {
+    'currentUser',
+    function ScdRepositoryListCtrl($window, $q, scdRepositoryApi, initialData, currentUser) {
       var self = this,
         _ = $window._;
 
       this.files = initialData.files;
       this.selector = initialData.selector;
+      this.currentUser = currentUser;
 
 
       this.listFile = function(studentId) {
