@@ -43,6 +43,16 @@
 
     $httpBackend.whenPUT(fix.urls.oneStudentName).respond({});
 
+    $httpBackend.whenGET(fix.urls.pgy).respond({
+      pgy: [{
+        id: 2015,
+        label: 'Year 2015',
+        isActive: true
+      }]
+    });
+
+    $httpBackend.whenDELETE(fix.urls.onePgy).respond({});
+
 
     $httpBackend.whenGET(fix.urls.staff).respond(function() {
       return [200, {

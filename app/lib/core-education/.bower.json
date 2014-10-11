@@ -1,6 +1,6 @@
 {
   "name": "core-education",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "homepage": "https://github.com/ChrisBoesch/core-education",
   "authors": [
     "Chris Boesch"
@@ -25,13 +25,13 @@
   "devDependencies": {
     "angular-mocks": "~1.2.15"
   },
-  "_release": "0.8.2",
+  "_release": "0.8.3",
   "_resolution": {
     "type": "version",
-    "tag": "0.8.2",
-    "commit": "7bb0435323bff68f2474a36f11ec1ab0a5bfd3d7"
+    "tag": "v0.8.3",
+    "commit": "573bd6057423e85d9c5589f692dcfe202844a9f8"
   },
   "_source": "https://github.com/ChrisBoesch/core-education.git",
-  "_target": "~0.8.2",
+  "_target": "~0.8.3",
   "_originalSource": "https://github.com/ChrisBoesch/core-education.git"
 }

@@ -13,6 +13,8 @@
       oneStudent: /api\/v1\/students\/(A\d+)$/i,
       oneStudentName: /api\/v1\/students\/(A\d+)\/name$/i,
       newStudentUploadUrl: '/api/v1/students/_uploadurl',
+      pgy: '/api/v1/pgy',
+      onePgy: /api\/v1\/pgy\/(\d+)$/,
       staff: '/api/v1/staff',
       newStaff: /\/api\/v1\/staff\/(\d+)/
     },

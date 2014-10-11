@@ -394,6 +394,8 @@
       'scceUser.services'
     ]);
 
+  // Generic user/student list
+
   module.controller('ScceUserListCtrl', [
     '$window',
     '$q',
@@ -518,6 +520,9 @@
     }
   ]);
 
+
+  // Controller to upload student portrait
+
   function SccePortraitUploadListCtrl($upload, scceUsersApi) {
     this.showForm = false;
     this.$upload = $upload;
@@ -559,6 +564,30 @@
   };
 
   module.controller('SccePortraitUploadListCtrl', SccePortraitUploadListCtrl);
+
+
+  // Controller to archive student of specific years
+
+  module.controller('ScceArchiveYearCtrl', [
+    '$window',
+    'scceUsersApi',
+    function ScceArchiveYearCtrl($window, scceUsersApi) {
+      var self = this,
+        _ = $window._;
+
+      this.years = [];
+      scceUsersApi.listPgys().then(function(years){
+        self.years = _.filter(years, {isActive: true});
+      });
+
+      this.archiveYear = function(year, students) {
+        scceUsersApi.archivePgy(year.id).then(function() {
+          _.remove(self.years, {id: year.id});
+          _.remove(students, {year: year.id});
+        });
+      };
+    }
+  ]);
 
 })();
 
@@ -743,6 +772,10 @@
 
         listPgys: function() {
           return client.all('pgy').getList();
+        },
+
+        archivePgy: function(yearId) {
+          return client.one('pgy', yearId).remove();
         },
 
         newStudentUploadUrl: function() {
