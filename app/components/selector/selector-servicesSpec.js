@@ -65,7 +65,7 @@
 
       it('should query the student list when the user is an admin', function() {
         $httpBackend.whenGET(fix.urls.login).respond(fix.data.user);
-        $httpBackend.expectGET(fix.urls.students).respond([]);
+        $httpBackend.expectGET(fix.urls.allStudents).respond([]);
         selectorService();
         $httpBackend.flush();
       });
@@ -74,7 +74,7 @@
         var selector;
 
         $httpBackend.whenGET(fix.urls.login).respond(fix.data.user);
-        $httpBackend.whenGET(fix.urls.students).respond({
+        $httpBackend.whenGET(fix.urls.allStudents).respond({
           students: Object.keys(fix.data.students).map(function(id) {
             return fix.data.students[id];
           }),
@@ -93,7 +93,7 @@
         var count = 0;
 
         $httpBackend.whenGET(fix.urls.login).respond(fix.data.user);
-        $httpBackend.expectGET(fix.urls.students).respond(function() {
+        $httpBackend.expectGET(fix.urls.allStudents).respond(function() {
           count++;
           return [200, []];
         });
@@ -119,7 +119,7 @@
         auth.reset();
 
         $httpBackend.expectGET(fix.urls.login).respond(fix.data.user);
-        $httpBackend.expectGET(fix.urls.students).respond({
+        $httpBackend.expectGET(fix.urls.allStudents).respond({
           students: Object.keys(fix.data.students).map(function(id) {
             return fix.data.students[id];
           }),
