@@ -50,10 +50,10 @@
                         <li ng-class="{active: isActive('/first-aid')}">
                             <a ng-href="#/first-aid">First Aid</a>
                         </li>
-                        <li ng-class="{active: isActive('/students')}" ng-if="currentUser.isAdmin">
+                        <li ng-class="{active: isActive('/students')}" ng-if="currentUser.isStaff || currentUser.isAdmin">
                             <a ng-href="#/students">Students</a>
                         </li>
-                        <li ng-class="{active: isActive('/users')}" ng-if="currentUser.isAdmin">
+                        <li ng-class="{active: isActive('/users')}" ng-if="currentUser.isStaff || currentUser.isAdmin">
                             <a ng-href="#/users">Permissions</a>
                         </li>
                     </ul>
