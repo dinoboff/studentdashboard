@@ -42,7 +42,7 @@
                             <span class="glyphicon glyphicon-download"></span>
                         </a>
 
-                        <button type="button" ng-hide="file.confirmDelete"  class="btn btn-danger btn-sm" ng-click="file.confirmDelete = true">
+                        <button type="button" ng-hide="file.confirmDelete || !ctrl.currentUser.isAdmin"  class="btn btn-danger btn-sm" ng-click="file.confirmDelete = true">
                             <span class="glyphicon glyphicon-remove"></span>
                         </button>
 
