@@ -41,17 +41,17 @@ angular.module("views/sccoreeducation/student-list.html", []).run(["$templateCac
     "\n" +
     "                            <div class=\"form-group\">\n" +
     "                                <label class=\"sr-only\" ng-attr-for=\"{{user.studentId}}-given-name\">given name</label>\n" +
-    "                                <input type=\"text\" ng-model=\"user.newName.givenName\" placeholder=\"given name\" ng-change=\"ctrl.updateNewDisplayName(user)\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-given-name\"/>\n" +
+    "                                <input type=\"text\" ng-model=\"user.newName.givenName\" placeholder=\"given name\" ng-change=\"ctrl.updateNewDisplayName(user)\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-given-name\" />\n" +
     "                            </div>\n" +
     "\n" +
     "                            <div class=\"form-group\">\n" +
     "                                <label class=\"sr-only\" ng-attr-for=\"{{user.studentId}}-family-name\">family name</label>\n" +
-    "                                <input type=\"text\" ng-model=\"user.newName.familyName\" placeholder=\"family name\" ng-change=\"ctrl.updateNewDisplayName(user)\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-family-name\"/>\n" +
+    "                                <input type=\"text\" ng-model=\"user.newName.familyName\" placeholder=\"family name\" ng-change=\"ctrl.updateNewDisplayName(user)\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-family-name\" />\n" +
     "                            </div>\n" +
     "\n" +
     "                            <div class=\"form-group\">\n" +
     "                                <label class=\"sr-only\" ng-attr-for=\"{{user.studentId}}-display-name\">display name</label>\n" +
-    "                                <input type=\"text\" ng-model=\"user.newName.displayName\" placeholder=\"display name\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-display-name\"/>\n" +
+    "                                <input type=\"text\" ng-model=\"user.newName.displayName\" placeholder=\"display name\" class=\"form-control\" ng-attr-id=\"{{user.studentId}}-display-name\" />\n" +
     "                            </div>\n" +
     "\n" +
     "                            <button type=\"button\" class=\"btn btn-primary\" ng-click=\"ctrl.saveUserName(user)\">\n" +
@@ -131,6 +131,23 @@ angular.module("views/sccoreeducation/student-list.html", []).run(["$templateCac
     "2,Alice,Alice Brown,A0000002@NUS.EDU.SG\n" +
     "...</pre>\n" +
     "                </fielset>\n" +
+    "            </form>\n" +
+    "            <hr/>\n" +
+    "            <form role=\"form\" id=\"archive-year\" name=\"archiveYearForm\" ng-controller=\"ScceArchiveYearCtrl as archCtrl\">\n" +
+    "                <fieldset>\n" +
+    "                    <legend>Archive years</legend>\n" +
+    "\n" +
+    "                    <div class=\"form-group\">\n" +
+    "                        <label for=\"year\">Year to archive</label>\n" +
+    "                        <select id=\"year\" name=\"year\" required=\"true\" class=\"form-control\" ng-model=\"archCtrl.selectedYear\" ng-options=\"y as y.label for y in archCtrl.years track by y.id\">\n" +
+    "                            <option value=\"\">Select a year</option>\n" +
+    "                        </select>\n" +
+    "                    </div>\n" +
+    "\n" +
+    "                    <button type=\"submit\" class=\"btn btn-primary btn-block\" ng-click=\"archCtrl.archiveYear(archCtrl.selectedYear, ctrl.users)\" ng-disabled=\"archiveYearForm.$invalid\">\n" +
+    "                        Archive\n" +
+    "                    </button>\n" +
+    "                </fieldset>\n" +
     "            </form>\n" +
     "        </div>\n" +
     "    </div>\n" +

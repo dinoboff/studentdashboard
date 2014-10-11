@@ -32,17 +32,17 @@
 
                             <div class="form-group">
                                 <label class="sr-only" ng-attr-for="{{user.studentId}}-given-name">given name</label>
-                                <input type="text" ng-model="user.newName.givenName" placeholder="given name" ng-change="ctrl.updateNewDisplayName(user)" class="form-control" ng-attr-id="{{user.studentId}}-given-name"/>
+                                <input type="text" ng-model="user.newName.givenName" placeholder="given name" ng-change="ctrl.updateNewDisplayName(user)" class="form-control" ng-attr-id="{{user.studentId}}-given-name" />
                             </div>
 
                             <div class="form-group">
                                 <label class="sr-only" ng-attr-for="{{user.studentId}}-family-name">family name</label>
-                                <input type="text" ng-model="user.newName.familyName" placeholder="family name" ng-change="ctrl.updateNewDisplayName(user)" class="form-control" ng-attr-id="{{user.studentId}}-family-name"/>
+                                <input type="text" ng-model="user.newName.familyName" placeholder="family name" ng-change="ctrl.updateNewDisplayName(user)" class="form-control" ng-attr-id="{{user.studentId}}-family-name" />
                             </div>
 
                             <div class="form-group">
                                 <label class="sr-only" ng-attr-for="{{user.studentId}}-display-name">display name</label>
-                                <input type="text" ng-model="user.newName.displayName" placeholder="display name" class="form-control" ng-attr-id="{{user.studentId}}-display-name"/>
+                                <input type="text" ng-model="user.newName.displayName" placeholder="display name" class="form-control" ng-attr-id="{{user.studentId}}-display-name" />
                             </div>
 
                             <button type="button" class="btn btn-primary" ng-click="ctrl.saveUserName(user)">
@@ -122,6 +122,23 @@ S/N,Surname,Student Name,NUS Email
 2,Alice,Alice Brown,A0000002@NUS.EDU.SG
 ...</pre>
                 </fielset>
+            </form>
+            <hr/>
+            <form role="form" id="archive-year" name="archiveYearForm" ng-controller="ScceArchiveYearCtrl as archCtrl">
+                <fieldset>
+                    <legend>Archive years</legend>
+
+                    <div class="form-group">
+                        <label for="year">Year to archive</label>
+                        <select id="year" name="year" required="true" class="form-control" ng-model="archCtrl.selectedYear" ng-options="y as y.label for y in archCtrl.years track by y.id">
+                            <option value="">Select a year</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" ng-click="archCtrl.archiveYear(archCtrl.selectedYear, ctrl.users)" ng-disabled="archiveYearForm.$invalid">
+                        Archive
+                    </button>
+                </fieldset>
             </form>
         </div>
     </div>
