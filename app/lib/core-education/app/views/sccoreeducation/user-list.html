@@ -9,6 +9,7 @@
             <th>Last name</th>
             <th>Is student</th>
             <th>Is Staff</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -24,18 +25,31 @@
             <td>
                 <input type="checkbox" ng-checked="user.isStaff" ng-disabled="user.isStaff || !user.id" ng-click="ctrl.makeStaff(user)">
             </td>
+            <td>
+                <button type="button" ng-hide="user.confirmDelete" class="btn btn-danger btn-xs" ng-click="user.confirmDelete = true" ng-disabled="!ctrl.currentUser.isAdmin || ctrl.currentUser.id == user.id">
+                    <span class="glyphicon glyphicon-remove"></span>
+                </button>
+
+                <button type="button" ng-show="user.confirmDelete" class="btn btn-danger" ng-click="ctrl.deleteUser(user)">
+                    Confirm delete
+                </button>
+                <button type="button" ng-show="user.confirmDelete" class="btn btn-default" ng-click="user.confirmDelete = false">
+                    Cancel
+                </button>
+
+            </td>
         </tr>
         <tr ng-if="ctrl.users.length == 0">
-            <td colspan="5">No {{ctrl.userType}}</td>
+            <td colspan="6">No {{ctrl.userType}}</td>
         </tr>
         <tr ng-if="ctrl.users == null">
-            <td colspan="5">Loading {{ctrl.userType}}</td>
+            <td colspan="6">Loading {{ctrl.userType}}</td>
         </tr>
 
     </tbody>
     <tfoot ng-show="ctrl.users.cursor">
         <tr>
-            <td colspan="5" class="more-btn">
+            <td colspan="6" class="more-btn">
                 <button class="btn btn-primary" ng-click="ctrl.getMore()" ng-disabled="ctrl.loading">More</button>
             </td>
         </tr>

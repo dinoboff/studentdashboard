@@ -484,6 +484,12 @@
         });
       };
 
+      this.deleteUser = function(user) {
+        scceUsersApi.deleteUser(user.id).then(function(){
+          _.remove(self.users, {id: user.id});
+        });
+      };
+
       this.deleteStudent = function(user) {
         scceUsersApi.deleteStudent(user.studentId).then(function(){
           _.remove(self.users, {studentId: user.studentId});
@@ -758,6 +764,10 @@
 
         getById: function(userId) {
           return client.one('users', userId).get();
+        },
+
+        deleteUser: function(userId) {
+          return client.one('users', userId).remove();
         },
 
         listStudents: function(cursor, params) {

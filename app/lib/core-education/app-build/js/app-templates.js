@@ -169,6 +169,7 @@ angular.module("views/sccoreeducation/user-list.html", []).run(["$templateCache"
     "            <th>Last name</th>\n" +
     "            <th>Is student</th>\n" +
     "            <th>Is Staff</th>\n" +
+    "            <th>Action</th>\n" +
     "        </tr>\n" +
     "    </thead>\n" +
     "    <tbody>\n" +
@@ -184,18 +185,31 @@ angular.module("views/sccoreeducation/user-list.html", []).run(["$templateCache"
     "            <td>\n" +
     "                <input type=\"checkbox\" ng-checked=\"user.isStaff\" ng-disabled=\"user.isStaff || !user.id\" ng-click=\"ctrl.makeStaff(user)\">\n" +
     "            </td>\n" +
+    "            <td>\n" +
+    "                <button type=\"button\" ng-hide=\"user.confirmDelete\" class=\"btn btn-danger btn-xs\" ng-click=\"user.confirmDelete = true\" ng-disabled=\"!ctrl.currentUser.isAdmin || ctrl.currentUser.id == user.id\">\n" +
+    "                    <span class=\"glyphicon glyphicon-remove\"></span>\n" +
+    "                </button>\n" +
+    "\n" +
+    "                <button type=\"button\" ng-show=\"user.confirmDelete\" class=\"btn btn-danger\" ng-click=\"ctrl.deleteUser(user)\">\n" +
+    "                    Confirm delete\n" +
+    "                </button>\n" +
+    "                <button type=\"button\" ng-show=\"user.confirmDelete\" class=\"btn btn-default\" ng-click=\"user.confirmDelete = false\">\n" +
+    "                    Cancel\n" +
+    "                </button>\n" +
+    "\n" +
+    "            </td>\n" +
     "        </tr>\n" +
     "        <tr ng-if=\"ctrl.users.length == 0\">\n" +
-    "            <td colspan=\"5\">No {{ctrl.userType}}</td>\n" +
+    "            <td colspan=\"6\">No {{ctrl.userType}}</td>\n" +
     "        </tr>\n" +
     "        <tr ng-if=\"ctrl.users == null\">\n" +
-    "            <td colspan=\"5\">Loading {{ctrl.userType}}</td>\n" +
+    "            <td colspan=\"6\">Loading {{ctrl.userType}}</td>\n" +
     "        </tr>\n" +
     "\n" +
     "    </tbody>\n" +
     "    <tfoot ng-show=\"ctrl.users.cursor\">\n" +
     "        <tr>\n" +
-    "            <td colspan=\"5\" class=\"more-btn\">\n" +
+    "            <td colspan=\"6\" class=\"more-btn\">\n" +
     "                <button class=\"btn btn-primary\" ng-click=\"ctrl.getMore()\" ng-disabled=\"ctrl.loading\">More</button>\n" +
     "            </td>\n" +
     "        </tr>\n" +

@@ -86,7 +86,7 @@
         var callCount = 0,
           users = [];
 
-        $httpBackend.whenGET(/\/api\/v1\/user/).respond(function() {
+        $httpBackend.whenGET(fix.urls.login).respond(function() {
           callCount++;
           return [200, user];
         });
@@ -112,7 +112,7 @@
         var callCount = 0,
           users = [];
 
-        $httpBackend.whenGET(/\/api\/v1\/user/).respond(function() {
+        $httpBackend.whenGET(fix.urls.login).respond(function() {
           callCount++;
           return [200, user];
         });
@@ -135,7 +135,7 @@
       });
 
       it('should reset user after 401 resp to relative url', function() {
-        $httpBackend.whenGET(/\/api\/v1\/user/).respond(user);
+        $httpBackend.whenGET(fix.urls.login).respond(user);
         currentUserApi.auth();
         $httpBackend.flush();
 
@@ -153,7 +153,7 @@
       });
 
       it('should reset user after 401 resp to a url to same domain', function() {
-        $httpBackend.whenGET(/\/api\/v1\/user/).respond(user);
+        $httpBackend.whenGET(fix.urls.login).respond(user);
         currentUserApi.auth();
         $httpBackend.flush();
 
@@ -173,7 +173,7 @@
       });
 
       it('should not reset user after 401 resp to other domain', function() {
-        $httpBackend.whenGET(/\/api\/v1\/user/).respond(user);
+        $httpBackend.whenGET(fix.urls.login).respond(user);
         currentUserApi.auth();
         $httpBackend.flush();
 
@@ -190,7 +190,7 @@
       });
 
       it('should keep user.loginUrl after 401 resp', function() {
-        $httpBackend.whenGET(/\/api\/v1\/user/).respond({
+        $httpBackend.whenGET(fix.urls.login).respond({
           loginUrl: '/login'
         });
         currentUserApi.auth();
@@ -221,7 +221,7 @@
       describe('all', function() {
 
         it('should query all users', function() {
-          $httpBackend.expectGET('/api/v1/users').respond(
+          $httpBackend.expectGET(fix.urls.users).respond(
             JSON.stringify({
               type: 'users',
               users: _.map(users),
@@ -240,7 +240,7 @@
         it('should return a promise resolving to an array of user', function() {
           var data;
 
-          $httpBackend.whenGET('/api/v1/users').respond(
+          $httpBackend.whenGET(fix.urls.users).respond(
             JSON.stringify({
               type: 'users',
               users: _.map(users),
@@ -260,7 +260,7 @@
         it('should return promise resolving to array with a cursor', function() {
           var data;
 
-          $httpBackend.whenGET('/api/v1/users').respond(
+          $httpBackend.whenGET(fix.urls.users).respond(
             JSON.stringify({
               type: 'users',
               users: _.map(users),
@@ -276,13 +276,28 @@
           expect(data.cursor).toBe('foo');
         });
 
+        it('should delete users', function() {
+          var req, userId;
+
+          $httpBackend.whenDELETE(fix.urls.oneUser).respond(function(m, url, body) {
+            userId = fix.urls.oneUser.exec(url)[1];
+            req = body;
+            return [200, {}];
+          });
+          usersApi.deleteUser('1234');
+          $httpBackend.flush();
+
+          expect(userId).toBe('1234');
+          expect(req).toBe(null);
+        });
+
       });
 
 
       describe('students', function() {
 
         it('should query students users', function() {
-          $httpBackend.expectGET('/api/v1/students').respond(
+          $httpBackend.expectGET(fix.urls.students).respond(
             JSON.stringify({
               type: 'students',
               students: [],
@@ -301,7 +316,7 @@
         it('should query an upload URL', function() {
           var url;
 
-          $httpBackend.expectPOST('/api/v1/students/_uploadurl').respond({
+          $httpBackend.expectPOST(fix.urls.newStudentUploadUrl).respond({
             url: '/foo'
           });
           usersApi.newStudentUploadUrl().then(function(_url_) {
@@ -315,7 +330,7 @@
         it('should get the list of year', function() {
           var years;
 
-          $httpBackend.expectGET('/api/v1/pgy').respond(
+          $httpBackend.expectGET(fix.urls.pgy).respond(
             [2015, 2016, 2017, 2018]
           );
           usersApi.listPgys().then(function(resp) {
@@ -366,7 +381,7 @@
       describe('staff', function() {
 
         it('should query staff users', function() {
-          $httpBackend.expectGET('/api/v1/staff').respond(
+          $httpBackend.expectGET(fix.urls.staff).respond(
             JSON.stringify({
               type: 'users',
               users: _(users).map().filter(function(user) {
@@ -387,7 +402,7 @@
         it('should return a promise resolving to an array of user', function() {
           var data;
 
-          $httpBackend.whenGET('/api/v1/staff').respond(
+          $httpBackend.whenGET(fix.urls.staff).respond(
             JSON.stringify({
               type: 'users',
               users: _(users).map().filter(function(user) {
@@ -411,7 +426,7 @@
         it('should return promise resolving to array with a cursor', function() {
           var data;
 
-          $httpBackend.whenGET('/api/v1/staff').respond(
+          $httpBackend.whenGET(fix.urls.staff).respond(
             JSON.stringify({
               type: 'users',
               users: _(users).map().filter(function(user) {
