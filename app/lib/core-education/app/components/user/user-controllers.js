@@ -97,6 +97,12 @@
         });
       };
 
+      this.deleteUser = function(user) {
+        scceUsersApi.deleteUser(user.id).then(function(){
+          _.remove(self.users, {id: user.id});
+        });
+      };
+
       this.deleteStudent = function(user) {
         scceUsersApi.deleteStudent(user.studentId).then(function(){
           _.remove(self.users, {studentId: user.studentId});

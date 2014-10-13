@@ -26,6 +26,8 @@
       cursor: null
     });
 
+    $httpBackend.whenDELETE(fix.urls.oneUser).respond({});
+
     $httpBackend.whenGET(fix.urls.students).respond({
       type: 'students',
       students: _.map(fix.data.studentList, function(student) {

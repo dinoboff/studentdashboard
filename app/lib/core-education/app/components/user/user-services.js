@@ -141,6 +141,10 @@
           return client.one('users', userId).get();
         },
 
+        deleteUser: function(userId) {
+          return client.one('users', userId).remove();
+        },
+
         listStudents: function(cursor, params) {
           params = params || {};
 

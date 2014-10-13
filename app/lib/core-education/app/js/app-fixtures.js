@@ -9,6 +9,7 @@
     urls: {
       login: /\/api\/v1\/user($|\?.+)/,
       users: '/api/v1/users',
+      oneUser: /api\/v1\/users\/(.+)$/,
       students: '/api/v1/students',
       oneStudent: /api\/v1\/students\/(A\d+)$/i,
       oneStudentName: /api\/v1\/students\/(A\d+)\/name$/i,
