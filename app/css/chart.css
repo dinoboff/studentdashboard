@@ -31,7 +31,6 @@ rect {
 /** data **/
 
 .data text, .data tspan {
-  dominant-baseline: middle;
   text-anchor: start;
   font-size: 12px;
 }
@@ -59,29 +58,24 @@ rect.border {
   stroke: #ddd;
 }
 .ticks text {
-  dominant-baseline: hanging;
   text-anchor: middle;
   font-size: 10px;
   fill: #333;
 }
 .average text {
-  dominant-baseline: hanging;
   text-anchor: start;
 }
 /** x-axis **/
 
 .x-axis text {
-  dominant-baseline: hanging;
   text-anchor: middle;
 }
 /** y-axis **/
 
 .y-axis text, .y-ticks text, .chart-row .data-label {
-  dominant-baseline: middle;
   text-anchor: end;
 }
 .axis .legend text {
-  dominant-baseline: hanging;
   text-anchor: middle;
 }
 /** Exam **/
@@ -129,7 +123,6 @@ rect.border {
   stroke: none;
 }
 .current-performance text, .current-performance tspan {
-  dominant-baseline: hanging;
   text-anchor: middle;
 }
 /** User progress **/
@@ -155,7 +148,6 @@ rect.border {
 }
 .progress text, .progress tspan {
   text-anchor: middle;
-  dominant-baseline: hanging;
 }
 /** Meters **/
 
@@ -170,11 +162,9 @@ rect.border {
 }
 .reading text, .reading tspan {
   text-anchor: middle;
-  dominant-baseline: hanging;
 }
 .meter .ticks-main text {
   font-size: 7px;
-  dominant-baseline: initial;
 }
 .meter .tick line, .meter .tick path {
   stroke-width: 1px;
