@@ -183,7 +183,9 @@ angular.module("views/sccoreeducation/user-list.html", []).run(["$templateCache"
     "                <input type=\"checkbox\" ng-checked=\"user.isStudent\" disabled=\"disabled\">\n" +
     "            </td>\n" +
     "            <td>\n" +
-    "                <input type=\"checkbox\" ng-checked=\"user.isStaff\" ng-disabled=\"user.isStaff || !user.id\" ng-click=\"ctrl.makeStaff(user)\">\n" +
+    "                <ng-form name=\"switchStaffForm\">\n" +
+    "                    <input type=\"checkbox\" ng-model=\"user.isStaff\" name=\"isStaff\" ng-disabled=\"switchStaffForm.isStaff.disabled || ctrl.currentUser.id == user.id\" ng-click=\"ctrl.switchStaff(user, switchStaffForm.isStaff)\">\n" +
+    "                </ng-form>\n" +
     "            </td>\n" +
     "            <td>\n" +
     "                <button type=\"button\" ng-hide=\"user.confirmDelete\" class=\"btn btn-danger btn-xs\" ng-click=\"user.confirmDelete = true\" ng-disabled=\"!ctrl.currentUser.isAdmin || ctrl.currentUser.id == user.id\">\n" +

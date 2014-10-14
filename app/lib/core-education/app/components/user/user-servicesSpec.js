@@ -446,7 +446,7 @@
 
       });
 
-      describe('makeStaff', function() {
+      describe('makeStaff/revokeStaff', function() {
 
         it('should put a new staff', function() {
           $httpBackend.expectPUT('/api/v1/staff/12345').respond({});
@@ -454,6 +454,21 @@
             id: '12345'
           });
           $httpBackend.flush();
+        });
+
+        it('should delete a staff', function() {
+          var req;
+
+          $httpBackend.expectDELETE('/api/v1/staff/12345').respond(function(m, u, body){
+            req = body;
+            return [200, {}];
+          });
+          usersApi.revokeStaff({
+            id: '12345'
+          });
+          $httpBackend.flush();
+
+          expect(req).toBe(null);
         });
 
       });

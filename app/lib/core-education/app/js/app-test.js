@@ -76,6 +76,12 @@
       return [200, {}];
     });
 
+    $httpBackend.whenDELETE(fix.urls.newStaff).respond(function(meth, url) {
+      var userId = fix.urls.newStaff.exec(url)[1];
+      fix.data.userList[userId].isStaff = false;
+      return [200, {}];
+    });
+
     $httpBackend.whenPOST(fix.urls.newStudentUploadUrl).respond({
       url: '/_upload/'
     });

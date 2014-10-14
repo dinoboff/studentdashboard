@@ -23,7 +23,9 @@
                 <input type="checkbox" ng-checked="user.isStudent" disabled="disabled">
             </td>
             <td>
-                <input type="checkbox" ng-checked="user.isStaff" ng-disabled="user.isStaff || !user.id" ng-click="ctrl.makeStaff(user)">
+                <ng-form name="switchStaffForm">
+                    <input type="checkbox" ng-model="user.isStaff" name="isStaff" ng-disabled="switchStaffForm.isStaff.disabled || ctrl.currentUser.id == user.id" ng-click="ctrl.switchStaff(user, switchStaffForm.isStaff)">
+                </ng-form>
             </td>
             <td>
                 <button type="button" ng-hide="user.confirmDelete" class="btn btn-danger btn-xs" ng-click="user.confirmDelete = true" ng-disabled="!ctrl.currentUser.isAdmin || ctrl.currentUser.id == user.id">
