@@ -448,16 +448,24 @@
         return this.loading;
       };
 
-      this.makeStaff = function(user) {
-        user.isStaff = true;
-        scceUsersApi.makeStaff(user).catch(function() {
-          user.isStaff = false;
-        });
-      };
+      this.switchStaff = function(user, input) {
+        var promise, originalValue = user.isStaff;
 
-      this.revokeStaff = function(user) {
-        // TODO
-        console.dir(user);
+        input.disabled = true;
+        if (user.isStaff) {
+          promise = scceUsersApi.revokeStaff(user);
+        } else {
+          promise = scceUsersApi.makeStaff(user);
+        }
+
+        return promise.then(function() {
+          user.isStaff = !originalValue;
+        }).catch(function(){
+          user.isStaff = originalValue;
+          input.$setViewValue(originalValue);
+        }).finally(function(){
+          input.disabled = false;
+        });
       };
 
       this.fileSelected = function($files, info) {
@@ -819,6 +827,10 @@
 
         makeStaff: function(user) {
           return client.one('staff', user.id).put();
+        },
+
+        revokeStaff: function(user) {
+          return client.one('staff', user.id).remove();
         }
       };
     }
