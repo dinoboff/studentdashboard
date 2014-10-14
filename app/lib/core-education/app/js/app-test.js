@@ -72,13 +72,33 @@
 
     $httpBackend.whenPUT(fix.urls.newStaff).respond(function(meth, url) {
       var userId = fix.urls.newStaff.exec(url)[1];
+
+      console.log(meth + ' ' + url);
       fix.data.userList[userId].isStaff = true;
       return [200, {}];
     });
 
     $httpBackend.whenDELETE(fix.urls.newStaff).respond(function(meth, url) {
       var userId = fix.urls.newStaff.exec(url)[1];
+
+      console.log(meth + ' ' + url);
       fix.data.userList[userId].isStaff = false;
+      return [200, {}];
+    });
+
+    $httpBackend.whenPUT(fix.urls.newAdmin).respond(function(meth, url) {
+      var userId = fix.urls.newAdmin.exec(url)[1];
+
+      console.log(meth + ' ' + url);
+      fix.data.userList[userId].isAdmin = true;
+      return [200, {}];
+    });
+
+    $httpBackend.whenDELETE(fix.urls.newAdmin).respond(function(meth, url) {
+      var userId = fix.urls.newAdmin.exec(url)[1];
+
+      console.log(meth + ' ' + url);
+      fix.data.userList[userId].isAdmin = false;
       return [200, {}];
     });
 

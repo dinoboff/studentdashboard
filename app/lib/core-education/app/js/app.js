@@ -16,14 +16,15 @@
   config(['$routeProvider',
     function($routeProvider) {
 
-      function resolver(meth, userType) {
+      function resolver(meth, userType, testUser) {
+        testUser = testUser || angular.noop;
         return {
           'currentUser': [
             '$location',
             'scceCurrentUserApi',
             function($location, scceCurrentUserApi) {
               return scceCurrentUserApi.auth().then(function(user) {
-                if (!user.isLoggedIn || (!user.isStaff && !user.isAdmin)) {
+                if (!user.isLoggedIn || testUser(user)) {
                   $location.path('/error');
                   return;
                 }
@@ -50,9 +51,21 @@
         };
       }
 
+      function forStaffResolver(meth, userType) {
+        return resolver(meth, userType, function isNotStaff(user){
+          return !user.isStaff && !user.isAdmin && !user.isDomainAdmin;
+        });
+      }
+
+      function forAdminResolver(meth, userType) {
+        return resolver(meth, userType, function isNotStaff(user){
+          return !user.isAdmin && !user.isDomainAdmin;
+        });
+      }
+
       $routeProvider
 
-      .when('/error', {
+        .when('/error', {
         template: '<h1>Error</h1><p>You may need to be part of the staff</p>'
       })
 
@@ -60,21 +73,21 @@
         templateUrl: 'views/sccoreeducation/user-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('all', 'Users')
+        resolve: forAdminResolver('all', 'Users')
       })
 
       .when('/students', {
         templateUrl: 'views/sccoreeducation/student-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('listStudents', 'Students')
+        resolve: forStaffResolver('listStudents', 'Students')
       })
 
       .when('/staff', {
         templateUrl: 'views/sccoreeducation/user-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('staff', 'Staff')
+        resolve: forAdminResolver('staff', 'Staff')
       })
 
       .otherwise({

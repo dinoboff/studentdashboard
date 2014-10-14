@@ -198,6 +198,14 @@
 
         revokeStaff: function(user) {
           return client.one('staff', user.id).remove();
+        },
+
+        makeAdmin: function(user) {
+          return client.one('admin', user.id).put();
+        },
+
+        revokeAdmin: function(user) {
+          return client.one('admin', user.id).remove();
         }
       };
     }

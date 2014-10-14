@@ -81,6 +81,26 @@
         });
       };
 
+      this.switchAdmin = function(user, input) {
+        var promise, originalValue = user.isAdmin;
+
+        input.disabled = true;
+        if (user.isAdmin) {
+          promise = scceUsersApi.revokeAdmin(user);
+        } else {
+          promise = scceUsersApi.makeAdmin(user);
+        }
+
+        return promise.then(function() {
+          user.isAdmin = !originalValue;
+        }).catch(function(){
+          user.isAdmin = originalValue;
+          input.$setViewValue(originalValue);
+        }).finally(function(){
+          input.disabled = false;
+        });
+      };
+
       this.fileSelected = function($files, info) {
         info.file = $files[0];
       };

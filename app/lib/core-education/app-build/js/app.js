@@ -16,14 +16,15 @@
   config(['$routeProvider',
     function($routeProvider) {
 
-      function resolver(meth, userType) {
+      function resolver(meth, userType, testUser) {
+        testUser = testUser || angular.noop;
         return {
           'currentUser': [
             '$location',
             'scceCurrentUserApi',
             function($location, scceCurrentUserApi) {
               return scceCurrentUserApi.auth().then(function(user) {
-                if (!user.isLoggedIn || (!user.isStaff && !user.isAdmin)) {
+                if (!user.isLoggedIn || testUser(user)) {
                   $location.path('/error');
                   return;
                 }
@@ -50,9 +51,21 @@
         };
       }
 
+      function forStaffResolver(meth, userType) {
+        return resolver(meth, userType, function isNotStaff(user){
+          return !user.isStaff && !user.isAdmin && !user.isDomainAdmin;
+        });
+      }
+
+      function forAdminResolver(meth, userType) {
+        return resolver(meth, userType, function isNotStaff(user){
+          return !user.isAdmin && !user.isDomainAdmin;
+        });
+      }
+
       $routeProvider
 
-      .when('/error', {
+        .when('/error', {
         template: '<h1>Error</h1><p>You may need to be part of the staff</p>'
       })
 
@@ -60,21 +73,21 @@
         templateUrl: 'views/sccoreeducation/user-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('all', 'Users')
+        resolve: forAdminResolver('all', 'Users')
       })
 
       .when('/students', {
         templateUrl: 'views/sccoreeducation/student-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('listStudents', 'Students')
+        resolve: forStaffResolver('listStudents', 'Students')
       })
 
       .when('/staff', {
         templateUrl: 'views/sccoreeducation/user-list.html',
         controller: 'ScceUserListCtrl',
         controllerAs: 'ctrl',
-        resolve: resolver('staff', 'Staff')
+        resolve: forAdminResolver('staff', 'Staff')
       })
 
       .otherwise({
@@ -468,6 +481,26 @@
         });
       };
 
+      this.switchAdmin = function(user, input) {
+        var promise, originalValue = user.isAdmin;
+
+        input.disabled = true;
+        if (user.isAdmin) {
+          promise = scceUsersApi.revokeAdmin(user);
+        } else {
+          promise = scceUsersApi.makeAdmin(user);
+        }
+
+        return promise.then(function() {
+          user.isAdmin = !originalValue;
+        }).catch(function(){
+          user.isAdmin = originalValue;
+          input.$setViewValue(originalValue);
+        }).finally(function(){
+          input.disabled = false;
+        });
+      };
+
       this.fileSelected = function($files, info) {
         info.file = $files[0];
       };
@@ -831,6 +864,14 @@
 
         revokeStaff: function(user) {
           return client.one('staff', user.id).remove();
+        },
+
+        makeAdmin: function(user) {
+          return client.one('admin', user.id).put();
+        },
+
+        revokeAdmin: function(user) {
+          return client.one('admin', user.id).remove();
         }
       };
     }

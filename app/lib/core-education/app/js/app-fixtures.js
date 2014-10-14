@@ -17,7 +17,8 @@
       pgy: '/api/v1/pgy',
       onePgy: /api\/v1\/pgy\/(\d+)$/,
       staff: '/api/v1/staff',
-      newStaff: /\/api\/v1\/staff\/(\d+)/
+      newStaff: /\/api\/v1\/staff\/(\d+)/,
+      newAdmin: /\/api\/v1\/admin\/(\d+)/
     },
     data: {
       user: {
@@ -35,17 +36,17 @@
         'verified': false,
         'isLoggedIn': true,
         'domain': 'example.com',
-        'isAdmin': true,
         'id': '12345',
         'loginUrl': '/api/login',
         'logoutUrl': '/_ah/login?continue=http%3A//localhost%3A8080/dashboard/&action=logout',
         'displayName': 'Damien Lebrun',
+        'isStaff': true,
+        'isAdmin': true,
         'isDomainAdmin': false,
         'name': {
           'givenName': 'Damien',
           'familyName': 'Lebrun'
-        },
-        'isStaff': false
+        }
       },
       loginError: {
         'hasCredentials': false,
@@ -99,6 +100,7 @@
             'isDefault': true
           },
           'verified': false,
+          'isGuest': true,
           'isStudent': false,
           'isStaff': false,
           'isAdmin': false,
