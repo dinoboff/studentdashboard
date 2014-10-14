@@ -16,9 +16,7 @@
             <g class="ticks ticks-main">
                 <path ng-attr-d="M-{{radius.inner}},0 A{{radius.inner}},{{radius.inner}} 0 0,1 {{radius.inner}},0" />
                 <g class="tick" ng-repeat="v in scales.degres.ticks(3)" ng-attr-transform="rotate({{scales.degres(v) - 90}})">
-                    <text ng-attr-y="-{{radius.outer}}" dy="-.35em">
-                        {{v}}
-                    </text>
+                    <text ng-attr-y="-{{radius.outer}}" dy="-.35em">{{v}}</text>
                     <line ng-attr-y1="-{{radius.inner}}" ng-attr-y2="-{{radius.outer - 3}}" />
                 </g>
             </g>
@@ -32,9 +30,7 @@
 
 
         <g class="reading" ng-attr-transform="translate({{layout.innerWidth/2}},{{layout.innerHeight + layout.margin.bottom/2}})">
-            <text dy="-.5ex" class="value" style="font-size:18px">
-                {{options.getValueAsText(reading)}}
-            </text>
+            <text dy="-.5ex" class="value" style="font-size:18px">{{options.getValueAsText(reading)}}</text>
             <text dy="1ex" style="font-size:9px; font-weight:200">{{reading.label}}</text>
         </g>
 
