@@ -221,7 +221,7 @@
             scope.arc = scdChartArc(radius);
             scope.shiftSlice = shifterFactory(scope.arc);
 
-            labelMargin = radius.outer + scope.layout.margin.top / 2;
+            labelMargin = radius.outer + scope.layout.margin.bottom / 2;
             scope.shiftLabel = function shiftLabel(slice, margin) {
               margin = (margin || 0) + labelMargin;
 
