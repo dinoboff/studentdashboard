@@ -280,8 +280,8 @@
 
       this.cummulativePerf = {
         layout: ScceLayout.contentSizing({
-          innerWidth: 400,
-          innerHeight: 360,
+          innerWidth: 500,
+          innerHeight: 200,
           margin: {
             top: 20,
             right: 150,
@@ -298,14 +298,6 @@
         }
       };
 
-      function components() {
-        return [{
-          label: 'N/A',
-          value: 100,
-          id: 'unattempted'
-        }];
-      }
-
       function categoriesLayout(stats, baseLayout) {
         if (!stats || !stats.categoryPerformances) {
           return;
@@ -317,57 +309,6 @@
           baseLayout
         ));
       }
-
-      this.progress = {
-        layout: ScceLayout.contentSizing({
-          innerWidth: 300,
-          innerHeight: 149,
-          margin: {
-            top: 30,
-            right: 50,
-            bottom: 110,
-            left: 50
-          },
-        }),
-        components: components(this.userStats)
-      };
-
-      this.passing = {
-        layout: ScceLayout.contentSizing({
-          innerWidth: 100,
-          innerHeight: 50,
-          margin: {
-            top: 12,
-            right: 12,
-            bottom: 50,
-            left: 12
-          },
-        }),
-        steps: [{
-          min: 0,
-          max: 75,
-          id: 'danger'
-        }, {
-          max: 90,
-          id: 'warning'
-        }, {
-          max: 100,
-          id: 'ok'
-        }]
-      };
-
-      this.abem = {
-        layout: this.passing.layout,
-        steps: [{
-          min: 0,
-          max: 75,
-          id: 'danger'
-        }, {
-          max: 100,
-          id: 'ok'
-        }]
-
-      };
 
       this.byCategory = {
         layout: null,
@@ -428,7 +369,6 @@
         self.userStats = null;
         return scdDashboardApi.firstAid.getStats(studentId).then(function(stats) {
           self.userStats = stats;
-          self.progress.components = components(stats);
           self.byCategory.layout = categoriesLayout(
             self.userStats,
             self.byCategory.baseLayout

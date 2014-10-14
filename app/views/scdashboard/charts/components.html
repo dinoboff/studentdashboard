@@ -19,8 +19,11 @@
 
 
 
-        <g class="progress" ng-attr-transform="translate({{layout.width/6 - layout.margin.left}},{{layout.innerHeight + layout.margin.top/2}})">
-            <text dy="1ex" style="font-size:24px; font-weight:200">{{mainData.title}}</text><text dy="2.2ex" style="font-size:48px" ng-if="mainData.value != null">{{mainData.value}} {{mainData.unit}}</text><text dy="2.2ex" style="font-size:48px" ng-if="mainData.value == null">N/A</text><text dy="13ex" style="font-size:10px; font-weight:200">{{mainData.subTitle}}</text>
+        <g class="progress" ng-attr-transform="translate({{layout.width/6 - layout.margin.left}},{{-layout.margin.top/2}})">
+            <text dy="-1.7ex" style="font-size:24px; font-weight:200">{{mainData.title}}</text>
+            <text dy=".7ex" style="font-size:48px" ng-if="mainData.value != null">{{mainData.value}} {{mainData.unit}}</text>
+            <text dy=".7ex" style="font-size:48px" ng-if="mainData.value == null">N/A</text>
+            <text dy="6ex" style="font-size:10px; font-weight:200">{{mainData.subTitle}}</text>
         </g>
 
     </svg>

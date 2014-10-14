@@ -36,29 +36,6 @@
 
     <div class="row">
 
-        <div class="col-sm-7">
-
-            <div class="well">
-                <h2>Cumulative Performance</h2>
-                <hr/>
-
-                <form role="form" class="form-inline filter-selectors">
-
-                    <div class="form-group">
-                        <label for="compare-user-to">Compared to:</label>
-                        <select id="compare-user-to" class="form-control" ng-model="ctrl.filters.ref" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.refs"></select>
-                    </div>
-
-                </form>
-
-                <!-- history chart -->
-                <scd-chart-history class="cumulative-perfomance rect" scd-layout="ctrl.cummulativePerf.layout" scd-series="ctrl.userStats.history" scd-current="{value: ctrl.userStats.performance, label: 'Overall percent correct'}" scd-options="ctrl.cummulativePerf.options" scd-legend="{y: 'percentage correct'}">
-                </scd-chart-history>
-
-            </div>
-
-        </div>
-
         <div class="col-sm-5">
 
             <div class="well">
@@ -85,38 +62,29 @@
 
         </div>
 
-
-    </div>
-
-    <!-- Result breakdown by topics -->
-    <div class="row">
-
-        <div class="col-md-12">
-
+        <div class="col-sm-7">
+            <!-- Result breakdown by topics -->
             <div class="well">
                 <h2>Performance by Category</h2>
                 <hr/>
-
-<!--                 <form role="form" class="form-inline filter-selectors">
+<!--
+                <form role="form" class="form-inline filter-selectors">
 
                     <div class="form-group">
                         <label for="compare-user-to">Compared to:</label>
                         <select id="compare-user-to" class="form-control" ng-model="ctrl.filters.ref" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.refs"></select>
                     </div>
 
-                </form> -->
-
-                <scd-chart-histogram
-                    scd-layout="ctrl.byCategory.layout"
-                    scd-series="ctrl.userStats.categoryPerformances"
-                    scd-options="ctrl.byCategory.options"
-                    scd-legend="{x: 'Score (%)'}"
-                >
+                </form>
+ -->
+                <scd-chart-histogram scd-layout="ctrl.byCategory.layout" scd-series="ctrl.userStats.categoryPerformances" scd-options="ctrl.byCategory.options" scd-legend="{x: 'Score (%)'}">
                 </scd-chart-histogram>
 
             </div>
 
         </div>
+
+
     </div>
 
 

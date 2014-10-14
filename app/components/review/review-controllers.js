@@ -249,24 +249,6 @@
       this.filters = initialData.params;
       this.filterOptions = initialData.filterOptions;
 
-      this.cummulativePerf = {
-        layout: ScceLayout.contentSizing({
-          innerWidth: 400,
-          innerHeight: 360,
-          margin: {
-            top: 20,
-            right: 150,
-            bottom: 30,
-            left: 70
-          },
-        }),
-        options: {
-          getValue: function(day) {
-            return day.performance;
-          }
-        }
-      };
-
       function components(userStats) {
         var correct, left;
         if (!userStats) {
@@ -308,11 +290,11 @@
       this.progress = {
         layout: ScceLayout.contentSizing({
           innerWidth: 300,
-          innerHeight: 149,
+          innerHeight: 200,
           margin: {
-            top: 30,
+            top: 120,
             right: 50,
-            bottom: 110,
+            bottom: 30,
             left: 50
           },
         }),
@@ -360,7 +342,7 @@
         layout: null,
         baseLayout: {
           rowHeight: 27,
-          innerWidth: 500,
+          innerWidth: 300,
           margin: {
             top: 10,
             right: 60,
