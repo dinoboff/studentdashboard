@@ -135,24 +135,33 @@
       this.chartLegend = setLegend(this.filters.sortBy);
       this.chartOptions = {
         domain: function(series) {
-          var max, min;
+          var max, min, key;
           if (self.filters.sortBy === 'performance') {
             return [0, 100];
           } else {
+            if (self.filters.topic === 'all') {
+              key = self.filters.sortBy;
+            } else {
+              key = 'lastPredictive';
+            }
             max = _.max(series, function(s) {
-              return s[self.filters.sortBy];
+              return s[key];
             });
             min = _.min(series, function(s) {
-              return s[self.filters.sortBy];
+              return s[key];
             });
-            return _.map([min, max], self.filters.sortBy);
+            return _.map([min, max], key);
           }
         },
         getLabel: function(row) {
           return row.displayName;
         },
         getValue: function(row) {
-          return row[self.filters.sortBy];
+          if (self.filters.topic === 'all') {
+            return row[self.filters.sortBy];
+          } else {
+            return row.lastPredictive;
+          }
         }
       };
 
@@ -197,6 +206,10 @@
        */
       this.filterChanged = function(params) {
         this.pages.clear();
+
+        if (params.topic !== 'all') {
+          params.sortBy = 'predictiveAverage';
+        }
 
         self.chartLegend = setLegend(params.sortBy);
         scdDashboardApi.firstAid.listStats(params).then(function(students) {
@@ -328,13 +341,13 @@
             var max, min;
 
             max = _.max(series, function(s) {
-              return s.predictiveSum;
+              return s.predictive;
             });
             min = _.min(series, function(s) {
-              return s.predictiveSum;
+              return s.predictive;
             });
 
-            return _.map([min, max], 'predictiveSum');
+            return _.map([min, max], 'predictive');
           },
           getLabel: function(row) {
             return initialData.topics[row.id].label;
@@ -349,7 +362,7 @@
             return '';
           },
           getValue: function(row) {
-            return row.predictiveSum;
+            return row.predictive;
           },
         }
       };
