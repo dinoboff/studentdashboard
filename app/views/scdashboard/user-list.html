@@ -8,7 +8,6 @@
             <th>First name</th>
             <th>Last name</th>
             <th>domain</th>
-            <th>Is student</th>
             <th>Is Staff</th>
             <th>Is Admin</th>
             <th>Action</th>
@@ -22,9 +21,6 @@
             <td>{{user.name.givenName}}</td>
             <td>{{user.name.familyName}}</td>
             <td>{{user.domain}}</td>
-            <td>
-                <input type="checkbox" ng-checked="user.isStudent" disabled="disabled">
-            </td>
             <td>
                 <ng-form name="switchStaffForm">
                     <input type="checkbox" ng-model="user.isStaff" name="isStaff" ng-disabled="switchStaffForm.isStaff.disabled || ctrl.currentUser.id == user.id" ng-click="ctrl.switchStaff(user, switchStaffForm.isStaff)">
@@ -50,16 +46,16 @@
             </td>
         </tr>
         <tr ng-if="ctrl.users.length == 0">
-            <td colspan="8">No users</td>
+            <td colspan="7">No users</td>
         </tr>
         <tr ng-if="ctrl.users == null">
-            <td colspan="8">Loading users</td>
+            <td colspan="7">Loading users</td>
         </tr>
 
     </tbody>
     <tfoot ng-show="ctrl.users.cursor">
         <tr>
-            <td colspan="8" class="more-btn">
+            <td colspan="7" class="more-btn">
                 <button class="btn btn-primary" ng-click="ctrl.getMore()" ng-disabled="ctrl.loading">More</button>
             </td>
         </tr>
