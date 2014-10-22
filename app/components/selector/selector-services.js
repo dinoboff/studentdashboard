@@ -2,7 +2,7 @@
   'use strict';
 
   angular.module('scdSelector.services', [
-    'scceUser.services',
+    'scDashboard.services'
   ]).
 
   /**
@@ -23,8 +23,8 @@
    *   him / herself)
    *
    */
-  factory('scdSelectedStudent', ['$window', 'scceCurrentUserApi', 'scceUsersApi', '$q',
-    function($window, scceCurrentUserApi, scceUsersApi, $q) {
+  factory('scdSelectedStudent', ['$window', 'scdDashboardApi', '$q',
+    function($window, scdDashboardApi, $q) {
       var selector = null,
         selectorPromise = null,
         studentsPromise = null,
@@ -43,7 +43,7 @@
         }
 
         if (students.cursor) {
-          return scceUsersApi.listStudents(students.cursor, {limit: 0}).then(function(students){
+          return scdDashboardApi.users.listStudents(students.cursor, {limit: 0}).then(function(students){
             return addStudents(students);
           });
         }
@@ -54,7 +54,7 @@
           return;
         }
 
-        studentsPromise = scceUsersApi.listStudents('', {limit: 0}).then(function(studentList) {
+        studentsPromise = scdDashboardApi.users.listStudents('', {limit: 0}).then(function(studentList) {
           return addStudents(studentList);
         })['finally'](function() {
           studentsPromise = null;
@@ -70,7 +70,7 @@
           return $q.when(selectorPromise);
         }
 
-        selectorPromise = scceCurrentUserApi.auth().then(function(user) {
+        selectorPromise = scdDashboardApi.auth.auth().then(function(user) {
 
           if (!user.isLoggedIn) {
             return $q.reject('You need to be login.');
@@ -78,16 +78,12 @@
 
           selector = {
             students: null,
-            selected: null,
+            selected: user,
             available: false,
             select: function(find) {
               this.selected = _.find(this.students, find);
             }
           };
-
-          if (user.isStudent) {
-            selector.selected = user;
-          }
 
           if (user.isStaff || user.isAdmin) {
             selector.available = true;

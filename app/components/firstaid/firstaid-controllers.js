@@ -2,8 +2,7 @@
   'use strict';
 
   angular.module('scdFirstAid.controllers', [
-    'scceSvg.services',
-    'scceUser.services',
+    'scdSvg.services',
     'scDashboard.services',
     'scdMisc.services',
     'scdSelector.services'
@@ -15,10 +14,9 @@
    */
   factory('scdFirstAidStatsCtrlInitialData', [
     '$q',
-    'scceUsersApi',
     'scdDashboardApi',
     'scdSelectedStudent',
-    function scdFirstAidStatsCtrlInitialDataFactory($q, scceUsersApi, scdDashboardApi, scdSelectedStudent) {
+    function scdFirstAidStatsCtrlInitialDataFactory($q, scdDashboardApi, scdSelectedStudent) {
       return function scdFirstAidStatsCtrlInitialData() {
         var params = {
             limit: 30,
@@ -44,7 +42,7 @@
           students: studentsPromise,
           paramOptions: $q.all({
 
-            residents: scceUsersApi.listPgys().then(function(years) {
+            residents: scdDashboardApi.users.listPgys().then(function(years) {
               return [{
                 id: 'all',
                 label: 'All Students',
@@ -79,18 +77,18 @@
   controller('ScdFirstAidStatsCtrl', [
     '$window',
     '$location',
-    'ScceLayout',
+    'ScdLayout',
     'ScdPageCache',
     'scdDashboardApi',
     'initialData',
-    function ScdFirstAidStatsCtrl($window, $location, ScceLayout, ScdPageCache, scdDashboardApi, initialData) {
+    function ScdFirstAidStatsCtrl($window, $location, ScdLayout, ScdPageCache, scdDashboardApi, initialData) {
       var self = this,
         _ = $window._,
         rowHeight = 25;
 
       function setStudent(students) {
         self.students = students;
-        self.chartLayout = ScceLayout.contentSizing({
+        self.chartLayout = ScdLayout.contentSizing({
           innerWidth: 600,
           innerHeight: rowHeight * students.length,
           margin: {
@@ -279,10 +277,10 @@
    */
   controller('ScdFirstAidUserStatsCtrl', [
     '$window',
-    'ScceLayout',
+    'ScdLayout',
     'scdDashboardApi',
     'initialData',
-    function ScdFirstAidUserStatsCtrl($window, ScceLayout, scdDashboardApi, initialData) {
+    function ScdFirstAidUserStatsCtrl($window, ScdLayout, scdDashboardApi, initialData) {
       var self = this,
         _ = $window._;
 
@@ -292,7 +290,7 @@
       this.filterOptions = initialData.filterOptions;
 
       this.cummulativePerf = {
-        layout: ScceLayout.contentSizing({
+        layout: ScdLayout.contentSizing({
           innerWidth: 500,
           innerHeight: 200,
           margin: {
@@ -316,7 +314,7 @@
           return;
         }
 
-        return new ScceLayout.contentSizing(_.assign({
+        return new ScdLayout.contentSizing(_.assign({
             'innerHeight': stats.categoryPerformances.length * baseLayout.rowHeight
           },
           baseLayout

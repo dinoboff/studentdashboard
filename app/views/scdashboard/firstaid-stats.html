@@ -37,8 +37,12 @@
         </p>
     </div>
 
-    <p ng-show="ctrl.students|isEmpty" class="alert alert-info" role="alert">
-        <strong>No student (more) data.</strong>
+    <p ng-show="ctrl.students|isEmpty &amp;&amp; ctrl.pages.position() == 0" class="alert alert-info" role="alert">
+        <strong>No student data.</strong>
+    </p>
+
+    <p ng-show="ctrl.students|isEmpty &amp;&amp; ctrl.pages.position() > 0" class="alert alert-info" role="alert">
+        <strong>No more student data.</strong>
     </p>
 
     <scd-chart-histogram

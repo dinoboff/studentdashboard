@@ -5,13 +5,16 @@
   'use strict';
 
   describe('scDashboard.services', function() {
-    var $httpBackend, apiRoot;
+    var $httpBackend, apiRoot, fix, scope, $http;
 
-    beforeEach(module('scDashboard.services', 'scDashboard.config'));
+    beforeEach(module('scDashboard.services', 'scDashboard.config', 'scDashboardMocked.fixtures'));
 
-    beforeEach(inject(function(_$httpBackend_, SCD_API_BASE) {
+    beforeEach(inject(function($rootScope, _$httpBackend_, _$http_, SCD_API_BASE, SC_DASHBOARD_FIXTURES) {
       $httpBackend = _$httpBackend_;
       apiRoot = SCD_API_BASE;
+      fix = SC_DASHBOARD_FIXTURES;
+      scope = $rootScope;
+      $http = _$http_;
     }));
 
 
@@ -166,6 +169,194 @@
           $httpBackend.flush();
 
           expect(studentId).toBe('A0001');
+        });
+
+      });
+
+
+      describe('scdDashboardApi.auth', function() {
+
+        beforeEach(inject(function(scdDashboardApi) {
+          api = scdDashboardApi.auth;
+        }));
+
+        it('query the server for the current user', function() {
+          var info;
+
+          $httpBackend.expectGET(fix.urls.login).respond(fix.data.user);
+
+          api.auth().then(function(_info) {
+            info = _info;
+          });
+          $httpBackend.flush();
+          expect(info.displayName).toBeDefined();
+          expect(info.displayName).toBe(fix.data.user.displayName);
+
+        });
+
+        it('query the server for the current user and the logout url', function() {
+          var info;
+
+          $httpBackend.expectGET(fix.urls.baseLogin + '?returnUrl=%2Ffoo').respond(fix.data.user);
+
+          api.auth('/foo').then(function(_info) {
+            info = _info;
+          });
+          $httpBackend.flush();
+          expect(info.displayName).toBeDefined();
+          expect(info.displayName).toBe(fix.data.user.displayName);
+
+        });
+
+        it('return the log in url for logged off users', function() {
+          var info;
+
+          $httpBackend.expectGET(fix.urls.baseLogin + '?returnUrl=%2Ffoo').respond(fix.data.loginError);
+
+          api.auth('/foo').then(function(_info) {
+            info = _info;
+          });
+          $httpBackend.flush();
+          expect(info.loginUrl).toBe(fix.data.loginError.loginUrl);
+
+        });
+
+        it('should fail if the server failed to return the login info', function() {
+          var info;
+
+          $httpBackend.expectGET(fix.urls.baseLogin + '?returnUrl=%2Ffoo').respond(function() {
+            return [500, 'Server error'];
+          });
+
+          api.auth('/foo').catch(function(_info) {
+            info = _info;
+          });
+
+          $httpBackend.flush();
+          expect(info.data).toBe('Server error');
+          expect(info.status).toBe(500);
+
+        });
+
+        it('should merge concurrent requests', function() {
+          var callCount = 0,
+            users = [];
+
+          $httpBackend.whenGET(fix.urls.login).respond(function() {
+            callCount++;
+            return [200, fix.data.user];
+          });
+
+          function saveUser(user) {
+            users.push(user);
+            return user;
+          }
+
+          api.auth().then(saveUser);
+          api.auth().then(saveUser);
+
+          $httpBackend.flush();
+          expect(callCount).toBe(1);
+
+          expect(users.length).toBe(2);
+          expect(users[0].displayName).toEqual(fix.data.user.displayName);
+          expect(users[1].displayName).toEqual(fix.data.user.displayName);
+          expect(users[0]).toBe(users[1]);
+        });
+
+        it('should not fetch user data again if already fetch', function() {
+          var callCount = 0,
+            users = [];
+
+          $httpBackend.whenGET(fix.urls.login).respond(function() {
+            callCount++;
+            return [200, fix.data.user];
+          });
+
+          function saveUser(user) {
+            users.push(user);
+            return user;
+          }
+
+          api.auth().then(saveUser);
+          $httpBackend.flush();
+          api.auth().then(saveUser);
+          scope.$digest();
+          expect(callCount).toBe(1);
+
+          expect(users.length).toBe(2);
+          expect(users[0].displayName).toEqual(fix.data.user.displayName);
+          expect(users[1].displayName).toEqual(fix.data.user.displayName);
+          expect(users[0]).toEqual(users[1]);
+        });
+
+        it('should reset user after 401 resp to relative url', function() {
+          $httpBackend.expectGET(fix.urls.login).respond(fix.data.user);
+          api.auth();
+          $httpBackend.flush();
+
+          $httpBackend.whenGET('/api/v1/foo/').respond(401, {});
+
+          $http.get('/api/v1/foo/');
+          $httpBackend.flush();
+          scope.$digest();
+
+          expect(api.info).toEqual({
+            'loginUrl': fix.data.user.loginUrl,
+            'error': undefined
+          });
+        });
+
+        it('should reset user after 401 resp to a url to same domain', function() {
+          $httpBackend.whenGET(fix.urls.login).respond(fix.data.user);
+          api.auth();
+          $httpBackend.flush();
+
+          $httpBackend.whenGET(/http:\/\//).respond(401, {});
+
+          expect(api.info.displayName).toEqual(fix.data.user.displayName);
+
+          $http.get('http://server/foo/');
+          $httpBackend.flush();
+
+          expect(api.info).toEqual({
+            'loginUrl': fix.data.user.loginUrl,
+            'error': undefined
+          });
+        });
+
+        it('should not reset user after 401 resp to other domain', function() {
+          $httpBackend.whenGET(fix.urls.login).respond(fix.data.user);
+          api.auth();
+          $httpBackend.flush();
+
+          $httpBackend.whenGET(/http:\/\//).respond(401, {});
+
+          expect(api.info.displayName).toEqual(fix.data.user.displayName);
+
+          $http.get('http://example.com/api');
+          $httpBackend.flush();
+
+          expect(api.info.displayName).toEqual(fix.data.user.displayName);
+        });
+
+        it('should keep user.loginUrl after 401 resp', function() {
+          $httpBackend.whenGET(fix.urls.login).respond({
+            loginUrl: '/login'
+          });
+          api.auth();
+          $httpBackend.flush();
+
+          expect(api.info.loginUrl).toEqual('/login');
+
+          $httpBackend.whenGET('/api/v1/foo/').respond(function() {
+            return [401, {}];
+          });
+
+          $http.get('/api/v1/foo/');
+          $httpBackend.flush();
+
+          expect(api.info.loginUrl).toEqual('/login');
         });
 
       });

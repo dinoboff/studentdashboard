@@ -2,8 +2,7 @@
   'use strict';
 
   angular.module('scdReview.controllers', [
-    'scceSvg.services',
-    'scceUser.services',
+    'scdSvg.services',
     'scDashboard.services',
     'scdMisc.filters',
     'scdMisc.services',
@@ -18,10 +17,9 @@
    */
   factory('scdReviewStatsCtrlInitialData', [
     '$q',
-    'scceUsersApi',
     'scdDashboardApi',
     'scdSelectedStudent',
-    function scdReviewStatsCtrlInitialDataFactory($q, scceUsersApi, scdDashboardApi, scdSelectedStudent) {
+    function scdReviewStatsCtrlInitialDataFactory($q, scdDashboardApi, scdSelectedStudent) {
       return function scdReviewStatsCtrlInitialData() {
         var params = {
             limit: 30,
@@ -47,7 +45,7 @@
           students: studentsPromise,
           paramOptions: $q.all({
 
-            residents: scceUsersApi.listPgys().then(function(years) {
+            residents: scdDashboardApi.users.listPgys().then(function(years) {
               return [{
                 id: 'all',
                 label: 'All Students',
@@ -78,18 +76,18 @@
   controller('ScdReviewStatsCtrl', [
     '$location',
     '$window',
-    'ScceLayout',
+    'ScdLayout',
     'scdDashboardApi',
     'ScdPageCache',
     'initialData',
-    function ScdReviewStatsCtrl($location, $window, ScceLayout, scdDashboardApi, ScdPageCache, initialData) {
+    function ScdReviewStatsCtrl($location, $window, ScdLayout, scdDashboardApi, ScdPageCache, initialData) {
       var self = this,
         _ = $window._,
         rowHeight = 25;
 
       function setStudent(students) {
         self.students = students;
-        self.chartLayout = ScceLayout.contentSizing({
+        self.chartLayout = ScdLayout.contentSizing({
           innerWidth: 600,
           innerHeight: rowHeight * students.length,
           margin: {
@@ -237,10 +235,10 @@
    */
   controller('ScdReviewUserStatsCtrl', [
     '$window',
-    'ScceLayout',
+    'ScdLayout',
     'scdDashboardApi',
     'initialData',
-    function ScdReviewUserStatsCtrl($window, ScceLayout, scdDashboardApi, initialData) {
+    function ScdReviewUserStatsCtrl($window, ScdLayout, scdDashboardApi, initialData) {
       var self = this,
         _ = $window._;
 
@@ -280,7 +278,7 @@
           return;
         }
 
-        return new ScceLayout.contentSizing(_.assign({
+        return new ScdLayout.contentSizing(_.assign({
             'innerHeight': stats.categoryPerformances.length * baseLayout.rowHeight
           },
           baseLayout
@@ -288,7 +286,7 @@
       }
 
       this.progress = {
-        layout: ScceLayout.contentSizing({
+        layout: ScdLayout.contentSizing({
           innerWidth: 300,
           innerHeight: 200,
           margin: {
@@ -302,7 +300,7 @@
       };
 
       this.passing = {
-        layout: ScceLayout.contentSizing({
+        layout: ScdLayout.contentSizing({
           innerWidth: 100,
           innerHeight: 50,
           margin: {

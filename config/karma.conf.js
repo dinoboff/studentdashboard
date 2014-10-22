@@ -28,8 +28,6 @@ module.exports = function(config) {
       'app/lib/restangular/dist/restangular.js',
       'app/lib/ng-file-upload/angular-file-upload.js',
       'app/lib/bootstrap/js/collapse.js',
-      'app/lib/core-education/app-build/js/app.js',
-      'app/lib/core-education/app-build/js/app-templates.js',
       'app/lib/angular-loading-bar/build/loading-bar.js',
       'app/lib/angular-mocks/angular-mocks.js',
       'app/js/*.js',

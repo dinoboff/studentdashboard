@@ -9,17 +9,17 @@
 
     beforeEach(module(
       'scdChart.directives',
-      'scceSvg.services',
+      'scdSvg.services',
       'views/scdashboard/charts/meter.html',
       'views/scdashboard/charts/components.html',
       'views/scdashboard/charts/history.html',
       'views/scdashboard/charts/histogram.html'
     ));
 
-    beforeEach(inject(function(_$compile_, _$rootScope_, ScceLayout, $window) {
+    beforeEach(inject(function(_$compile_, _$rootScope_, ScdLayout, $window) {
       compile = _$compile_;
       scope = _$rootScope_;
-      Layout = ScceLayout;
+      Layout = ScdLayout;
       _ = $window._;
     }));
 

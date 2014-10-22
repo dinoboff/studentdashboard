@@ -4,16 +4,16 @@
 (function() {
   'use strict';
 
-  describe('scceSvg.services', function() {
+  describe('scdSvg.services', function() {
 
-    beforeEach(module('scceSvg.services'));
+    beforeEach(module('scdSvg.services'));
 
 
-    describe('ScceLayout', function() {
+    describe('ScdLayout', function() {
       var Layout;
 
-      beforeEach(inject(function(ScceLayout) {
-        Layout = ScceLayout;
+      beforeEach(inject(function(ScdLayout) {
+        Layout = ScdLayout;
       }));
 
       it('should have default', function() {

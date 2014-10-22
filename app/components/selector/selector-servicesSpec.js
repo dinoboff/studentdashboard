@@ -7,13 +7,13 @@
   describe('scdSelector.services', function() {
     var $httpBackend, scope, auth, fix;
 
-    beforeEach(module('scdSelector.services', 'scDashboardMocked.fixtures', 'scceUser.services'));
+    beforeEach(module('scdSelector.services', 'scDashboardMocked.fixtures', 'scDashboard.services'));
 
-    beforeEach(inject(function(_$rootScope_, _$httpBackend_, scceCurrentUserApi, SC_DASHBOARD_FIXTURES) {
+    beforeEach(inject(function(_$rootScope_, _$httpBackend_, scdDashboardApi, SC_DASHBOARD_FIXTURES) {
       $httpBackend = _$httpBackend_;
       fix = SC_DASHBOARD_FIXTURES;
       scope = _$rootScope_;
-      auth = scceCurrentUserApi;
+      auth = scdDashboardApi.auth;
     }));
 
     describe('scdSelectedStudent', function() {
@@ -113,7 +113,7 @@
         $httpBackend.expectGET(fix.urls.login).respond({
           error: 'not logged in',
           isLoggedIn: false
-        });
+        }, 401);
         selectorService();
         $httpBackend.flush();
         auth.reset();
@@ -126,10 +126,12 @@
           cursor: null
         });
 
+
         selectorService().then(function(_selector_) {
           selector = _selector_;
         });
         $httpBackend.flush();
+
         expect(selector.students.length).toBe(2);
       });
 
