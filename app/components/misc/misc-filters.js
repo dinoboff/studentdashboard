@@ -56,9 +56,13 @@
   }).
 
   filter('portrait', function portraitFactory() {
+    var googleImagePattern = /^([^?]+)\?sz=\d+$/;
     return function portrait(url, size) {
+      var filteredUrl = url && googleImagePattern.exec(url);
 
-      if (url) {
+      if (filteredUrl) {
+        return filteredUrl[1] + '?sz=' + size;
+      } else if (url) {
         return url + '=s' + size;
       } else {
         return (

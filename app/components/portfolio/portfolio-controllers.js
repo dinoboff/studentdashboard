@@ -3,7 +3,7 @@
 
   var module = angular.module(
     'scdPortfolio.controllers', [
-      'ngRoute', 'scceUser.services', 'scdSelector.services', 'scdPortFolio.services'
+      'ngRoute', 'scdSelector.services', 'scdPortFolio.services'
     ]
   );
 
@@ -235,13 +235,13 @@
   module.factory('scdPortfolioStudentExamCtrlInitialData', [
     '$q',
     '$route',
-    'scceCurrentUserApi',
+    'scdDashboardApi',
     'scdPorfolioApi',
-    function($q, $route, scceCurrentUserApi, scdPorfolioApi) {
+    function($q, $route, scdDashboardApi, scdPorfolioApi) {
       return function() {
         var studentId = $route.current.params.studentId,
           examId = $route.current.params.examId,
-          examPromise = scceCurrentUserApi.auth().then(function(user) {
+          examPromise = scdDashboardApi.auth.auth().then(function(user) {
             if (!user.isStaff && !user.isAdmin && user.id !== studentId) {
               return $q.reject('You do not have permission to see those results');
             }

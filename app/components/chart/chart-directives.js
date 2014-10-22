@@ -3,7 +3,7 @@
 
 
   angular.module('scdChart.directives', [
-    'scceSvg.directives',
+    'scdSvg.directives',
     'scdMisc.filters'
   ]).
 

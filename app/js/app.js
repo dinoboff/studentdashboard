@@ -8,15 +8,15 @@
    * Can be used as in route resolve map.
    *
    */
-  function currentUser(scceCurrentUserApi, $window) {
-    return scceCurrentUserApi.auth().then(function(user) {
+  function currentUser(scdDashboardApi, $window) {
+    return scdDashboardApi.auth.auth().then(function(user) {
       if (!user.isLoggedIn && user.loginUrl) {
         $window.location.replace(user.loginUrl);
       }
       return user;
     });
   }
-  currentUser.$inject = ['scceCurrentUserApi', '$window'];
+  currentUser.$inject = ['scdDashboardApi', '$window'];
 
   /**
    * Return a promise resolving to the current user if he's part of staff.
@@ -24,8 +24,8 @@
    * Can be used as in route resolve map.
    *
    */
-  function currentUserIsStaff(scceCurrentUserApi, $window, $q) {
-    return scceCurrentUserApi.auth().then(function(user) {
+  function currentUserIsStaff(scdDashboardApi, $window, $q) {
+    return scdDashboardApi.auth.auth().then(function(user) {
       if (!user.isLoggedIn && user.loginUrl) {
         $window.location.replace(user.loginUrl);
         return user;
@@ -37,31 +37,49 @@
       return user;
     });
   }
-  currentUser.$inject = ['scceCurrentUserApi', '$window', '$q'];
+  currentUser.$inject = ['scdDashboardApi', '$window', '$q'];
+
+  /**
+   * Return a promise resolving to the current user if he's has admin permissiom.
+   *
+   * Can be used as in route resolve map.
+   *
+   */
+  function currentUserIsAdmin(scdDashboardApi, $window, $q) {
+    return scdDashboardApi.auth.auth().then(function(user) {
+      if (!user.isLoggedIn && user.loginUrl) {
+        $window.location.replace(user.loginUrl);
+        return user;
+      }
+
+      if (!user.isAdmin) {
+        return $q.reject('Only staff or admins can access this page.');
+      }
+      return user;
+    });
+  }
+  currentUser.$inject = ['scdDashboardApi', '$window', '$q'];
 
 
   angular.module('scDashboard', [
-    'ngRoute',
     'angular-loading-bar',
+    'ngRoute',
     'scDashboard.controllers',
-    'scdRepository.controllers',
-    'scdFirstAid.controllers',
-    'scdPortfolio.controllers',
-    'scdReview.controllers',
-    'scdPortFolio.directives',
-    'scdMisc.filters',
     'scdChart.directives',
-    // Load core education angular app, which configure the router
-    // https://github.com/ChrisBoesch/core-education/blob/master/app/js/app.js
-    // It will add routes for `/users`, `/students` and `/users`.
-    'scCoreEducation',
-    'scceUser.services'
+    'scdFirstAid.controllers',
+    'scdMisc.filters',
+    'scdPortfolio.controllers',
+    'scdPortFolio.directives',
+    'scdRepository.controllers',
+    'scdReview.controllers',
+    'scdStudents.controllers',
+    'scdUpload.directives',
+    'scdUsers.controllers'
   ]).
 
-  config(['$routeProvider', 'cfpLoadingBarProvider', 'scceUserOptionsProvider',
-    function($routeProvider, cfpLoadingBarProvider, scceUserOptionsProvider) {
+  config(['$routeProvider', 'cfpLoadingBarProvider',
+    function($routeProvider, cfpLoadingBarProvider) {
 
-      scceUserOptionsProvider.setAppName('dashboard');
       cfpLoadingBarProvider.includeSpinner = false;
 
       $routeProvider.
@@ -173,6 +191,34 @@
           'initialData': ['scdPortfolioStudentExamCtrlInitialData',
             function(scdPortfolioStudentExamCtrlInitialData) {
               return scdPortfolioStudentExamCtrlInitialData();
+            }
+          ]
+        }
+      }).
+
+      when('/students', {
+        templateUrl: 'views/scdashboard/student-list.html',
+        controller: 'ScdStudentListCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUserIsStaff,
+          'initialData': ['scdStudentListCtrlInitialData',
+            function(scdStudentListCtrlInitialData) {
+              return scdStudentListCtrlInitialData();
+            }
+          ]
+        }
+      }).
+
+      when('/users', {
+        templateUrl: 'views/scdashboard/user-list.html',
+        controller: 'ScdUserListCtrl',
+        controllerAs: 'ctrl',
+        resolve: {
+          'currentUser': currentUserIsAdmin,
+          'initialData': ['scdUserListCtrlInitialData',
+            function(scdUserListCtrlInitialData) {
+              return scdUserListCtrlInitialData();
             }
           ]
         }

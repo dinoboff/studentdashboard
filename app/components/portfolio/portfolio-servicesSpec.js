@@ -5,15 +5,14 @@
   'use strict';
 
   describe('scdPortFolio.services', function() {
-    var $httpBackend, scope, auth, fix;
+    var $httpBackend, scope, fix;
 
     beforeEach(module('scdPortFolio.services', 'scDashboardMocked.fixtures'));
 
-    beforeEach(inject(function(_$rootScope_, _$httpBackend_, scceCurrentUserApi, SC_DASHBOARD_FIXTURES) {
+    beforeEach(inject(function(_$rootScope_, _$httpBackend_, SC_DASHBOARD_FIXTURES) {
       $httpBackend = _$httpBackend_;
       fix = SC_DASHBOARD_FIXTURES;
       scope = _$rootScope_;
-      auth = scceCurrentUserApi;
     }));
 
     describe('scdPorfolioApi', function() {

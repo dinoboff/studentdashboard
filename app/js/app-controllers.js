@@ -2,26 +2,25 @@
   'use strict';
 
   angular.module('scDashboard.controllers', [
-    'scceUser.directives',
-    'scceUser.services',
     'scDashboard.services'
   ]).
 
-  controller('scdNavBarCtrl', ['$scope', '$location', 'scceCurrentUserApi',
-    function($scope, $location, currentUserApi) {
-      $scope.currentUser = null;
+  controller('ScdNavBarCtrl', ['$location', 'scdDashboardApi',
+    function ScdNavBarCtrl($location, scdDashboardApi) {
+      var self = this;
 
-      $scope.isActive = function(route, exactMatch) {
+      this.currentUser = null;
+      scdDashboardApi.auth.auth().then(function(user) {
+        self.currentUser = user;
+      });
+
+      this.isActive = function(route, exactMatch) {
         if (exactMatch) {
           return $location.path() === route;
         } else {
           return ($location.path() + '').indexOf(route) === 0;
         }
       };
-
-      currentUserApi.auth().then(function(user) {
-        $scope.currentUser = user;
-      });
     }
   ])
 

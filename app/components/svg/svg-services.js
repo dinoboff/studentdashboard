@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  angular.module('scceSvg.services', []).
+  angular.module('scdSvg.services', []).
 
   /**
    * Return a Layout object constructor.
@@ -14,12 +14,12 @@
    * - `innerWdith` and `innerHeight` to represent the dimensions of the svg
    * main feature.
    *
-   * ScceLayout includes 2 method to build the layout from
-   * the content size (`ScceLayout.contentSizing`) or from the
-   * box size (`ScceLayout.boxSizing`).
+   * ScdLayout includes 2 method to build the layout from
+   * the content size (`ScdLayout.contentSizing`) or from the
+   * box size (`ScdLayout.boxSizing`).
    *
    */
-  factory('ScceLayout', ['$window',
+  factory('ScdLayout', ['$window',
     function($window) {
       var _ = $window._;
 

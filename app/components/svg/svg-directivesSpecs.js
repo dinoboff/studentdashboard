@@ -4,12 +4,12 @@
 (function() {
   'use strict';
 
-  describe('scceSvg.directives', function() {
+  describe('scdSvg.directives', function() {
     var $compile, $scope, elem;
 
 
     beforeEach(module(
-      'scceSvg.directives'
+      'scdSvg.directives'
     ));
 
     beforeEach(inject(function(_$compile_, _$rootScope_) {
@@ -18,13 +18,13 @@
     }));
 
 
-    describe('scceSvgContainer', function() {
+    describe('scdSvgContainer', function() {
 
       beforeEach(function() {
         elem = $compile(
-          '<scce-svg-container scce-viewbox="layout">' +
+          '<scd-svg-container scd-viewbox="layout">' +
           '<svg><text>foo</text></svg>' +
-          '</scce-svg-container>'
+          '</scd-svg-container>'
         )($scope);
 
         $scope.layout = {

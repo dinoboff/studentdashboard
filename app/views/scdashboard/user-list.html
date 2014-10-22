@@ -1,4 +1,4 @@
-<h1>{{ctrl.userType}}</h1>
+<h1>Users</h1>
 
 
 <table class="table table-striped">
@@ -15,9 +15,9 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="user in ctrl.users track by user.id" ng-if="!user.isGuest">
+        <tr ng-repeat="user in ctrl.users track by user.id">
             <td>
-                <img ng-src="{{user.image.url}}" />
+                <img ng-src="{{user.image.url|portrait:32}}" />
             </td>
             <td>{{user.name.givenName}}</td>
             <td>{{user.name.familyName}}</td>
@@ -50,10 +50,10 @@
             </td>
         </tr>
         <tr ng-if="ctrl.users.length == 0">
-            <td colspan="8">No {{ctrl.userType}}</td>
+            <td colspan="8">No users</td>
         </tr>
         <tr ng-if="ctrl.users == null">
-            <td colspan="8">Loading {{ctrl.userType}}</td>
+            <td colspan="8">Loading users</td>
         </tr>
 
     </tbody>

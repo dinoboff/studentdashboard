@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  angular.module('scceSvg.directives', []).
+  angular.module('scdSvg.directives', []).
 
   /**
    * Directive to set the a `svg element `viewBox` attribute
@@ -16,19 +16,19 @@
    *
    * Usage:
    *
-   *   <scce-svg-container scce-viewbox="layout">
+   *   <scd-svg-container scd-viewbox="layout">
    *     <svg/>
-   *   </scce-svg-container>
+   *   </scd-svg-container>
    *
    * where `$scope.layout == {width: 100, height: 100, margin:{top:10, left:20}}`
    *
    */
-  directive('scceSvgContainer', function() {
+  directive('scdSvgContainer', function() {
     return {
       restrict: 'E',
       transclude: true,
       scope: {
-        'viewBox': '=?scceViewbox'
+        'viewBox': '=?scdViewbox'
       },
       template: '<div ng-transclude ng-style="container"></div>',
       link: function(scope, element) {

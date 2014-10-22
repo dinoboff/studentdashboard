@@ -3,7 +3,6 @@
 
   angular.module('scdRepository.controllers', [
     'angularFileUpload',
-    'scceUser.services',
     'scDashboard.services',
     'scdRepository.directives',
     'scdRepository.services',
@@ -25,6 +24,13 @@
               return [];
             }
             return scdRepositoryApi.getRepositoryById(selector.selected.studentId);
+          }).catch(function(resp){
+            if (resp.status === 404) {
+              return [];
+            } else {
+              return $q.reject(resp);
+            }
+
           })
         });
       };

@@ -1,4 +1,4 @@
-<scce-svg-container scce-viewbox="layout" ng-if="layout">
+<scd-svg-container scd-viewbox="layout" ng-if="layout">
     <svg>
         <g class="pie" ng-attr-transform="translate({{layout.innerWidth / 2}},{{layout.innerHeight / 2}})">
             <g class="slice" ng-repeat="slice in slices track by slice.data.id" ng-class="'pie-slice-' + slice.data.id">
@@ -27,4 +27,4 @@
         </g>
 
     </svg>
-</scce-svg-container>
+</scd-svg-container>

@@ -31,15 +31,16 @@
 
       fix = {
         urls: {
-          login: /\/api\/v1\/user/,
+          baseLogin: '/api/v1/dashboard/user',
+          login: /\/api\/v1\/dashboard\/user/,
           exams: /\/api\/v1\/dashboard\/assessments\/exams(?:\?userId=(.+))?$/,
           exam: /\/api\/v1\/dashboard\/assessments\/exams\/(\d+)$/,
-          examUploadUrl: /\/api\/v1\/dashboard\/assessments\/uploadurl$/,
+          examUploadUrl: /\/api\/v1\/dashboard\/uploadurl\/assessments$/,
           examUpload: '/_exam/upload',
-          students: '/api/v1/students',
-          allStudents: '/api/v1/students?limit=0',
+          students: '/api/v1/dashboard/students',
+          allStudents: '/api/v1/dashboard/students?limit=0',
           studentFiles: /\/api\/v1\/dashboard\/repository\/([^\/]+)\/files/,
-          uploadUrl: /api\/v1\/dashboard\/repository\/([^\/]+)\/uploadurl/,
+          uploadUrl: /api\/v1\/dashboard\/uploadurl\/repository\/([^\/]+)/,
           upload: /_ah\/upload\/(.*)/,
           // Deprecated, should use the assessments and users endpoint instead
           portfolio: /\/api\/v1\/dashboard\/portfolio\/([^\/]+)$/,
@@ -53,7 +54,6 @@
               'isDefault': true
             },
             'studentId': 'A00001',
-            'isStudent': true,
             'isStaff': true,
             'isAdmin': true,
             'primaryEmail': 'chris@example.com',
@@ -68,13 +68,19 @@
             'loginUrl': '/#_login',
             'logoutUrl': '/#_logout'
           },
+          loginError: {
+            'isLoggedIn': false,
+            'isDomainAdmin': false,
+            'isAdmin': false,
+            'isStaff': false,
+            'loginUrl': '/api/login'
+          },
           studentUser: {
             'image': {
               'url': 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50',
               'isDefault': true
             },
             'studentId': 'A00001',
-            'isStudent': true,
             'isStaff': false,
             'isAdmin': false,
             'primaryEmail': 'chris@example.com',
@@ -96,7 +102,6 @@
                 'isDefault': true
               },
               'studentId': 'A00001',
-              'isStudent': true,
               'isStaff': true,
               'isAdmin': true,
               'domain': 'chrisboesch.com',
@@ -113,7 +118,6 @@
                 'isDefault': true
               },
               'studentId': 'A00002',
-              'isStudent': true,
               'isStaff': false,
               'isAdmin': false,
               'domain': 'chrisboesch.com',
