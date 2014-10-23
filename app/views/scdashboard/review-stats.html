@@ -37,11 +37,11 @@
         </p>
     </div>
 
-    <p ng-show="ctrl.students|isEmpty &amp;&amp; ctrl.pages.position() == 0" class="alert alert-info" role="alert">
+    <p ng-show="(ctrl.students|isEmpty) &amp;&amp; ctrl.pages.position() == 0" class="alert alert-info" role="alert">
         <strong>No student data.</strong>
     </p>
 
-    <p ng-show="ctrl.students|isEmpty &amp;&amp; ctrl.pages.position() > 0" class="alert alert-info" role="alert">
+    <p ng-show="(ctrl.students|isEmpty) &amp;&amp; ctrl.pages.position() > 0" class="alert alert-info" role="alert">
         <strong>No more student data.</strong>
     </p>
 
