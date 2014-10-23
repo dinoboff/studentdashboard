@@ -135,6 +135,36 @@
 
     <div class="col-md-4" ng-if="ctrl.currentUser.isAdmin">
         <div>
+
+            <form role="form" name="uploadYearForm" id="upload-form" ng-controller="ScdUploadYearCtrl as uploadCtrl">
+                <fielset>
+                    <legend>Upload student list</legend>
+
+                    <div class="form-group">
+                        <label for="file-select">Select a csv file to upload :</label>
+                        <input type="file" id="file-select" class="form-control" ng-file-select="uploadCtrl.fileSelected($files, uploadCtrl)" scd-file="uploadCtrl.file" accept="text/csv">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="file-year">Year :</label>
+                        <input type="number" class="form-control" id="file-year" name="uploadYear" placeholder="YYYY" ng-model="uploadCtrl.year" ng-required="true" ng-pattern="/\d{4}/" ng-attr-min="{{uploadCtrl.thisYear}}" ng-attr-max="{{uploadCtrl.thisYear + 10}}" />
+                        <span class="help-block" ng-show="uploadYearFormYear.$dirty &amp;&amp; uploadYearForm.uploadYear.$invalid">Year should be between {{uploadCtrl.thisYear}} and {{uploadCtrl.thisYear + 10}}</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" ng-click="uploadCtrl.uploadFile(uploadCtrl, ctrl.reload)" ng-disabled="!uploadCtrl.file || uploadYearForm.uploadYear.$invalid || uploadCtrl.inProgress" id="upload-file">
+                        Upload
+                    </button>
+                    <hr/>
+                    <p>Expecting a csv file with the following format:</p>
+                    <pre>
+S/N,Surname,Student Name,NUS Email
+1,Bob,"Smith, Bob",A0000001@NUS.EDU.SG
+2,Alice,Alice Brown,A0000002@NUS.EDU.SG
+...</pre>
+                </fielset>
+            </form>
+            <hr/>
+
             <form name="addStudentForm" ng-controller="ScdNewStudentCtrl as newStudentCtrl" class="form-horizontal">
                 <fieldset>
                     <legend>Add a student</legend>
@@ -191,34 +221,6 @@
             </form>
             <hr/>
 
-            <form role="form" name="uploadYearForm" id="upload-form" ng-controller="ScdUploadYearCtrl as uploadCtrl">
-                <fielset>
-                    <legend>Upload student list</legend>
-
-                    <div class="form-group">
-                        <label for="file-select">Select a csv file to upload :</label>
-                        <input type="file" id="file-select" class="form-control" ng-file-select="uploadCtrl.fileSelected($files, uploadCtrl)" scd-file="uploadCtrl.file" accept="text/csv">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="file-year">Year :</label>
-                        <input type="number" class="form-control" id="file-year" name="uploadYear" placeholder="YYYY" ng-model="uploadCtrl.year" ng-required="true" ng-pattern="/\d{4}/" ng-attr-min="{{uploadCtrl.thisYear}}" ng-attr-max="{{uploadCtrl.thisYear + 10}}" />
-                        <span class="help-block" ng-show="uploadYearFormYear.$dirty &amp;&amp; uploadYearForm.uploadYear.$invalid">Year should be between {{uploadCtrl.thisYear}} and {{uploadCtrl.thisYear + 10}}</span>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-block" ng-click="uploadCtrl.uploadFile(uploadCtrl, ctrl.reload)" ng-disabled="!uploadCtrl.file || uploadYearForm.uploadYear.$invalid || uploadCtrl.inProgress" id="upload-file">
-                        Upload
-                    </button>
-                    <hr/>
-                    <p>Expecting a csv file with the following format:</p>
-                    <pre>
-S/N,Surname,Student Name,NUS Email
-1,Bob,"Smith, Bob",A0000001@NUS.EDU.SG
-2,Alice,Alice Brown,A0000002@NUS.EDU.SG
-...</pre>
-                </fielset>
-            </form>
-            <hr/>
             <form role="form" id="archive-year" name="archiveYearForm" ng-controller="ScdArchiveYearCtrl as archCtrl">
                 <fieldset>
                     <legend>Archive years</legend>
