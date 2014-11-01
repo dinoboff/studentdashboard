@@ -339,13 +339,13 @@
       this.byCategory = {
         layout: null,
         baseLayout: {
-          rowHeight: 27,
-          innerWidth: 300,
+          rowHeight: 25,
+          innerWidth: 600,
           margin: {
-            top: 10,
-            right: 60,
+            top: 20,
+            right: 200,
             bottom: 50,
-            left: 220
+            left: 200
           },
         },
 
