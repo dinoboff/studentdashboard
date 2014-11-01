@@ -55,11 +55,21 @@
 
                     </td>
                 </tr>
+
                 <tr ng-if="ctrl.files == null">
-                    <td colspan="6">Loading file list...</td>
+                    <td colspan="5">Loading file list...</td>
                 </tr>
+
                 <tr ng-if="ctrl.files.length == 0">
-                    <td colspan="6">No files</td>
+                    <td colspan="5">No files</td>
+                </tr>
+
+                <tr ng-if="ctrl.files.cursor" class="show-more">
+                    <td colspan="5">
+                        <button class="btn btn-primary" ng-click="ctrl.showMore(ctrl.files.curor)">
+                            Show more
+                        </button>
+                    </td>
                 </tr>
             </tbody>
         </table>
