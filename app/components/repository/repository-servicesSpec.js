@@ -52,7 +52,7 @@
         });
 
         $httpBackend.expectPOST(
-          '/api/v1/dashboard/repository/12345/uploadurl'
+          '/api/v1/dashboard/uploadurl/repository/12345'
         ).respond({url: '/foo'});
         $httpBackend.flush();
 

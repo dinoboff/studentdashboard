@@ -74,6 +74,20 @@
         });
       };
 
+      this.showMore = function() {
+        if (!this.files.cursor) {
+          return $q.when(this.files);
+        }
+
+        return scdRepositoryApi.getRepositoryById(
+          this.selector.selected.studentId, {cursor: this.files.cursor}
+        ).then(function(list) {
+          self.files = self.files.concat(list);
+          self.files.cursor = list.cursor;
+          return self.files;
+        });
+      };
+
       this.delete = function(file) {
         scdRepositoryApi.deleteDocument(file).then(function() {
           _.remove(self.files, {id: file.id});
