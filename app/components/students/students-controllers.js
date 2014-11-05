@@ -288,7 +288,6 @@
         }).then(function() {
           info.file = null;
           info.year = null;
-          onSuccess();
         }).finally(function() {
           info.inProgress = false;
         });
