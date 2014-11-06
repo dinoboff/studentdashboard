@@ -22,7 +22,7 @@
             limit: 30,
             residents: 'all',
             topic: 'all',
-            sortBy: 'predictiveSum'
+            sortBy: 'performance'
           },
           selectorPromise = scdSelectedStudent(),
           studentsPromise = selectorPromise.then(function(selector) {
@@ -57,12 +57,14 @@
             }),
 
             sortBy: [{
-              id: 'predictiveSum',
-              label: 'Sum of Predictions',
+              id: 'performance',
+              label: 'Correct answered rate',
+              unit: '%'
             }, {
-              id: 'predictiveAverage',
-              label: 'Average of Predictions'
-            }],
+              id: 'questionTaken',
+              label: 'Question taken',
+              unit: ''
+            }]
 
           })
         });
@@ -101,27 +103,11 @@
       }
 
       function setLegend(sortById) {
-        var sortBy = _.find(
-          self.filterOptions.sortBy, {
+        self.chartLegend = {
+          x: _.find(self.filterOptions.sortBy, {
             id: sortById
-          }
-        );
-
-        if (sortBy.id === 'performance') {
-          return {
-            x: {
-              label: sortBy.label + ' (%)',
-              unit: '%'
-            }
-          };
-        } else {
-          return {
-            x: {
-              label: sortBy.label,
-              unit: ''
-            }
-          };
-        }
+          })
+        };
       }
 
       this.pages = new ScdPageCache(initialData.params.limit);
@@ -130,40 +116,29 @@
       this.filterOptions = initialData.paramOptions;
 
       this.chartRef = null; // no average stats yet.
-      this.chartLegend = setLegend(this.filters.sortBy);
       this.chartOptions = {
         domain: function(series) {
-          var max, min, key;
+          var max;
+
           if (self.filters.sortBy === 'performance') {
             return [0, 100];
           } else {
-            if (self.filters.topic === 'all') {
-              key = self.filters.sortBy;
-            } else {
-              key = 'lastPredictive';
-            }
             max = _.max(series, function(s) {
-              return s[key];
-            });
-            min = _.min(series, function(s) {
-              return s[key];
-            });
-            return _.map([min, max], key);
+              return s[self.filters.sortBy];
+            })[self.filters.sortBy];
+            return [0, max];
           }
         },
         getLabel: function(row) {
           return row.displayName;
         },
         getValue: function(row) {
-          if (self.filters.topic === 'all') {
-            return row[self.filters.sortBy];
-          } else {
-            return row.lastPredictive;
-          }
+          return row[self.filters.sortBy];
         }
       };
 
       setStudent(this.pages.next());
+      setLegend(this.filters.sortBy);
 
       /**
        * Query next page of student
@@ -180,9 +155,11 @@
           scdDashboardApi.firstAid.listStats(params).then(function(students) {
             self.pages.add(students);
             setStudent(self.pages.next());
+            setLegend(this.filters.sortBy);
           });
         } else {
           setStudent(this.pages.next());
+          setLegend(this.filters.sortBy);
         }
       };
 
@@ -193,6 +170,7 @@
       this.prev = function() {
         if (this.pages.position() > 0) {
           setStudent(this.pages.prev());
+          setLegend(this.filters.sortBy);
         }
       };
 
@@ -205,14 +183,11 @@
       this.filterChanged = function(params) {
         this.pages.clear();
 
-        if (params.topic !== 'all') {
-          params.sortBy = 'predictiveAverage';
-        }
-
         self.chartLegend = setLegend(params.sortBy);
         scdDashboardApi.firstAid.listStats(params).then(function(students) {
           self.pages.add(students);
           setStudent(self.pages.next());
+          setLegend(params.sortBy);
         });
       };
 
@@ -239,7 +214,8 @@
         var _ = $window._,
           selectorPromise = scdSelectedStudent(),
           params = {
-            ref: 'programAverage'
+            ref: 'programAverage',
+            sortBy: 'performance'
           };
 
         return $q.all({
@@ -264,7 +240,18 @@
             refs: [{
               id: 'programAverage',
               label: 'Program Average'
+            }],
+
+            sortBy: [{
+              id: 'performance',
+              label: 'Correct answered rate',
+              unit: '%'
+            }, {
+              id: 'questionTaken',
+              label: 'Question taken',
+              unit: ''
             }]
+
           })
         });
       };
@@ -289,26 +276,6 @@
       this.filters = initialData.params;
       this.filterOptions = initialData.filterOptions;
 
-      this.cummulativePerf = {
-        layout: ScdLayout.contentSizing({
-          innerWidth: 500,
-          innerHeight: 200,
-          margin: {
-            top: 20,
-            right: 150,
-            bottom: 30,
-            left: 70
-          },
-        }),
-        options: {
-          domain: [-300, 300],
-          unit: '',
-          getValue: function(day) {
-            return day.predictiveSum;
-          }
-        }
-      };
-
       function categoriesLayout(stats, baseLayout) {
         if (!stats || !stats.categoryPerformances) {
           return;
@@ -324,28 +291,19 @@
       this.byCategory = {
         layout: null,
         baseLayout: {
-          rowHeight: 27,
-          innerWidth: 500,
+          rowHeight: 25,
+          innerWidth: 600,
           margin: {
-            top: 10,
-            right: 60,
+            top: 20,
+            right: 200,
             bottom: 50,
-            left: 220
-          },
+            left: 200
+          }
         },
 
         options: {
-          domain: function(series) {
-            var max, min;
-
-            max = _.max(series, function(s) {
-              return s.predictive;
-            });
-            min = _.min(series, function(s) {
-              return s.predictive;
-            });
-
-            return _.map([min, max], 'predictive');
+          domain: function() {
+            return [0, 100];
           },
           getLabel: function(row) {
             return initialData.topics[row.id].label;
@@ -360,7 +318,7 @@
             return '';
           },
           getValue: function(row) {
-            return row.predictive;
+            return row.performance;
           },
         }
       };

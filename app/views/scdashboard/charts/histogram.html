@@ -11,7 +11,7 @@
             </g>
             <line x1="-5" ng-attr-x2="{{layout.innerWidth}}" />
             <text class="label" ng-attr-transform="translate({{layout.innerWidth/2}},25)" dy=".5ex">
-                {{legend.x.label}}
+                <tspan>{{legend.x.label}}</tspan><tspan ng-if="legend.x.unit"> ({{legend.x.unit}})</tspan>
             </text>
         </g>
 

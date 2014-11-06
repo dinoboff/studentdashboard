@@ -346,7 +346,7 @@
             right: 200,
             bottom: 50,
             left: 200
-          },
+          }
         },
 
         options: {

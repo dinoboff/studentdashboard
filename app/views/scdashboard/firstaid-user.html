@@ -35,33 +35,6 @@
 
 <div class="graph-view" ng-if="ctrl.selector.selected.studentId &amp;&amp; ctrl.userStats">
 
-    <div class="row">
-
-        <div class="col-sm-12">
-
-            <div class="well">
-                <h2>Cumulative Performance</h2>
-                <hr/>
-
-                <!-- <form role="form" class="form-inline filter-selectors">
-
-                    <div class="form-group">
-                        <label for="compare-user-to">Compared to:</label>
-                        <select id="compare-user-to" class="form-control" ng-model="ctrl.filters.ref" ng-options="opt.id as opt.label for opt in ctrl.filterOptions.refs"></select>
-                    </div>
-
-                </form> -->
-
-                <!-- history chart -->
-                <scd-chart-history class="cumulative-perfomance rect" scd-layout="ctrl.cummulativePerf.layout" scd-series="ctrl.userStats.history" scd-current="{value: ctrl.userStats.predictiveSum, label: 'Sum of predictions'}" scd-options="ctrl.cummulativePerf.options" scd-legend="{y: 'predictions sum'}">
-                </scd-chart-history>
-
-            </div>
-
-        </div>
-
-    </div>
-
     <!-- Result breakdown by topics -->
     <div class="row">
 
@@ -84,7 +57,7 @@
                     scd-layout="ctrl.byCategory.layout"
                     scd-series="ctrl.userStats.categoryPerformances"
                     scd-options="ctrl.byCategory.options"
-                    scd-legend="{x: 'Sum of predictions'}"
+                    scd-legend="{x: {label: 'Correct answered rate', unit: '%'}}"
                 >
                 </scd-chart-histogram>
 
