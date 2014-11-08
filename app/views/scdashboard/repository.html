@@ -83,7 +83,7 @@
 
                     <div class="form-group">
                         <label for="file-select">Select a file to upload :</label>
-                        <input type="file" id="file-select" class="form-control" scd-file="uploadCtrl.selected.file" scd-selected="uploadCtrl.onFileSelect(uploadCtrl.selected.file)">
+                        <input type="file" id="file-select" class="form-control" scd-file="uploadCtrl.selected.file" ng-file-select="uploadCtrl.onFileSelect($files)">
                     </div>
 
                     <div class="form-group">
