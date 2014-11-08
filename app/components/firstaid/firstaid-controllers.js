@@ -58,7 +58,7 @@
 
             sortBy: [{
               id: 'performance',
-              label: 'Correct answered rate',
+              label: 'Correct answers rate',
               unit: '%'
             }, {
               id: 'questionTaken',
@@ -244,7 +244,7 @@
 
             sortBy: [{
               id: 'performance',
-              label: 'Correct answered rate',
+              label: 'Correct answers rate',
               unit: '%'
             }, {
               id: 'questionTaken',
