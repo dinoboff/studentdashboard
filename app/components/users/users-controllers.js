@@ -16,7 +16,8 @@
       return function scdUserListCtrlInitialData() {
 
         return $q.all({
-          users: scdDashboardApi.users.listUsers()
+          users: scdDashboardApi.users.listUsers(),
+          currentUser: scdDashboardApi.auth.auth()
         });
       };
     }
@@ -36,6 +37,7 @@
         _ = $window._;
 
       this.users = initialData.users;
+      this.currentUser = initialData.currentUser;
 
       this.getMore = function() {
         if (!this.users || !this.users.cursor) {
@@ -56,40 +58,36 @@
       };
 
       this.switchStaff = function(user, input) {
-        var promise, originalValue = user.isStaff;
+        var promise, newValue = user.isStaff;
 
         input.disabled = true;
-        if (user.isStaff) {
+        if (!newValue) {
           promise = scdDashboardApi.users.revokeStaff(user);
         } else {
           promise = scdDashboardApi.users.makeStaff(user);
         }
 
-        return promise.then(function() {
-          user.isStaff = !originalValue;
-        }).catch(function() {
-          user.isStaff = originalValue;
-          input.$setViewValue(originalValue);
+        return promise.catch(function() {
+          user.isStaff = !newValue;
+          input.$setViewValue(!newValue);
         }).finally(function() {
           input.disabled = false;
         });
       };
 
       this.switchAdmin = function(user, input) {
-        var promise, originalValue = user.isAdmin;
+        var promise, newValue = user.isAdmin;
 
         input.disabled = true;
-        if (user.isAdmin) {
+        if (!newValue) {
           promise = scdDashboardApi.users.revokeAdmin(user);
         } else {
           promise = scdDashboardApi.users.makeAdmin(user);
         }
 
-        return promise.then(function() {
-          user.isAdmin = !originalValue;
-        }).catch(function() {
-          user.isAdmin = originalValue;
-          input.$setViewValue(originalValue);
+        return promise.catch(function() {
+          user.isAdmin = !newValue;
+          input.$setViewValue(!newValue);
         }).finally(function() {
           input.disabled = false;
         });
