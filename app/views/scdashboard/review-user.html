@@ -10,18 +10,14 @@
 
 <div class="well" ng-if="ctrl.selector.available">
     <form role="form" class="form-inline" ng-if="ctrl.selector.available">
-
         <div class="form-group">
-            <label for="selected-student">Show stats of</label>
-            <select id="selected-student" class="form-control" ng-model="ctrl.selector.selected" ng-options="s as s.displayName group by s.year for s in ctrl.selector.students track by s.studentId" ng-change="ctrl.showStats(ctrl.selector.selected.studentId)">
-                <option value="">Select a student</option>
-            </select>
+            <label for="selected-student">Show results of</label>
+            <input type="text" class="form-control" ng-model="ctrl.selector.selected" ng-options="icon as icon.displayName for icon in ctrl.selector.filter($viewValue)" placeholder="student name and/or year" bs-typeahead ng-model-options="{updateOn: 'default blur', debounce: {'default': 800, 'blur': 0}}">
         </div>
 
         <div class="form-group">
             or <a href="#/review/stats">Show global performances</a>
         </div>
-
     </form>
 </div>
 
@@ -42,7 +38,7 @@
             <div class="well">
                 <h2>Performance by Category</h2>
                 <hr/>
-<!--
+                <!--
                 <form role="form" class="form-inline filter-selectors">
 
                     <div class="form-group">

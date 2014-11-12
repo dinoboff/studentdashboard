@@ -185,8 +185,9 @@
       this.showDetails = function(studentStats) {
         initialData.selector.select({
           studentId: studentStats.studentId
+        }).then(function(){
+          $location.path('/review');
         });
-        $location.path('/review');
       };
     }
   ]).

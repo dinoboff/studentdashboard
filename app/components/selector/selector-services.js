@@ -1,26 +1,30 @@
 (function() {
   'use strict';
+  var yearPattern = /20\d{2}/g;
+
 
   angular.module('scdSelector.services', [
     'scDashboard.services'
   ]).
 
   /**
-   * Get a list of student and keep tract of a selected student.
+   * Keep tract of a selected student.
    *
    * Can be share by directive and controller to keep track of which student
    * the current user is watching or editing.
    *
-   * If the current user is not an admin or staff, he won't be able to pick and
-   * the selected user will be the current user (assuming he's a student).
+   * If the current user is not an admin or staff, he won't be able to pick
+   * a student; the selected user will be the current user
+   * (assuming he's a student).
    *
    * Return a promising resolving to a selector object with the
    * following properties:
    *
-   * - `students` (list of student selectable),
-   * - `selectedId` (id of the selected student),
+   * - `selected` (Current selected student),
    * - `available` (can the current user select a student other than
-   *   him / herself)
+   *   him / herself).
+   * - `select(id)` to select a student.
+   * - `search(filter)` to get a list of student that match
    *
    */
   factory('scdSelectedStudent', ['$window', 'scdDashboardApi', '$q',
@@ -28,37 +32,45 @@
       var selector = null,
         selectorPromise = null,
         studentsPromise = null,
+        searchParams = {},
         _ = $window._;
 
-      function addStudents(students) {
-        if (!selector) {
-          return $q.reject('selector not instantiated');
-        }
+      function parseFilter(filter) {
+        var name = [], years = [];
 
-        if (!selector.students) {
-          selector.students = students;
-        } else {
-          selector.students = selector.students.concat(students);
-          selector.students.cursor = students.cursor;
-        }
+        filter.split(' ').forEach(function(token){
+          if (yearPattern.test(token)) {
+            years.push(token);
+          } else if (token) {
+            name.push(token);
+          }
+        });
 
-        if (students.cursor) {
-          return scdDashboardApi.users.listStudents(students.cursor, {limit: 0}).then(function(students){
-            return addStudents(students);
-          });
-        }
+        return {name: name.join(' '), years: years};
       }
 
-      function listStudents(selector) {
-        if (selector.students || studentsPromise) {
-          return;
-        }
+      function listStudents(selector, filter, limit) {
+        var params = parseFilter(filter || '');
 
-        studentsPromise = scdDashboardApi.users.listStudents('', {limit: 0}).then(function(studentList) {
-          return addStudents(studentList);
+        params.limit = limit || 8;
+
+        studentsPromise = $q.when(studentsPromise).then(function(){
+          var diffYears = _.xor(params.years, searchParams.years);
+
+          if (params.name === searchParams.name && diffYears.length === 0) {
+            return selector._students || [];
+          }
+
+          _.assign(searchParams, params);
+          return scdDashboardApi.users.listStudents(params);
+        }).then(function(studentList) {
+          selector._students = studentList;
+          return studentList;
         })['finally'](function() {
           studentsPromise = null;
         });
+
+        return studentsPromise;
       }
 
       return function() {
@@ -73,21 +85,34 @@
         selectorPromise = scdDashboardApi.auth.auth().then(function(user) {
 
           if (!user.isLoggedIn) {
-            return $q.reject('You need to be login.');
+            return $q.reject('You need to be logged in.');
           }
 
           selector = {
-            students: null,
+            _students: [],
             selected: user,
             available: false,
             select: function(find) {
-              this.selected = _.find(this.students, find);
+              return scdDashboardApi.users.getStudent(find.studentId).then(function(student){
+                selector.selected = student;
+                return student;
+              });
+            },
+            search: function(filter) {
+              return  listStudents(selector, filter);
+            },
+            filter: function(filter) {
+              // If a student have been selected, the modele is now a student.
+              // We just return the last selected student.
+              if (filter && filter.displayName) {
+                return [filter];
+              }
+              return selector.search(filter);
             }
           };
 
           if (user.isStaff || user.isAdmin) {
             selector.available = true;
-            listStudents(selector);
           }
 
           return selector;

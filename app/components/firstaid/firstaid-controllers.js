@@ -58,7 +58,7 @@
 
             sortBy: [{
               id: 'performance',
-              label: 'Correct answered rate',
+              label: 'Correct answers rate',
               unit: '%'
             }, {
               id: 'questionTaken',
@@ -194,8 +194,9 @@
       this.showDetails = function(studentStats) {
         initialData.selector.select({
           studentId: studentStats.studentId
+        }).then(function(){
+          $location.path('/first-aid');
         });
-        $location.path('/first-aid');
       };
     }
   ]).
@@ -244,7 +245,7 @@
 
             sortBy: [{
               id: 'performance',
-              label: 'Correct answered rate',
+              label: 'Correct answers rate',
               unit: '%'
             }, {
               id: 'questionTaken',

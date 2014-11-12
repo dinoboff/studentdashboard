@@ -4,7 +4,6 @@
   angular.module('scdRepository.controllers', [
     'angularFileUpload',
     'scDashboard.services',
-    'scdRepository.directives',
     'scdRepository.services',
     'scdSelector.services'
   ]).
@@ -24,7 +23,7 @@
               return [];
             }
             return scdRepositoryApi.getRepositoryById(selector.selected.studentId);
-          }).catch(function(resp){
+          }).catch(function(resp) {
             if (resp.status === 404) {
               return [];
             } else {
@@ -50,7 +49,6 @@
       this.files = initialData.files;
       this.selector = initialData.selector;
       this.currentUser = currentUser;
-
 
       this.listFile = function(studentId) {
         if (!studentId) {
@@ -90,7 +88,9 @@
 
       this.delete = function(file) {
         scdRepositoryApi.deleteDocument(file).then(function() {
-          _.remove(self.files, {id: file.id});
+          _.remove(self.files, {
+            id: file.id
+          });
         });
       };
     }
@@ -149,8 +149,13 @@
         this.progress = 0;
       };
 
-      this.onFileSelect = function(file) {
-        this.fileMeta.name = file.name;
+      this.onFileSelect = function($files) {
+        if (!$files || $files.lenght < 1) {
+          self.selected.file = null;
+          return;
+        }
+        self.selected.file = $files[0];
+        this.fileMeta.name = $files[0].name;
       };
 
       this.uploadButtonClicked = function(student, file, fileList) {

@@ -1,4 +1,24 @@
-<h1>Active students</h1>
+<h1>Students</h1>
+
+<div class="well">
+
+    <form role="form" class="form-horizontal">
+
+        <div class="form-group">
+            <label for="search-student" class="col-sm-4 control-label">Search students</label>
+            <div class="col-sm-4">
+                <input id="search-student" class="form-control"
+                    ng-model="ctrl.rawFilter"
+                    ng-model-options="{updateOn: 'default blur', debounce: {'default': 1000, 'blur': 0}}"
+                    ng-change="ctrl.filterUpdated(ctrl.rawFilter)"
+                    placeholder="Name and/or Year"
+                />
+            </div>
+        </div>
+
+    </form>
+
+</div>
 
 <div class="row">
     <div class="col-md-8">
