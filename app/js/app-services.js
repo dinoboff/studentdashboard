@@ -162,14 +162,17 @@
            * List active students
            *
            */
-          listStudents: function(cursor, params) {
+          listStudents: function(params) {
             params = params || {};
 
-            if (cursor) {
-              params.cursor = cursor;
-            }
-
             return baseApi.all('students').getList(params);
+          },
+
+          /**
+           * Get details of a student
+           */
+          getStudent: function(studentId) {
+            return baseApi.one('students', studentId).get();
           },
 
           /**

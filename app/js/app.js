@@ -63,6 +63,7 @@
 
   angular.module('scDashboard', [
     'angular-loading-bar',
+    'mgcrea.ngStrap.typeahead',
     'ngRoute',
     'scDashboard.controllers',
     'scdChart.directives',

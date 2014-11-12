@@ -23,7 +23,7 @@
               return [];
             }
             return scdRepositoryApi.getRepositoryById(selector.selected.studentId);
-          }).catch(function(resp){
+          }).catch(function(resp) {
             if (resp.status === 404) {
               return [];
             } else {
@@ -49,7 +49,6 @@
       this.files = initialData.files;
       this.selector = initialData.selector;
       this.currentUser = currentUser;
-
 
       this.listFile = function(studentId) {
         if (!studentId) {
@@ -89,7 +88,9 @@
 
       this.delete = function(file) {
         scdRepositoryApi.deleteDocument(file).then(function() {
-          _.remove(self.files, {id: file.id});
+          _.remove(self.files, {
+            id: file.id
+          });
         });
       };
     }

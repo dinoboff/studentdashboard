@@ -1,6 +1,9 @@
 (function() {
   'use strict';
 
+  var yearPattern = /^20\d{2}$/;
+
+
   angular.module('scdStudents.controllers', [
     'angularFileUpload',
     'scDashboard.services'
@@ -47,12 +50,17 @@
       this.currentUser = initialData.currentUser;
       this.students = initialData.students;
       this.loading = null;
+      this.rawFilter = '';
+      this.filter = {
+        name: '',
+        years: []
+      };
 
       this.reload = function() {
         self.students = null;
 
         self.loading = $q.when(self.loading).then(function() {
-          return scdDashboardApi.users.listStudents();
+          return scdDashboardApi.users.listStudents(self.filter);
         }).then(function(students) {
           self.students = students;
           return students;
@@ -70,7 +78,10 @@
         }
 
         self.loading = $q.when(self.loading).then(function() {
-          return scdDashboardApi.users.listStudents(self.students.cursor);
+          var params = {
+            cursor: self.students.cursor,
+          };
+          return scdDashboardApi.users.listStudents(_.assign(params, self.filter));
         }).then(function(students) {
           self.students = self.students.concat(students);
           self.students.cursor = students.cursor;
@@ -80,6 +91,40 @@
         });
 
         return self.loading;
+      };
+
+      this.updateFilter = function(name, years) {
+        var yearDiff = _.xor(self.filter.years, years);
+
+        name = name.trim();
+
+        if (self.filter.name === name && yearDiff.length === 0) {
+          return $q.when(self.students);
+        }
+
+        self.filter = {
+          name: name,
+          years: years
+        };
+
+        return self.reload();
+      };
+
+      this.filterUpdated = function (filter) {
+        var name = [],
+          years = [];
+
+        filter.split(' ').forEach(function(token){
+          var dest = name;
+
+          if (yearPattern.test(token)) {
+            dest = years;
+          }
+
+          dest.push(token);
+        });
+
+        self.updateFilter(name.join(' '), years);
       };
 
 

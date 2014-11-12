@@ -194,8 +194,9 @@
       this.showDetails = function(studentStats) {
         initialData.selector.select({
           studentId: studentStats.studentId
+        }).then(function(){
+          $location.path('/first-aid');
         });
-        $location.path('/first-aid');
       };
     }
   ]).
