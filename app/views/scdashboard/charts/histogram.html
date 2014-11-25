@@ -20,7 +20,7 @@
                 <text class="data-label" dx="-7" dy=".5ex">{{options.getLabel(row)}}</text>
                 <rect y="-5" height="10" ng-attr-width="{{scales.x(options.getValue(row))}}" />
                 <line class="average" ng-if="options.hasRef(row)" ng-attr-transform="translate({{scales.x(options.getRef(row).value)}},0)" y1='-5' y2='5' />
-                <text class="data-value" dx="5" dy=".5ex" ng-attr-x="{{scales.x(options.getValue(row))}}">{{options.getValue(row)}} {{options.getUnit(row)}}</text>
+                <text class="data-value" dx="5" dy=".5ex" ng-attr-x="{{scales.x(options.getValue(row))}}">{{options.getValueAsString(row)}}</text>
             </g>
         </g>
 

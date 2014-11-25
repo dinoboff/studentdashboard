@@ -420,6 +420,9 @@
             getValue: function(row) {
               return row.value;
             },
+            getValueAsString: function(row) {
+              return scope.options.getValue(row) + ' ' + scope.options.getUnit(row);
+            },
             isFailing: function(row) {
               // reference value can be global or per row
               var ref = scope.ref || this.getRef(row),
