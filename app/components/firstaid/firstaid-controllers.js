@@ -134,6 +134,13 @@
         },
         getValue: function(row) {
           return row[self.filters.sortBy];
+        },
+        getValueAsString: function(row) {
+          if (self.filters.sortBy === 'performance') {
+            return row.correctAnswers + '/' + row.questionTaken;
+          } else {
+            return row[self.filters.sortBy];
+          }
         }
       };
 
@@ -194,7 +201,7 @@
       this.showDetails = function(studentStats) {
         initialData.selector.select({
           studentId: studentStats.studentId
-        }).then(function(){
+        }).then(function() {
           $location.path('/first-aid');
         });
       };
@@ -321,6 +328,9 @@
           getValue: function(row) {
             return row.performance;
           },
+          getValueAsString: function(row) {
+            return row.correctAnswers + '/' + row.questionTaken;
+          }
         }
       };
       this.byCategory.layout = categoriesLayout(
