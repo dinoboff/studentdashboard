@@ -49,7 +49,7 @@
         return {name: name.join(' '), years: years};
       }
 
-      function listStudents(selector, filter, limit) {
+      function filterStudents(selector, filter, limit) {
         var params = parseFilter(filter || '');
 
         params.limit = limit || 8;
@@ -58,13 +58,13 @@
           var diffYears = _.xor(params.years, searchParams.years);
 
           if (params.name === searchParams.name && diffYears.length === 0) {
-            return selector._students || [];
+            return selector._filteredStudents || [];
           }
 
           _.assign(searchParams, params);
           return scdDashboardApi.users.listStudents(params);
         }).then(function(studentList) {
-          selector._students = studentList;
+          selector._filteredStudents = studentList;
           return studentList;
         })['finally'](function() {
           studentsPromise = null;
@@ -89,7 +89,8 @@
           }
 
           selector = {
-            _students: [],
+            _filteredStudents: [],
+            students: [],
             selected: user,
             available: false,
             select: function(find) {
@@ -99,7 +100,7 @@
               });
             },
             search: function(filter) {
-              return  listStudents(selector, filter);
+              return filterStudents(selector, filter);
             },
             filter: function(filter) {
               // If a student have been selected, the modele is now a student.
@@ -111,9 +112,14 @@
             }
           };
 
-          if (user.isStaff || user.isAdmin) {
-            selector.available = true;
+          if (!user.isStaff && !user.isAdmin) {
+            return selector;
           }
+
+          selector.available = true;
+          scdDashboardApi.users.listStudents({limit: 0}).then(function(studentList){
+            selector.students = studentList;
+          });
 
           return selector;
         })['finally'](function(){
