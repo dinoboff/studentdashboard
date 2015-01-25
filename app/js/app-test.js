@@ -7,20 +7,37 @@
 
   run(['$httpBackend', '$window', 'SC_DASHBOARD_FIXTURES',
     function($httpBackend, $window, fixtures) {
-      var _ = $window._,
-        files = {},
-        students = fixtures.data.students;
+      var _ = $window._;
+      var  files = {};
+      var  students = fixtures.data.students;
 
       // Login
       $httpBackend.whenGET(fixtures.urls.login).respond(fixtures.data.user);
 
-      // Student list
+      // User list
+      $httpBackend.whenGET(fixtures.urls.users).respond(fixtures.data.users);
+
+      // Complete Student list
+      $httpBackend.whenGET(fixtures.urls.allStudents).respond({
+        students: Object.keys(students).map(function(id) {
+          return students[id];
+        }),
+        cursor: null
+      });
+
+      // Filtered Student list
       $httpBackend.whenGET(fixtures.urls.students).respond({
         students: Object.keys(students).map(function(id) {
           return students[id];
         }),
         cursor: null
       });
+
+      // Edit student attribute
+      $httpBackend.whenPUT(fixtures.urls.studentAttribute).respond({});
+
+      // remove student
+      $httpBackend.whenDELETE(fixtures.urls.oneStudent).respond({});
 
       // Files
       files = {};
@@ -63,75 +80,44 @@
         ];
       });
 
-      // Assessments
-
-      // Exam list
-      $httpBackend.whenGET(fixtures.urls.exams).respond(function(m, url) {
-        var resp, userId = fixtures.urls.exams.exec(url)[1];
-
-        if (!userId) {
-          resp = [200, {
-            exams: fixtures.data.getExamList(),
-            cursor: ''
-          }];
-          return resp;
-        }
-
-        if (!students[userId]) {
-          return [404, {error: 'not found'}];
-        }
-
-        resp = [200, {
-          user: students[userId],
-          exams: fixtures.data.getExamListByUserId(userId),
-          cursor: ''
-        }];
-        return resp;
+      // Delete file
+      $httpBackend.whenDELETE(fixtures.urls.oneStudentFile).respond(function() {
+        return [200, {'success': true}];
       });
 
-      // Exam details
-      $httpBackend.whenGET(fixtures.urls.exam).respond(function(m, url) {
-        var examId = fixtures.urls.exam.exec(url)[1];
 
-        if (!examId || !fixtures.data.exams[examId]) {
-          return [404, {error: 'not found'}];
-        }
+      /* Rosh Review */
 
-        var resp = fixtures.data.exams[examId];
-        return [200, resp];
+      // pgy list
+      $httpBackend.whenGET(fixtures.urls.pgy).respond(fixtures.data.pgy);
+
+      // Topics
+      $httpBackend.whenGET(fixtures.urls.roshReviewTopics).respond(fixtures.data.roshReviewTopics);
+
+      // Global stats
+      $httpBackend.whenGET(fixtures.urls.roshReviewStats).respond(fixtures.data.roshReviewStats);
+
+      // student stats
+      $httpBackend.whenGET(fixtures.urls.oneStudentRoshReviewStats).respond(function(m, url) {
+        var studentId = fixtures.urls.oneStudentRoshReviewStats.exec(url)[1];
+        var student = _.find(students, {'studentId': studentId});
+        return [200, fixtures.data.roshReviewUserStats(student.displayName, studentId)];
       });
 
-      // Exam Upload
-      $httpBackend.whenPOST(fixtures.urls.examUploadUrl).respond({
-        url: fixtures.urls.examUpload
+
+      /* First aid */
+      $httpBackend.whenGET(fixtures.urls.firstAidTopics).respond(fixtures.data.firstAidTopics);
+
+      // Gobal stats
+      $httpBackend.whenGET(fixtures.urls.firstAidStats).respond(fixtures.data.firstAidStats);
+
+      // student stats
+      $httpBackend.whenGET(fixtures.urls.oneStudentFirstAidStats).respond(function(m, url) {
+        var studentId = fixtures.urls.oneStudentFirstAidStats.exec(url)[1];
+        var student = _.find(students, {'studentId': studentId});
+        return [200, fixtures.data.firstAidUserStats(student.displayName, studentId)];
       });
 
-      $httpBackend.whenPOST(fixtures.urls.examUpload).respond(function() {
-        var exam = fixtures.data.newExam(_.size(fixtures.data.exams + 1));
-        return [200, exam];
-      });
-
-      // Portfolio
-      //
-      // TODO: deprecate it.
-
-      // Student portfolio
-      $httpBackend.whenGET(fixtures.urls.portfolio).respond(function(m, url) {
-        var id = fixtures.urls.portfolio.exec(url)[1];
-
-        return [200, {
-          id: id,
-          student: fixtures.data.students[id],
-          examSeries: fixtures.data.exams
-        }];
-      });
-
-      // exam result
-      $httpBackend.whenGET(fixtures.urls.portfolioExam).respond(function(m, url) {
-        var examId = fixtures.urls.portfolioExam.exec(url)[2];
-
-        return [200, fixtures.data.examResults[examId]];
-      });
 
       // Everything else go.
       $httpBackend.whenGET(/.*/).passThrough();

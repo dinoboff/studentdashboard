@@ -107,7 +107,7 @@
         );
         return {
           x: {
-            label: sortBy.label + ' (%)',
+            label: sortBy.label,
             unit: '%'
           }
         };
@@ -125,6 +125,9 @@
           return row.displayName;
         },
         getValue: function(row) {
+          return row[self.filters.sortBy];
+        },
+        getValueAsString: function(row) {
           return row[self.filters.sortBy];
         }
       };

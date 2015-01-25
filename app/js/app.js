@@ -69,8 +69,6 @@
     'scdChart.directives',
     'scdFirstAid.controllers',
     'scdMisc.filters',
-    'scdPortfolio.controllers',
-    'scdPortFolio.directives',
     'scdRepository.controllers',
     'scdReview.controllers',
     'scdStudents.controllers',
@@ -150,48 +148,6 @@
           'initialData': ['scdFirstAidUserStatsCtrlInitialData',
             function(scdFirstAidUserStatsCtrlInitialData) {
               return scdFirstAidUserStatsCtrlInitialData();
-            }
-          ]
-        }
-      }).
-
-      when('/assessments', {
-        templateUrl: 'views/scdashboard/portfolio.html',
-        controller: 'ScdPortfolioCtrl',
-        controllerAs: 'ctrl',
-        resolve: {
-          'currentUser': currentUser,
-          'initialData': ['scdPortfolioCtrlInitialData',
-            function(scdPortfolioCtrlInitialData) {
-              return scdPortfolioCtrlInitialData();
-            }
-          ]
-        }
-      }).
-
-      when('/assessments/exam/:examId', {
-        templateUrl: 'views/scdashboard/exam-stats.html',
-        controller: 'ScdPortfolioExamStatsCtrl',
-        controllerAs: 'ctrl',
-        resolve: {
-          'currentUser': currentUserIsStaff,
-          'initialData': ['scdPortfolioExamStatsCtrlInitialData',
-            function(scdPortfolioExamStatsCtrlInitialData) {
-              return scdPortfolioExamStatsCtrlInitialData();
-            }
-          ]
-        }
-      }).
-
-      when('/assessments/exam/:examId/user/:userId', {
-        templateUrl: 'views/scdashboard/exam.html',
-        controller: 'ScdPortfolioStudentExamCtrl',
-        controllerAs: 'ctrl',
-        resolve: {
-          'currentUser': currentUser,
-          'initialData': ['scdPortfolioStudentExamCtrlInitialData',
-            function(scdPortfolioStudentExamCtrlInitialData) {
-              return scdPortfolioStudentExamCtrlInitialData();
             }
           ]
         }

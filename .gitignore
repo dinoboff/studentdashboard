@@ -15,5 +15,6 @@ results
 npm-debug.log
 node_modules/
 app-build/**
+app-debug/**
 app-dist/**
 app-e2e/**
